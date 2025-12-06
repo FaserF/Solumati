@@ -34,21 +34,34 @@ function App() {
         return i18n[key] || FALLBACK[key] || defaultText || key;
     };
 
-    // --- Verification Logic (Check URL params) ---
+    // --- Verification & Language Logic ---
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('verify_code') || window.location.pathname === '/verify') {
-            // Handle simple verification via API call if needed,
-            // but usually backend renders a page or we call API here.
-            // For now: Just log.
             console.log("Verification intent detected");
         }
 
-        const lang = navigator.language.split('-')[0] || 'en';
-        fetch(`${API_URL}/api/i18n/${lang}`)
-            .then(res => res.json())
-            .then(data => setI18n(data.translations || {}))
-            .catch(e => console.warn("Could not load translations", e));
+        // --- I18N FETCHING DEBUGGING ---
+        const browserLang = navigator.language;
+        const shortLang = browserLang.split('-')[0] || 'en';
+        console.log(`[App] Browser language detected: ${browserLang} -> Requesting: ${shortLang}`);
+
+        fetch(`${API_URL}/api/i18n/${shortLang}`)
+            .then(res => {
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                console.log("[App] Translations loaded:", data);
+                // Check if translations object is empty
+                if (!data.translations || Object.keys(data.translations).length === 0) {
+                    console.warn("[App] Received empty translations object. Falling back to default.");
+                }
+                setI18n(data.translations || {});
+            })
+            .catch(e => {
+                console.error("[App] Could not load translations. Check Network/CORS.", e);
+            });
     }, []);
 
     const questions = [
@@ -67,16 +80,18 @@ function App() {
             });
             if (res.ok) {
                 const data = await res.json();
+                console.log("[App] Login success:", data);
                 setUser(data);
                 setIsGuest(false);
                 fetchMatches(data.user_id);
                 setView('dashboard');
             } else {
                 const err = await res.json();
+                console.warn("[App] Login failed:", err);
                 alert(t('alert.login_failed', "Login fehlgeschlagen: ") + (err.detail || JSON.stringify(err)));
             }
         } catch (e) {
-            console.error(e);
+            console.error("[App] Login network error:", e);
             alert("Verbindungsfehler zum Server.");
         }
     };
@@ -121,7 +136,6 @@ function App() {
     };
 
     const handleGuest = async () => {
-        // Try to fetch matches for Guest ID 0 to check if guest mode is allowed
         try {
             const res = await fetch(`${API_URL}/matches/0`);
             if (res.ok) {

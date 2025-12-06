@@ -1,26 +1,62 @@
 # i18n.py
+# Enhanced with logging to debug path resolution issues.
 
 import os
 import json
 import locale
 from functools import lru_cache
+import logging
 
+# Configure local logger for this module
+logger = logging.getLogger(__name__)
+
+# The directory where translation JSON files are located.
+# Note: In Docker, this usually resolves to /app/i18n if i18n.py is in /app.
 I18N_DIR = os.path.join(os.path.dirname(__file__), 'i18n')
 DEFAULT_LANG = 'en'
+
+logger.info(f"I18N Directory resolved to: {I18N_DIR}")
 
 @lru_cache(maxsize=4)
 def load_translations(lang_code):
     """Load translation dictionary for given lang_code from JSON file."""
+    # Try exact match first (e.g., 'de.json')
     filename = os.path.join(I18N_DIR, f"{lang_code}.json")
+    logger.debug(f"Attempting to load translations from: {filename}")
+
     if os.path.exists(filename):
-        with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                logger.info(f"Successfully loaded translations for {lang_code}")
+                return data
+        except Exception as e:
+            logger.error(f"Error reading JSON for {lang_code}: {e}")
+            return {}
+
     # Try language only part like 'de' from 'de_DE'
     short = lang_code.split('_')[0]
-    filename = os.path.join(I18N_DIR, f"{short}.json")
-    if os.path.exists(filename):
-        with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    filename_short = os.path.join(I18N_DIR, f"{short}.json")
+
+    if filename_short != filename and os.path.exists(filename_short):
+        logger.debug(f"Attempting fallback load from: {filename_short}")
+        try:
+            with open(filename_short, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                logger.info(f"Successfully loaded fallback translations for {short}")
+                return data
+        except Exception as e:
+            logger.error(f"Error reading JSON for {short}: {e}")
+            return {}
+
+    logger.warning(f"No translation file found for {lang_code} or {short} in {I18N_DIR}")
+    # List available files to help debug
+    try:
+        available = os.listdir(I18N_DIR)
+        logger.info(f"Available files in directory: {available}")
+    except OSError:
+        logger.error("Could not list i18n directory.")
+
     return {}
 
 
@@ -32,9 +68,12 @@ def detect_system_language():
         # LANG may contain encoding; e.g. de_DE.UTF-8
         lang = lang_env.split('.')[0]
         return lang
-    loc = locale.getdefaultlocale()[0]
-    if loc:
-        return loc
+    try:
+        loc = locale.getdefaultlocale()[0]
+        if loc:
+            return loc
+    except Exception:
+        pass
     return DEFAULT_LANG
 
 
@@ -66,6 +105,8 @@ def get_translations(lang: str = None) -> dict:
     translations = load_translations(lang)
     if translations:
         return translations
+    # If requested language not found, try default
+    logger.info(f"Falling back to default language: {DEFAULT_LANG}")
     return load_translations(DEFAULT_LANG)
 
 

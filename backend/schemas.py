@@ -80,7 +80,7 @@ class MailConfig(BaseModel):
     smtp_password: str = "secret"
     smtp_ssl: bool = False
     smtp_tls: bool = True
-    from_email: str = "noreply@solumati.local"
+    from_email: str = "noreply@example.com"
 
 class RegistrationConfig(BaseModel):
     enabled: bool = True

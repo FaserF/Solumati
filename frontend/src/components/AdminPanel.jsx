@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, ExternalLink } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, ExternalLink, XCircle } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 
 const AdminPanel = ({ onLogout, t }) => {
@@ -8,6 +8,7 @@ const AdminPanel = ({ onLogout, t }) => {
     const [reports, setReports] = useState([]);
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     // Punishment Modal State
     const [punishModal, setPunishModal] = useState({ show: false, userId: null, reportId: null });
@@ -19,6 +20,7 @@ const AdminPanel = ({ onLogout, t }) => {
     }, [activeTab]);
 
     const loadData = () => {
+        setError(null);
         setLoading(true);
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'reports') fetchReports();
@@ -27,25 +29,35 @@ const AdminPanel = ({ onLogout, t }) => {
     };
 
     const fetchUsers = async () => {
+        console.log("[AdminPanel] Fetching users...");
         try {
             const res = await fetch(`${API_URL}/admin/users`);
-            if (res.ok) setUsers(await res.json());
-            else console.error("Failed to fetch users");
-        } catch (e) { console.error(e); }
+            if (res.ok) {
+                const data = await res.json();
+                console.log(`[AdminPanel] Fetched ${data.length} users:`, data);
+                setUsers(data);
+            } else {
+                console.error("[AdminPanel] Failed to fetch users. Status:", res.status);
+                setError(`Fehler beim Laden der Benutzer: Server antwortete mit Status ${res.status}`);
+            }
+        } catch (e) {
+            console.error("[AdminPanel] Network error fetching users:", e);
+            setError("Verbindungsfehler: Das Backend ist nicht erreichbar oder die Datenbankverbindung ist fehlgeschlagen. Bitte prüfe die Server-Logs.");
+        }
     };
 
     const fetchReports = async () => {
         try {
             const res = await fetch(`${API_URL}/admin/reports`);
             if (res.ok) setReports(await res.json());
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(e); setError("Konnte Berichte nicht laden."); }
     };
 
     const fetchSettings = async () => {
         try {
             const res = await fetch(`${API_URL}/admin/settings`);
             if (res.ok) setSettings(await res.json());
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(e); setError("Konnte Einstellungen nicht laden."); }
     };
 
     const handleReactivate = async (id) => {
@@ -142,6 +154,17 @@ const AdminPanel = ({ onLogout, t }) => {
                     <button onClick={onLogout} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded font-medium">{t('btn.logout')}</button>
                 </div>
 
+                {/* Error Banner */}
+                {error && (
+                    <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm flex items-start gap-3">
+                        <XCircle className="flex-shrink-0" />
+                        <div>
+                            <p className="font-bold">Ein Fehler ist aufgetreten</p>
+                            <p className="text-sm">{error}</p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex gap-4 mb-6">
                     <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition ${activeTab === 'users' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
                         <Users size={18} /> {t('admin.tab.users')}
@@ -174,7 +197,9 @@ const AdminPanel = ({ onLogout, t }) => {
                                 <tbody>
                                     {users.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" className="p-8 text-center text-gray-400">{t('admin.no_users')}</td>
+                                            <td colSpan="6" className="p-8 text-center text-gray-400">
+                                                {loading ? "Lade..." : t('admin.no_users')}
+                                            </td>
                                         </tr>
                                     ) : (
                                         users.map(u => (
