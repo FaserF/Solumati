@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # --- Database Service (PostgreSQL) ---
+  db:
+    image: postgres:15-alpine
+    container_name: solumati_db
+    restart: always
+    environment:
+      - POSTGRES_USER=solumati
+      - POSTGRES_PASSWORD=secure_dev_password
+      - POSTGRES_DB=solumatidb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - solumati_net
+    # Healthcheck to ensure DB is ready before backend starts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solumati -d solumatidb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Backend Service (Python API) ---
+  backend:
+    build: ./backend
+    container_name: solumati_backend
+    restart: always
+    # Wait-for-db script will block until DB is reachable, then start uvicorn
+    command: sh -c "python wait_for_db.py && uvicorn main:app --host 0.0.0.0 --port 7777 --reload"
+    volumes:
+      # Mount code for hot-reloading during dev
+      - ./backend:/app
+    ports:
+      - "7777:7777"
+    environment:
+      - DATABASE_URL=postgresql://solumati:secure_dev_password@db:5432/solumatidb
+      - TEST_MODE=false
+      - LANG            # forward host language env (if set) for automatic locale detection
+    depends_on:
+      - db
+    networks:
+      - solumati_net
+
+  # --- Frontend Service (React/Vite) ---
+  frontend:
+    build: ./frontend
+    container_name: solumati_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount code for hot-reloading
+      - ./frontend:/app
+      # Prevent node_modules from being overwritten by the mount
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:7777
+      - LANG            # forward host language env
+    depends_on:
+      - backend
+    networks:
+      - solumati_net
+
+networks:
+  solumati_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
