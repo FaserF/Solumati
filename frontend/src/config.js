@@ -1,0 +1,31 @@
+export const API_URL = "http://localhost:7777";
+
+export const FALLBACK = {
+    'app.title': 'Solumati',
+    'landing.tagline': 'Stop Swiping. Start Connecting.',
+    'landing.btn_login': 'Log in',
+    'landing.btn_register': 'Register',
+    'landing.btn_guest': 'Browse as guest',
+    'login.title': 'Welcome back',
+    'label.email': 'Email',
+    'label.password': 'Password',
+    'btn.login': 'Log in',
+    'btn.back': 'Back',
+    'register.title': 'Create profile',
+    'label.realname': 'First name',
+    'header.personality': 'Personality Check',
+    'scale.no': 'No',
+    'scale.yes': 'Yes',
+    'btn.register_now': 'Register for free',
+    'btn.cancel': 'Cancel',
+    'dashboard.guest_warning': 'Guest mode: Images are blurred & chat is disabled.',
+    'dashboard.no_matches': 'No matches found...',
+    'dashboard.match_score': 'Match Score',
+    'admin.title': 'Admin Console',
+    'admin.status.active': 'Active',
+    'admin.status.inactive': 'Inactive',
+    'admin.btn.deactivate': 'Deactivate',
+    'admin.btn.activate': 'Activate',
+    'admin.btn.delete': 'Delete',
+    'admin.access_title': 'Admin Panel Access'
+};
