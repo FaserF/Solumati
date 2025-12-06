@@ -4,8 +4,8 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
-    intent: Optional[str] = None # Relaxed validation
-    real_name: Optional[str] = None # Relaxed validation
+    intent: Optional[str] = None
+    real_name: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -35,6 +35,11 @@ class UserDisplay(UserBase):
 class UserUpdate(BaseModel):
     about_me: str
 
+class UserAccountUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    current_password: str # Required for security
+
 class MatchResult(BaseModel):
     user_id: int
     username: str
@@ -45,11 +50,10 @@ class MatchResult(BaseModel):
 class AdminLogin(BaseModel):
     password: str
 
-# Schema for taking action against a user
 class AdminPunishAction(BaseModel):
-    action: str # "deactivate", "reactivate", "ban", "delete"
-    reason_type: Optional[str] = "AdminDeactivation" # Reported, UserDeactivation, etc.
-    duration_hours: Optional[int] = None # Only for temp ban
+    action: str # "deactivate", "reactivate", "ban", "delete", "verify"
+    reason_type: Optional[str] = "AdminDeactivation"
+    duration_hours: Optional[int] = None
 
 class ReportCreate(BaseModel):
     reported_user_id: int
@@ -63,7 +67,6 @@ class ReportDisplay(BaseModel):
     reported_message_id: Optional[int]
     reason: str
     timestamp: datetime
-    # We include usernames for convenience in the UI
     reporter_name: Optional[str] = "Unknown"
     reported_name: Optional[str] = "Unknown"
 
@@ -81,16 +84,26 @@ class MailConfig(BaseModel):
     smtp_ssl: bool = False
     smtp_tls: bool = True
     from_email: str = "noreply@example.com"
+    sender_name: str = "Solumati" # New
+
+class MailTestRequest(BaseModel):
+    target_email: EmailStr
 
 class RegistrationConfig(BaseModel):
     enabled: bool = True
     allowed_domains: str = ""
     require_verification: bool = True
     guest_mode_enabled: bool = True
+    server_domain: str = "" # New: e.g. "myserver.com"
+
+class LegalConfig(BaseModel):
+    imprint: str = "Impressum hier eintragen."
+    privacy: str = "Datenschutzerklärung hier eintragen."
 
 class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
+    legal: Optional[LegalConfig] = LegalConfig()
 
 class PublicConfig(BaseModel):
     registration_enabled: bool

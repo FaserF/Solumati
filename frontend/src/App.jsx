@@ -8,6 +8,9 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
+import UserProfile from './components/UserProfile';
+import AccountSettings from './components/AccountSettings';
+import Legal from './components/Legal';
 
 function App() {
     // --- Global State ---
@@ -25,7 +28,6 @@ function App() {
 
     // --- Admin State ---
     const [adminPass, setAdminPass] = useState("");
-    // Removed adminData state here as it is managed inside AdminPanel now
 
     // --- I18n State ---
     const [i18n, setI18n] = useState({});
@@ -34,34 +36,14 @@ function App() {
         return i18n[key] || FALLBACK[key] || defaultText || key;
     };
 
-    // --- Verification & Language Logic ---
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('verify_code') || window.location.pathname === '/verify') {
-            console.log("Verification intent detected");
-        }
-
-        // --- I18N FETCHING DEBUGGING ---
         const browserLang = navigator.language;
         const shortLang = browserLang.split('-')[0] || 'en';
-        console.log(`[App] Browser language detected: ${browserLang} -> Requesting: ${shortLang}`);
 
         fetch(`${API_URL}/api/i18n/${shortLang}`)
-            .then(res => {
-                if (!res.ok) throw new Error(`Status ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                console.log("[App] Translations loaded:", data);
-                // Check if translations object is empty
-                if (!data.translations || Object.keys(data.translations).length === 0) {
-                    console.warn("[App] Received empty translations object. Falling back to default.");
-                }
-                setI18n(data.translations || {});
-            })
-            .catch(e => {
-                console.error("[App] Could not load translations. Check Network/CORS.", e);
-            });
+            .then(res => res.ok ? res.json() : {})
+            .then(data => setI18n(data.translations || {}))
+            .catch(console.error);
     }, []);
 
     const questions = [
@@ -80,88 +62,61 @@ function App() {
             });
             if (res.ok) {
                 const data = await res.json();
-                console.log("[App] Login success:", data);
                 setUser(data);
                 setIsGuest(false);
                 fetchMatches(data.user_id);
                 setView('dashboard');
             } else {
                 const err = await res.json();
-                console.warn("[App] Login failed:", err);
                 alert(t('alert.login_failed', "Login fehlgeschlagen: ") + (err.detail || JSON.stringify(err)));
             }
-        } catch (e) {
-            console.error("[App] Login network error:", e);
-            alert("Verbindungsfehler zum Server.");
-        }
+        } catch (e) { alert("Verbindungsfehler zum Server."); }
     };
 
     const handleRegister = async () => {
         const answersArray = questions.map(q => parseInt(answers[q.id] || 3));
-
         try {
             const res = await fetch(`${API_URL}/users/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    real_name: realName,
-                    intent,
-                    answers: answersArray
-                })
+                body: JSON.stringify({ email, password, real_name: realName, intent, answers: answersArray })
             });
-
             if (res.ok) {
                 const data = await res.json();
                 if (data.is_verified) {
-                    alert(t('alert.welcome', `Willkommen`) + `, ${data.username}!`);
                     setUser({ user_id: data.id, username: data.username });
                     setIsGuest(false);
                     fetchMatches(data.id);
                     setView('dashboard');
                 } else {
-                    alert("Account erstellt! Bitte überprüfe deine E-Mails, um den Account zu aktivieren.");
+                    alert("Account erstellt! Bitte überprüfe deine E-Mails.");
                     setView('landing');
                 }
             } else {
                 const err = await res.json();
-                const errorMsg = typeof err.detail === 'object' ? JSON.stringify(err.detail, null, 2) : err.detail;
-                alert("Fehler: " + errorMsg);
+                alert("Fehler: " + err.detail);
             }
-        } catch (e) {
-            console.error(e);
-            alert("Registrierung fehlgeschlagen (Netzwerkfehler).");
-        }
+        } catch (e) { alert("Registrierung fehlgeschlagen."); }
     };
 
     const handleGuest = async () => {
         try {
             const res = await fetch(`${API_URL}/matches/0`);
             if (res.ok) {
-                const data = await res.json();
-                setMatches(data);
+                setMatches(await res.json());
                 setIsGuest(true);
                 setUser({ user_id: 0, username: t('user.guest', "Gast") });
                 setView('dashboard');
             } else {
-                const err = await res.json();
-                if (res.status === 403) {
-                    alert("Gastmodus ist leider deaktiviert. Bitte registriere dich.");
-                } else {
-                    alert("Fehler beim Gast-Login.");
-                }
+                alert("Gastmodus ist leider deaktiviert.");
             }
-        } catch (e) { console.error(e); alert("Serverfehler"); }
+        } catch (e) { alert("Serverfehler"); }
     };
 
     const fetchMatches = async (uid) => {
         try {
             const res = await fetch(`${API_URL}/matches/${uid}`);
-            if (res.ok) {
-                const data = await res.json();
-                setMatches(data);
-            }
+            if (res.ok) setMatches(await res.json());
         } catch (e) { console.error("Match fetch failed", e); }
     };
 
@@ -172,13 +127,19 @@ function App() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: adminPass })
             });
-            if (res.ok) {
-                setView('adminPanel');
-            } else {
-                alert("Zugriff verweigert.");
-            }
+            if (res.ok) setView('adminPanel');
+            else alert("Zugriff verweigert.");
         } catch (e) { alert("Serverfehler"); }
     };
+
+    const handleLogout = () => {
+        setUser(null);
+        setView('landing');
+        setEmail("");
+        setPassword("");
+    };
+
+    if (view === 'legal') return <Legal onBack={() => setView('landing')} t={t} />;
 
     if (view === 'landing') return (
         <Landing
@@ -186,6 +147,7 @@ function App() {
             onRegister={() => setView('register')}
             onGuest={handleGuest}
             onAdmin={() => setView('adminLogin')}
+            onLegal={() => setView('legal')}
             t={t}
         />
     );
@@ -218,8 +180,27 @@ function App() {
             user={user}
             matches={matches}
             isGuest={isGuest}
-            onLogout={() => setView('landing')}
+            onLogout={handleLogout}
             onRegisterClick={() => setView('register')}
+            onProfileClick={() => setView('profile')}
+            t={t}
+        />
+    );
+
+    if (view === 'profile') return (
+        <UserProfile
+            user={user}
+            onBack={() => setView('dashboard')}
+            onOpenSettings={() => setView('settings')}
+            t={t}
+        />
+    );
+
+    if (view === 'settings') return (
+        <AccountSettings
+            user={user}
+            onBack={() => setView('profile')}
+            onLogout={handleLogout}
             t={t}
         />
     );

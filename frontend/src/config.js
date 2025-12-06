@@ -17,6 +17,7 @@ export const FALLBACK = {
     'landing.btn_guest': 'Browse as guest',
     'landing.opensource': 'Free & Open Source',
     'landing.admin': 'Admin',
+    'landing.legal': 'Legal',
 
     // Login
     'login.title': 'Welcome back',
@@ -49,6 +50,7 @@ export const FALLBACK = {
     'admin.tab.users': 'Users',
     'admin.tab.reports': 'Reports',
     'admin.tab.settings': 'Settings',
+    'admin.tab.legal': 'Legal Texts',
     'admin.btn.refresh': 'Refresh',
 
     // Admin Users
@@ -65,6 +67,7 @@ export const FALLBACK = {
     'admin.btn.deactivate': 'Block',
     'admin.btn.activate': 'Unblock',
     'admin.btn.delete': 'Delete',
+    'admin.btn.verify': 'Verify',
     'admin.no_users': 'No users found.',
 
     // Admin Reports
@@ -77,21 +80,30 @@ export const FALLBACK = {
     'admin.no_reports': 'No open reports. Everything clean!',
 
     // Admin Settings
-    'admin.settings.registration_title': 'Registration & Access',
+    'admin.settings.registration_title': 'General & Access',
     'admin.settings.allow_reg': 'Allow Registration',
     'admin.settings.require_verify': 'Force Email Verification',
     'admin.settings.allow_guest': 'Allow Guest Mode',
     'admin.settings.domains': 'Allowed Domains (empty = all)',
     'admin.settings.domains_hint': 'Comma separated list.',
+    'admin.settings.server_domain': 'Server Domain (e.g. myserver.com)',
     'admin.settings.mail_title': 'SMTP Mail Server',
     'admin.settings.mail_active': 'Enable Mail Sending',
     'admin.settings.host': 'Host',
     'admin.settings.port': 'Port',
     'admin.settings.user': 'User',
     'admin.settings.pass': 'Password',
+    'admin.settings.sender_name': 'Sender Name',
     'admin.settings.from': 'Sender Address',
+    'admin.settings.enc_none': 'No Encryption',
+    'admin.settings.enc_tls': 'STARTTLS',
+    'admin.settings.enc_ssl': 'SSL/TLS',
+    'admin.settings.test_mail_btn': 'Send Test Email',
     'admin.settings.saved': 'Settings saved!',
     'admin.settings.save_error': 'Error saving settings.',
+    'admin.settings.legal_title': 'Legal Texts',
+    'admin.settings.imprint': 'Imprint (HTML allowed)',
+    'admin.settings.privacy': 'Privacy Policy (HTML allowed)',
 
     // Admin Modal
     'admin.modal.punish_title': 'Block User',
@@ -102,5 +114,20 @@ export const FALLBACK = {
     'admin.reason.unknown': 'Other / Unknown',
     'admin.modal.duration': 'Duration (Hours)',
     'admin.modal.duration_hint': 'Account will be reactivated automatically after this time.',
-    'admin.btn.execute_ban': 'Execute Ban'
+    'admin.btn.execute_ban': 'Execute Ban',
+
+    // Profile & Settings
+    'profile.title': 'Your Profile',
+    'profile.about_me': 'About Me',
+    'profile.btn_settings': 'Account Settings & Security',
+    'profile.saved': 'Profile saved.',
+    'settings.title': 'Account Settings',
+    'settings.change_mail': 'Change Email Address',
+    'settings.change_pw': 'Change Password',
+    'settings.curr_pw': 'Current Password (confirm)',
+    'settings.new_pw': 'New Password',
+    'settings.delete_acc': 'Permanently Delete Account',
+    'settings.delete_confirm': 'Are you sure? All data will be lost.',
+    'settings.success': 'Successfully updated.',
+    'settings.reverify': 'Please verify your new email address.'
 };

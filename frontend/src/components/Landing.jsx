@@ -1,7 +1,7 @@
 import React from 'react';
-import { Lock, Github, Heart } from 'lucide-react';
+import { Lock, Github, Heart, Scale } from 'lucide-react';
 
-const Landing = ({ onLogin, onRegister, onGuest, onAdmin, t }) => (
+const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-gray-900 to-black opacity-90"></div>
 
@@ -31,15 +31,20 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, t }) => (
         </div>
 
         <div className="z-10 w-full p-6 flex justify-between items-end text-gray-500 text-xs md:text-sm">
-            <a
-                href="https://github.com/FaserF/Solumati"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-white transition group"
-            >
-                <Github size={20} className="group-hover:text-white" />
-                <span>{t('landing.opensource')} <Heart size={12} className="inline text-red-500 fill-current" /></span>
-            </a>
+            <div className="flex gap-4">
+                <a
+                    href="https://github.com/FaserF/Solumati"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 hover:text-white transition group"
+                >
+                    <Github size={20} className="group-hover:text-white" />
+                    <span className="hidden md:inline">{t('landing.opensource')}</span>
+                </a>
+                <button onClick={onLegal} className="hover:text-white transition flex items-center gap-1">
+                    <Scale size={16} /> {t('landing.legal')}
+                </button>
+            </div>
 
             <button onClick={onAdmin} className="hover:text-gray-300 transition flex items-center gap-1">
                 <Lock size={16} /> {t('landing.admin')}
