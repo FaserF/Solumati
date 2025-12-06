@@ -1,0 +1,23 @@
+{
+    "name": "Solumati",
+    "short_name": "Solumati",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#EC4899",
+    "description": "The Revolution in Dating Apps. No more swiping, just real connections.",
+    "icons": [
+        {
+            "src": "/logo/android-chrome-192x192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo/android-chrome-512x512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "any maskable"
+        }
+    ]
+}

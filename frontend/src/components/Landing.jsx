@@ -1,12 +1,16 @@
 import React from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, Github, Heart } from 'lucide-react';
 
 const Landing = ({ onLogin, onRegister, onGuest, onAdmin, t }) => (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-gray-900 to-black opacity-90"></div>
 
-        <div className="z-10 text-center max-w-3xl">
-            <h1 className="text-6xl md:text-8xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-pulse">
+        <div className="z-10 text-center max-w-3xl flex flex-col items-center flex-grow justify-center">
+            <div className="mb-6 w-32 h-32 md:w-48 md:h-48 relative animate-pulse">
+                <img src="/logo/android-chrome-512x512.png" alt="Solumati Logo" className="w-full h-full drop-shadow-2xl" />
+            </div>
+
+            <h1 className="text-6xl md:text-8xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
                 {t('app.title')}
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 font-light">
@@ -26,9 +30,21 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, t }) => (
             </div>
         </div>
 
-        <button onClick={onAdmin} className="absolute bottom-4 right-4 text-gray-700 hover:text-gray-500 transition">
-            <Lock size={20} />
-        </button>
+        <div className="z-10 w-full p-6 flex justify-between items-end text-gray-500 text-xs md:text-sm">
+            <a
+                href="https://github.com/FaserF/Solumati"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-white transition group"
+            >
+                <Github size={20} className="group-hover:text-white" />
+                <span>{t('landing.opensource')} <Heart size={12} className="inline text-red-500 fill-current" /></span>
+            </a>
+
+            <button onClick={onAdmin} className="hover:text-gray-300 transition flex items-center gap-1">
+                <Lock size={16} /> {t('landing.admin')}
+            </button>
+        </div>
     </div>
 );
 

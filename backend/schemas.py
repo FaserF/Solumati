@@ -2,45 +2,95 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
-# --- Pydantic Models for Data Validation ---
-
-# Base User Data shared across creation and reading
 class UserBase(BaseModel):
     email: EmailStr
-    intent: str
-    real_name: str # Added real name for generation
+    intent: Optional[str] = None # Relaxed validation
+    real_name: Optional[str] = None # Relaxed validation
 
-# Data required to create a user (Registration)
 class UserCreate(UserBase):
     password: str
     answers: List[int]
 
-# Data for login (simplified)
 class UserLogin(BaseModel):
     email: str
     password: str
 
-# Data returned to the frontend
 class UserDisplay(UserBase):
     id: int
-    username: str # Display the generated handle
+    username: str
+    about_me: Optional[str] = None
+    image_url: Optional[str] = None
     is_guest: bool
     is_active: bool
+    is_verified: bool
+    created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    # Admin fields
+    deactivation_reason: Optional[str] = None
+    banned_until: Optional[datetime] = None
 
     class Config:
         from_attributes = True
 
-# Schema for matching results
+class UserUpdate(BaseModel):
+    about_me: str
+
 class MatchResult(BaseModel):
     user_id: int
-    username: str # Show username instead of email
+    username: str
+    image_url: Optional[str] = None
+    about_me: Optional[str] = None
     score: float
-    is_blurred: bool = False # For guest view logic if handled by backend
 
-# Schema for admin login
 class AdminLogin(BaseModel):
     password: str
 
-# Schema for admin actions
-class AdminAction(BaseModel):
-    action: str # "delete", "deactivate", "reactivate"
+# Schema for taking action against a user
+class AdminPunishAction(BaseModel):
+    action: str # "deactivate", "reactivate", "ban", "delete"
+    reason_type: Optional[str] = "AdminDeactivation" # Reported, UserDeactivation, etc.
+    duration_hours: Optional[int] = None # Only for temp ban
+
+class ReportCreate(BaseModel):
+    reported_user_id: int
+    reason: str
+    reported_message_id: Optional[int] = None
+
+class ReportDisplay(BaseModel):
+    id: int
+    reporter_id: int
+    reported_user_id: int
+    reported_message_id: Optional[int]
+    reason: str
+    timestamp: datetime
+    # We include usernames for convenience in the UI
+    reporter_name: Optional[str] = "Unknown"
+    reported_name: Optional[str] = "Unknown"
+
+    class Config:
+        from_attributes = True
+
+# --- Settings Schemas ---
+
+class MailConfig(BaseModel):
+    enabled: bool = False
+    smtp_host: str = "smtp.example.com"
+    smtp_port: int = 587
+    smtp_user: str = "user@example.com"
+    smtp_password: str = "secret"
+    smtp_ssl: bool = False
+    smtp_tls: bool = True
+    from_email: str = "noreply@solumati.local"
+
+class RegistrationConfig(BaseModel):
+    enabled: bool = True
+    allowed_domains: str = ""
+    require_verification: bool = True
+    guest_mode_enabled: bool = True
+
+class SystemSettings(BaseModel):
+    mail: MailConfig
+    registration: RegistrationConfig
+
+class PublicConfig(BaseModel):
+    registration_enabled: bool

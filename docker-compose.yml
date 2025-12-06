@@ -33,7 +33,8 @@ services:
       - "7777:7777"
     environment:
       - DATABASE_URL=postgresql://solumati:secure_dev_password@db:5432/solumatidb
-      - TEST_MODE=true 
+      - TEST_MODE=true
+      - ADMIN_SECRET=SuperSecretAdminPassword! # Change this value as needed
       - LANG            # forward host language env (if set) for automatic locale detection
     depends_on:
       - db

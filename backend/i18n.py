@@ -1,5 +1,4 @@
 # i18n.py
-# Simple internationalization helper. Comments and logging in English.
 
 import os
 import json

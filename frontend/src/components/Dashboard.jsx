@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, AlertTriangle, EyeOff, User, CheckCircle } from 'lucide-react';
+import { AlertTriangle, EyeOff, User, CheckCircle } from 'lucide-react';
 
 const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, t }) => (
     <div className="min-h-screen bg-gray-50">
@@ -13,9 +13,14 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, t }) => 
             </div>
         )}
 
-        <nav className="bg-white shadow p-4 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-                <Heart className="text-pink-600 fill-current" />
+        <nav className="bg-white shadow p-4 flex justify-between items-center sticky top-0 z-40">
+            <div className="flex items-center gap-3">
+                {/* Logo in Navbar - Path fixed */}
+                <img
+                    src="/logo/android-chrome-192x192.png"
+                    alt="Logo"
+                    className="w-10 h-10 rounded-lg shadow-sm"
+                />
                 <span className="font-bold text-xl text-gray-800">{t('app.title')}</span>
             </div>
             <div className="flex items-center gap-4">

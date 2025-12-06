@@ -25,18 +25,25 @@ function App() {
 
     // --- Admin State ---
     const [adminPass, setAdminPass] = useState("");
-    const [adminData, setAdminData] = useState([]);
+    // Removed adminData state here as it is managed inside AdminPanel now
 
     // --- I18n State ---
     const [i18n, setI18n] = useState({});
 
-    // Helper: Translate key, fallback to args or FALLBACK dict or key itself
     const t = (key, defaultText = "") => {
         return i18n[key] || FALLBACK[key] || defaultText || key;
     };
 
-    // Load translations
+    // --- Verification Logic (Check URL params) ---
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('verify_code') || window.location.pathname === '/verify') {
+            // Handle simple verification via API call if needed,
+            // but usually backend renders a page or we call API here.
+            // For now: Just log.
+            console.log("Verification intent detected");
+        }
+
         const lang = navigator.language.split('-')[0] || 'en';
         fetch(`${API_URL}/api/i18n/${lang}`)
             .then(res => res.json())
@@ -50,8 +57,6 @@ function App() {
         { id: 2, text: t('q.2', "Glaube/Spiritualität ist mir wichtig.") },
         { id: 3, text: t('q.3', "Ich diskutiere gerne Politik.") }
     ];
-
-    // --- Actions ---
 
     const handleLogin = async () => {
         try {
@@ -68,7 +73,7 @@ function App() {
                 setView('dashboard');
             } else {
                 const err = await res.json();
-                alert(t('alert.login_failed', "Login fehlgeschlagen: ") + err.detail);
+                alert(t('alert.login_failed', "Login fehlgeschlagen: ") + (err.detail || JSON.stringify(err)));
             }
         } catch (e) {
             console.error(e);
@@ -94,26 +99,56 @@ function App() {
 
             if (res.ok) {
                 const data = await res.json();
-                alert(t('alert.welcome', `Willkommen`) + `, ${data.username}!`);
-                setUser({ user_id: data.id, username: data.username });
-                setIsGuest(false);
-                fetchMatches(data.id);
+                if (data.is_verified) {
+                    alert(t('alert.welcome', `Willkommen`) + `, ${data.username}!`);
+                    setUser({ user_id: data.id, username: data.username });
+                    setIsGuest(false);
+                    fetchMatches(data.id);
+                    setView('dashboard');
+                } else {
+                    alert("Account erstellt! Bitte überprüfe deine E-Mails, um den Account zu aktivieren.");
+                    setView('landing');
+                }
+            } else {
+                const err = await res.json();
+                const errorMsg = typeof err.detail === 'object' ? JSON.stringify(err.detail, null, 2) : err.detail;
+                alert("Fehler: " + errorMsg);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Registrierung fehlgeschlagen (Netzwerkfehler).");
+        }
+    };
+
+    const handleGuest = async () => {
+        // Try to fetch matches for Guest ID 0 to check if guest mode is allowed
+        try {
+            const res = await fetch(`${API_URL}/matches/0`);
+            if (res.ok) {
+                const data = await res.json();
+                setMatches(data);
+                setIsGuest(true);
+                setUser({ user_id: 0, username: t('user.guest', "Gast") });
                 setView('dashboard');
             } else {
                 const err = await res.json();
-                alert("Fehler: " + err.detail);
+                if (res.status === 403) {
+                    alert("Gastmodus ist leider deaktiviert. Bitte registriere dich.");
+                } else {
+                    alert("Fehler beim Gast-Login.");
+                }
             }
-        } catch (e) { alert("Registrierung fehlgeschlagen."); }
+        } catch (e) { console.error(e); alert("Serverfehler"); }
     };
 
-    const handleGuest = () => {
-        setIsGuest(true);
-        setUser({ username: t('user.guest', "Gast") });
-        setView('dashboard');
-        setMatches([
-            { username: "PremiumUser#12", score: 98 },
-            { username: "Anna#44", score: 85 }
-        ]);
+    const fetchMatches = async (uid) => {
+        try {
+            const res = await fetch(`${API_URL}/matches/${uid}`);
+            if (res.ok) {
+                const data = await res.json();
+                setMatches(data);
+            }
+        } catch (e) { console.error("Match fetch failed", e); }
     };
 
     const handleAdminLogin = async () => {
@@ -124,36 +159,12 @@ function App() {
                 body: JSON.stringify({ password: adminPass })
             });
             if (res.ok) {
-                fetchAdminData();
                 setView('adminPanel');
             } else {
                 alert("Zugriff verweigert.");
             }
         } catch (e) { alert("Serverfehler"); }
     };
-
-    const fetchAdminData = async () => {
-        const res = await fetch(`${API_URL}/admin/users`);
-        const data = await res.json();
-        setAdminData(data);
-    };
-
-    const adminAction = async (id, action) => {
-        if (!confirm(`Benutzer wirklich ${action}?`)) return;
-        await fetch(`${API_URL}/admin/users/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
-        });
-        fetchAdminData();
-    };
-
-    const fetchMatches = async (uid) => {
-        const res = await fetch(`${API_URL}/matches/${uid}`);
-        if (res.ok) setMatches(await res.json());
-    };
-
-    // --- Render Logic ---
 
     if (view === 'landing') return (
         <Landing
@@ -210,8 +221,6 @@ function App() {
 
     if (view === 'adminPanel') return (
         <AdminPanel
-            adminData={adminData}
-            onAction={adminAction}
             onLogout={() => setView('landing')}
             t={t}
         />
