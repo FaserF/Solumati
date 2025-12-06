@@ -8,28 +8,39 @@ from datetime import datetime
 class UserBase(BaseModel):
     email: EmailStr
     intent: str
+    real_name: str # Added real name for generation
 
 # Data required to create a user (Registration)
 class UserCreate(UserBase):
     password: str
     answers: List[int]
 
-# Data returned to the frontend (excludes password)
+# Data for login (simplified)
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+# Data returned to the frontend
 class UserDisplay(UserBase):
     id: int
+    username: str # Display the generated handle
     is_guest: bool
+    is_active: bool
 
     class Config:
-        from_attributes = True # Allows Pydantic to read from SQLAlchemy models
+        from_attributes = True
 
 # Schema for matching results
 class MatchResult(BaseModel):
     user_id: int
-    email: str # Or generic username for privacy
+    username: str # Show username instead of email
     score: float
+    is_blurred: bool = False # For guest view logic if handled by backend
 
-# Schema for sending messages
-class MessageCreate(BaseModel):
-    receiver_id: int
-    content: str
-    is_final_contact: bool = False
+# Schema for admin login
+class AdminLogin(BaseModel):
+    password: str
+
+# Schema for admin actions
+class AdminAction(BaseModel):
+    action: str # "delete", "deactivate", "reactivate"

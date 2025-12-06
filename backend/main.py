@@ -17,175 +17,170 @@ from logging_config import logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create database tables on startup (if they don't exist)
+# Create database tables on startup
 try:
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables verified/created successfully.")
 except Exception as e:
     logger.error(f"Error creating database tables: {e}")
 
-app = FastAPI(title="Solumati API", version="0.1.0")
+app = FastAPI(title="Solumati API", version="0.2.0")
 
-# CORS Setup - Allow Frontend to communicate with Backend
+# CORS Setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # In production, restrict this to the frontend domain
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Business Logic / Algorithms ---
+# --- Business Logic / Helpers ---
 
 def calculate_compatibility(user_a: models.User, user_b: models.User) -> float:
-    """
-    Calculates a compatibility score (0-100) based on answer vectors.
-    Returns 0.0 if intents do not match.
-    """
+    """Calculates compatibility score (0-100)."""
     if user_a.intent != user_b.intent:
-        logger.debug(f"Intent mismatch between User {user_a.id} and {user_b.id}")
         return 0.0
-
-    # Calculate Manhattan distance (sum of absolute differences)
+    # Manhattan distance
     diff_sum = sum(abs(a - b) for a, b in zip(user_a.answers, user_b.answers))
-    # Max possible difference: 20 questions * 4 (max diff per q: 5-1=4) = 80
     max_diff = len(user_a.answers) * 4
-
-    # Invert distance to get similarity percentage
     match_percentage = 100 - ((diff_sum / max_diff) * 100)
     return round(max(0, match_percentage), 2)
+
+def generate_unique_username(db: Session, real_name: str) -> str:
+    """
+    Generates a username like 'Max#1'.
+    Finds count of users with same base name and increments.
+    """
+    base = real_name.strip()
+    # Simple counting strategy. In high-load, use sequences or optimistic locking.
+    # We look for usernames starting with the name to approximate the suffix.
+    # A safer way is simply count how many users have this real_name.
+    count = db.query(models.User).filter(models.User.real_name == base).count()
+    suffix = count + 1
+
+    # Ensure uniqueness loop (edge case handling)
+    while True:
+        candidate = f"{base}#{suffix}"
+        if not db.query(models.User).filter(models.User.username == candidate).first():
+            return candidate
+        suffix += 1
 
 # --- API Endpoints ---
 
 @app.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    """
-    Registers a new user.
-    """
-    logger.info(f"Attempting to register user: {user.email}")
+    """Registers a new user with auto-generated username."""
+    logger.info(f"Registering: {user.email}")
 
-    # Check if email exists
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
-        logger.warning(f"Registration failed: Email {user.email} already exists.")
+    if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create new user instance
-    # SECURITY NOTE: In a real app, hash the password using bcrypt!
+    username = generate_unique_username(db, user.real_name)
+
     new_user = models.User(
         email=user.email,
-        hashed_password=user.password + "notreallyhashed",
+        hashed_password=user.password + "salt", # Simplified hashing
+        real_name=user.real_name,
+        username=username,
         intent=user.intent,
-        answers=user.answers
+        answers=user.answers,
+        is_active=True
     )
 
     try:
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        logger.info(f"User {new_user.id} created successfully.")
+        logger.info(f"Created user {username} ({new_user.id})")
         return new_user
     except Exception as e:
-        logger.error(f"Database error during registration: {e}")
+        logger.error(f"DB Error: {e}")
         db.rollback()
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise HTTPException(status_code=500, detail="Server Error")
 
 @app.post("/login")
-def login(login_data: schemas.UserCreate, db: Session = Depends(get_db)):
-    """
-    Simplified login for MVP. Returns user ID on success.
-    """
-    logger.info(f"Login attempt for: {login_data.email}")
-    user = db.query(models.User).filter(models.User.email == login_data.email).first()
+def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
+    """Standard Login."""
+    user = db.query(models.User).filter(models.User.email == creds.email).first()
 
-    # Simple password check (again, use hashing in prod)
-    if not user or user.hashed_password != (login_data.password + "notreallyhashed"):
-        logger.warning("Invalid credentials provided.")
-        raise HTTPException(status_code=404, detail="Invalid credentials")
+    # Check password and active status
+    if not user or user.hashed_password != (creds.password + "salt"):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    return {"user_id": user.id, "email": user.email, "intent": user.intent}
+    if not user.is_active:
+         raise HTTPException(status_code=403, detail="Account deactivated by Admin")
+
+    return {"user_id": user.id, "username": user.username, "is_admin": user.is_admin}
 
 @app.get("/matches/{user_id}", response_model=List[schemas.MatchResult])
 def get_matches(user_id: int, db: Session = Depends(get_db)):
-    """
-    Returns a sorted list of compatible matches.
-    """
-    logger.info(f"Fetching matches for User {user_id}")
+    """Returns matches with usernames."""
     current_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Get all other users
-    all_users = db.query(models.User).filter(models.User.id != user_id).all()
+    all_users = db.query(models.User).filter(models.User.id != user_id, models.User.is_active == True).all()
     matches = []
 
     for other in all_users:
-        try:
-            score = calculate_compatibility(current_user, other)
-            if score > 0:
-                matches.append(schemas.MatchResult(
-                    user_id=other.id,
-                    email=f"User #{other.id}", # Anonymized for initial match list
-                    score=score
-                ))
-        except Exception as e:
-            logger.error(f"Error calculating match for {other.id}: {e}")
-            continue
+        score = calculate_compatibility(current_user, other)
+        if score > 0:
+            matches.append(schemas.MatchResult(
+                user_id=other.id,
+                username=other.username,
+                score=score
+            ))
 
-    # Sort by score descending
     matches.sort(key=lambda x: x.score, reverse=True)
     return matches
 
+# --- Admin Endpoints ---
 
-@app.get('/api/i18n/{lang}', summary='Return UI translations for requested language')
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "SuperSafePassword123!") # In prod, use env var
+
+@app.post("/admin/login")
+def admin_login(creds: schemas.AdminLogin):
+    """Validates admin password."""
+    if creds.password != ADMIN_SECRET:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return {"status": "authenticated", "token": "dummy_admin_token"}
+
+@app.get("/admin/users", response_model=List[schemas.UserDisplay])
+def admin_get_users(db: Session = Depends(get_db)):
+    """List all users for the panel."""
+    return db.query(models.User).all()
+
+@app.put("/admin/users/{user_id}")
+def admin_manage_user(user_id: int, action: schemas.AdminAction, db: Session = Depends(get_db)):
+    """Admin actions: delete, deactivate, reactivate."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if action.action == "delete":
+        db.delete(user)
+        msg = "User deleted"
+    elif action.action == "deactivate":
+        user.is_active = False
+        msg = "User deactivated"
+    elif action.action == "reactivate":
+        user.is_active = True
+        msg = "User reactivated"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    db.commit()
+    return {"message": msg, "user_id": user_id}
+
+# --- Infrastructure ---
+
+@app.get('/api/i18n/{lang}')
 async def get_i18n(lang: str):
-    """Return the translation dictionary for the requested language.
-    The frontend (PWA) should fetch this and use it for UI strings.
-    """
     normalized = i18n.normalize_lang_code(lang)
     translations = i18n.get_translations(normalized)
-    if not translations:
-        # Fallback to default language if requested not available
-        translations = i18n.get_translations(i18n.DEFAULT_LANG)
-        normalized = i18n.DEFAULT_LANG
-    logger.info(f"Serving translations for language: {normalized}")
     return {"lang": normalized, "translations": translations}
 
-
-@app.get('/api/i18n', summary='Return available languages')
-async def list_i18n():
-    langs = i18n.get_available_languages()
-    logger.info(f"Available languages requested: {langs}")
-    return {"available": langs}
-
-
-def _parse_db_host_port(db_url: str):
-    try:
-        parsed = urlparse(db_url)
-        host = parsed.hostname or 'db'
-        port = parsed.port or 5432
-        return host, port
-    except Exception:
-        return 'db', 5432
-
-
-@app.get('/health', summary='Basic health check; verifies DB TCP connectivity')
+@app.get('/health')
 async def health_check():
-    db_url = os.getenv('DATABASE_URL', '')
-    host, port = _parse_db_host_port(db_url)
-    # Try to connect to DB TCP port
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(2)
-    try:
-        sock.connect((host, int(port)))
-        sock.close()
-        return {"status": "ok", "db": f"{host}:{port}"}
-    except Exception as ex:
-        logger.error(f"Health check failed: cannot reach DB at {host}:{port}: {ex}")
-        raise HTTPException(status_code=503, detail="Database not reachable")
-
-
-# Simple root endpoint
-@app.get('/')
-async def root():
-    return {"message": "Solumati API running"}
+    return {"status": "ok"}
