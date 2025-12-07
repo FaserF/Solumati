@@ -14,7 +14,7 @@
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "qrcode.react": "^3.1.0",
-        "@simplewebauthn/browser": "^10.0.0"
+        "@simplewebauthn/browser": "^13.0.0"
     },
     "devDependencies": {
         "@types/react": "^19.0.0",
