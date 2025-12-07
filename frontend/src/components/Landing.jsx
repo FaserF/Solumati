@@ -45,10 +45,6 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => (
                     <Scale size={16} /> {t('landing.legal')}
                 </button>
             </div>
-
-            <button onClick={onAdmin} className="hover:text-gray-300 transition flex items-center gap-1">
-                <Lock size={16} /> {t('landing.admin')}
-            </button>
         </div>
     </div>
 );

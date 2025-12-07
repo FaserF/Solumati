@@ -15,7 +15,10 @@ class User(Base):
     about_me = Column(Text, default="Ich bin neu hier!")
     image_url = Column(String, nullable=True)
 
-    is_admin = Column(Boolean, default=False)
+    # REFACTORED: Replaced is_admin with role based access
+    # Roles: 'user', 'moderator', 'admin'
+    role = Column(String, default="user")
+
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
@@ -26,9 +29,17 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
 
-    deactivation_reason = Column(String, nullable=True) # "Reported", "Admin", "TempBan", etc.
+    # Ban system extensions
+    deactivation_reason = Column(String, nullable=True) # Technical reason enum
+    ban_reason_text = Column(Text, nullable=True) # Human readable text shown to user
     deactivated_at = Column(DateTime, nullable=True)
     banned_until = Column(DateTime, nullable=True) # If set, user is temp-banned until this time
+
+    # Helper property to maintain backward compatibility check if needed,
+    # though usage should migrate to checking role == 'admin'
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
 
 class Message(Base):
     __tablename__ = "messages"

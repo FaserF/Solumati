@@ -8,12 +8,14 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onBack, t }) =
 
             <h2 className="text-3xl font-bold mb-6 text-gray-800">{t('login.title')}</h2>
             <div className="mb-4 text-left">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('label.email')}</label>
+                {/* Updated Label */}
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('label.email_user', 'Email or Username')}</label>
                 <input
                     className="w-full p-4 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                    placeholder="mail@example.com"
+                    placeholder="user / mail@example.com"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && onLogin()}
                 />
             </div>
             <div className="mb-6 text-left">
@@ -24,6 +26,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onBack, t }) =
                     placeholder="***"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && onLogin()}
                 />
             </div>
             <button onClick={onLogin} className="w-full bg-black text-white py-4 rounded-lg font-bold hover:bg-gray-800 transition">

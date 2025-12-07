@@ -1,32 +1,51 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 from datetime import datetime
+from email_validator import validate_email, EmailNotValidError
 
 class UserBase(BaseModel):
-    email: EmailStr
+    # CHANGED: EmailStr to str + custom validator to allow .local domains
+    email: str
     intent: Optional[str] = None
     real_name: Optional[str] = None
+
+    @field_validator('email')
+    @classmethod
+    def validate_email_address(cls, v: str) -> str:
+        # Whitelist our local domain specifically
+        if v.endswith("@solumati.local"):
+            return v
+
+        # For all other emails, use strict validation but don't crash on deliverability checks
+        try:
+            valid = validate_email(v, check_deliverability=False)
+            return valid.normalized
+        except EmailNotValidError as e:
+            raise ValueError(str(e))
 
 class UserCreate(UserBase):
     password: str
     answers: List[int]
 
 class UserLogin(BaseModel):
-    email: str
+    login: str # Can be email or username
     password: str
 
 class UserDisplay(UserBase):
     id: int
     username: str
+    # email inherited from UserBase
     about_me: Optional[str] = None
     image_url: Optional[str] = None
     is_guest: bool
     is_active: bool
     is_verified: bool
+    role: str
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
     # Admin fields
     deactivation_reason: Optional[str] = None
+    ban_reason_text: Optional[str] = None
     banned_until: Optional[datetime] = None
 
     class Config:
@@ -35,10 +54,12 @@ class UserDisplay(UserBase):
 class UserUpdate(BaseModel):
     about_me: str
 
-class UserAccountUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
-    current_password: str # Required for security
+# New Schema for Admin editing users
+class UserAdminUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None # Plaintext password to be hashed
+    is_verified: Optional[bool] = None
 
 class MatchResult(BaseModel):
     user_id: int
@@ -47,12 +68,10 @@ class MatchResult(BaseModel):
     about_me: Optional[str] = None
     score: float
 
-class AdminLogin(BaseModel):
-    password: str
-
 class AdminPunishAction(BaseModel):
-    action: str # "deactivate", "reactivate", "ban", "delete", "verify"
+    action: str
     reason_type: Optional[str] = "AdminDeactivation"
+    custom_reason: Optional[str] = None
     duration_hours: Optional[int] = None
 
 class ReportCreate(BaseModel):
@@ -73,37 +92,29 @@ class ReportDisplay(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Settings Schemas ---
-
 class MailConfig(BaseModel):
     enabled: bool = False
-    smtp_host: str = "smtp.example.com"
+    smtp_host: str = "smtp.solumati.local"
     smtp_port: int = 587
-    smtp_user: str = "user@example.com"
+    smtp_user: str = "user@solumati.local"
     smtp_password: str = "secret"
     smtp_ssl: bool = False
     smtp_tls: bool = True
-    from_email: str = "noreply@example.com"
-    sender_name: str = "Solumati" # New
+    from_email: str = "noreply@solumati.local"
+    sender_name: str = "Solumati" # Added Sender Name
 
-class MailTestRequest(BaseModel):
-    target_email: EmailStr
+class TestMailRequest(BaseModel):
+    target_email: str
 
 class RegistrationConfig(BaseModel):
     enabled: bool = True
     allowed_domains: str = ""
     require_verification: bool = True
-    guest_mode_enabled: bool = True
-    server_domain: str = "" # New: e.g. "myserver.com"
-
-class LegalConfig(BaseModel):
-    imprint: str = "Impressum hier eintragen."
-    privacy: str = "Datenschutzerklärung hier eintragen."
+    # guest_mode_enabled removed, logic now depends on Guest User (ID 0) status
 
 class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
-    legal: Optional[LegalConfig] = LegalConfig()
 
 class PublicConfig(BaseModel):
     registration_enabled: bool
