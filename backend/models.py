@@ -44,6 +44,22 @@ class User(Base):
     deactivated_at = Column(DateTime, nullable=True)
     banned_until = Column(DateTime, nullable=True)
 
+    # --- 2FA Extensions ---
+    # Methods: 'none', 'totp', 'email', 'passkey'
+    two_factor_method = Column(String, default='none')
+
+    # TOTP Secret (Base32)
+    totp_secret = Column(String, nullable=True)
+
+    # Email 2FA (Temporary code storage)
+    email_2fa_code = Column(String, nullable=True)
+    email_2fa_expires = Column(DateTime, nullable=True)
+
+    # WebAuthn / Passkey Credentials (Stored as JSON string)
+    webauthn_credentials = Column(Text, nullable=True, default="[]")
+    # Temporary challenge for WebAuthn ceremonies
+    webauthn_challenge = Column(String, nullable=True)
+
     @property
     def is_admin(self):
         return self.role == 'admin'

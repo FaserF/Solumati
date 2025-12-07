@@ -756,6 +756,13 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 </div>
                             )}
                         </div>
+                        {/* Github Link */}
+                        <div className="bg-white p-6 rounded-xl shadow border-l-4 border-gray-800 flex flex-col justify-between">
+                            <h3 className="font-bold text-gray-500 text-xs">PROJECT</h3>
+                            <a href="https://github.com/FaserF/Solumati" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 font-bold hover:underline">
+                                <Github size={20} /> GitHub Repo
+                            </a>
+                        </div>
                     </div>
                 )}
             </div>

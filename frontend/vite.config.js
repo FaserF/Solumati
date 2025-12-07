@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import packageJson from './package.json'
+import path from 'path'; // Importiere 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,6 +9,11 @@ export default defineConfig({
     define: {
         // Inject version from package.json as a global variable
         '__APP_VERSION__': JSON.stringify(packageJson.version)
+    },
+    resolve: {
+        alias: {
+            '~': path.resolve(__dirname, './src'),
+        },
     },
     server: {
         watch: {

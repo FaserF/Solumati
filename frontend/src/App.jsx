@@ -13,6 +13,7 @@ import AccountSettings from './components/AccountSettings';
 import Legal from './components/Legal';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import TwoFactorAuth from './components/TwoFactorAuth'; // NEW: 2FA Component
 
 function App() {
     // --- Global State ---
@@ -23,6 +24,9 @@ function App() {
 
     // Global Config
     const [testMode, setTestMode] = useState(false);
+
+    // --- 2FA State (New) ---
+    const [tempAuth, setTempAuth] = useState(null); // Stores intermediate login state for 2FA
 
     // --- Form State ---
     const [emailOrUser, setEmailOrUser] = useState("");
@@ -116,6 +120,22 @@ function App() {
         { id: 3, text: t('q.3', "Ich diskutiere gerne Politik.") }
     ];
 
+    // Helper to finalize login (used by handleLogin and 2FA)
+    const finishLogin = (data) => {
+        console.log("[App] Login success:", data);
+        setUser(data);
+        setIsGuest(data.role === 'guest' || data.is_guest);
+        setVerificationStatus(null);
+        setTempAuth(null); // Clear 2FA temp state
+
+        if (data.role === 'admin') {
+            setView('adminPanel');
+        } else {
+            fetchMatches(data.user_id);
+            setView('dashboard');
+        }
+    };
+
     const handleLogin = async () => {
         try {
             const res = await fetch(`${API_URL}/login`, {
@@ -125,17 +145,16 @@ function App() {
             });
             if (res.ok) {
                 const data = await res.json();
-                console.log("[App] Login success:", data);
-                setUser(data);
-                setIsGuest(data.role === 'guest' || data.is_guest);
-                setVerificationStatus(null);
 
-                if (data.role === 'admin') {
-                    setView('adminPanel');
-                } else {
-                    fetchMatches(data.user_id);
-                    setView('dashboard');
+                // --- 2FA Interception ---
+                if (data.require_2fa) {
+                    console.log("[App] 2FA required for user", data.user_id);
+                    setTempAuth(data);
+                    setView('verify_2fa');
+                    return;
                 }
+
+                finishLogin(data);
 
             } else {
                 const err = await res.json();
@@ -178,6 +197,7 @@ function App() {
                 }
             } else {
                 const err = await res.json();
+                // Original robust error handling preserved
                 const errorMsg = typeof err.detail === 'object' ? JSON.stringify(err.detail, null, 2) : err.detail;
                 alert("Fehler: " + errorMsg);
             }
@@ -204,7 +224,10 @@ function App() {
                     alert("Fehler beim Gast-Login.");
                 }
             }
-        } catch (e) { console.error(e); alert("Serverfehler"); }
+        } catch (e) {
+            console.error(e);
+            alert("Serverfehler");
+        }
     };
 
     const fetchMatches = async (uid) => {
@@ -256,6 +279,16 @@ function App() {
                     onLogin={handleLogin}
                     onBack={() => setView('landing')}
                     onForgotPassword={() => setView('forgot_pw')}
+                    t={t}
+                />
+            )}
+
+            {/* New 2FA Verification View */}
+            {view === 'verify_2fa' && tempAuth && (
+                <TwoFactorAuth
+                    tempAuth={tempAuth}
+                    onVerified={finishLogin}
+                    onCancel={() => { setTempAuth(null); setView('login'); }}
                     t={t}
                 />
             )}

@@ -1,7 +1,7 @@
 {
     "name": "solumati-frontend",
     "private": true,
-    "version": "0.1.1",
+    "version": "0.1.2",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -12,7 +12,9 @@
     "dependencies": {
         "lucide-react": "^0.292.0",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "qrcode.react": "^3.1.0",
+        "@simplewebauthn/browser": "^10.0.0"
     },
     "devDependencies": {
         "@types/react": "^18.2.15",

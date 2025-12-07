@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
 
@@ -42,6 +42,7 @@ class UserDisplay(UserBase):
     deactivation_reason: Optional[str] = None
     ban_reason_text: Optional[str] = None
     banned_until: Optional[datetime] = None
+    two_factor_method: Optional[str] = 'none'
 
     class Config:
         from_attributes = True
@@ -55,6 +56,7 @@ class UserAdminUpdate(BaseModel):
     password: Optional[str] = None
     is_verified: Optional[bool] = None
     is_visible_in_matches: Optional[bool] = None
+    two_factor_method: Optional[str] = None
 
 class MatchResult(BaseModel):
     user_id: int
@@ -106,16 +108,13 @@ class RegistrationConfig(BaseModel):
     allowed_domains: str = ""
     blocked_domains: str = ""
     require_verification: bool = True
-    # Domain used for generating links in emails (e.g., https://mysolumati.com)
     server_domain: str = "http://localhost:3000"
+    # New Setting: Email 2FA Global Toggle
+    email_2fa_enabled: bool = False
 
-# NEW: Extended LegalConfig to hold company data for auto-generation
 class LegalConfig(BaseModel):
-    # These fields store the generated HTML (optional, can be empty initially)
     imprint: Optional[str] = ""
     privacy: Optional[str] = ""
-
-    # Structured data fields for generation
     company_name: str = ""
     address_street: str = ""
     address_zip_city: str = ""
@@ -152,3 +151,42 @@ class ChangelogRelease(BaseModel):
     body: Optional[str]
     published_at: Optional[str]
     html_url: Optional[str]
+
+# --- 2FA SCHEMAS ---
+
+class TotpSetupResponse(BaseModel):
+    secret: str
+    uri: str
+
+class TotpVerifyRequest(BaseModel):
+    token: str
+
+class TwoFactorAuthRequest(BaseModel):
+    user_id: int
+    code: Optional[str] = None # For TOTP/Email
+    # For Passkey, logic is more complex, handled via specific endpoints
+
+class TwoFactorLoginResponse(BaseModel):
+    require_2fa: bool
+    user_id: Optional[int] = None
+    method: Optional[str] = None
+
+    # Standard login fields if 2fa not required
+    username: Optional[str] = None
+    role: Optional[str] = None
+    is_guest: Optional[bool] = None
+    is_admin: Optional[bool] = None
+
+# WebAuthn DTOs
+class WebAuthnRegistrationOptions(BaseModel):
+    options: Dict[str, Any]
+
+class WebAuthnRegistrationResponse(BaseModel):
+    credential: Dict[str, Any]
+
+class WebAuthnAuthOptions(BaseModel):
+    options: Dict[str, Any]
+
+class WebAuthnAuthResponse(BaseModel):
+    credential: Dict[str, Any]
+    user_id: int

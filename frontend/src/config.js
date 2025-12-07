@@ -25,6 +25,22 @@ export const FALLBACK = {
     'label.password': 'Password',
     'btn.login': 'Log in',
 
+    // 2FA
+    '2fa.title': 'Two-Factor Authentication',
+    '2fa.desc_totp': 'Please enter the 6-digit code from your authenticator app.',
+    '2fa.desc_email': 'We sent a code to your email. Please enter it below.',
+    '2fa.desc_passkey': 'Please use your Passkey / Fingerprint to verify.',
+    '2fa.label_code': 'Security Code',
+    '2fa.btn_verify': 'Verify',
+    '2fa.btn_passkey': 'Use Passkey',
+    '2fa.error': 'Invalid code. Please try again.',
+    '2fa.setup_title': 'Setup 2FA',
+    '2fa.method_none': 'Disabled',
+    '2fa.method_totp': 'Authenticator App (TOTP)',
+    '2fa.method_email': 'Email Verification',
+    '2fa.method_passkey': 'Passkey (WebAuthn)',
+    '2fa.setup_totp_desc': 'Scan the QR code with your app (e.g. Google Authenticator) and enter the code below.',
+
     // Register
     'register.title': 'Create profile',
     'label.realname': 'First name',
@@ -98,6 +114,7 @@ export const FALLBACK = {
     'admin.settings.allow_reg': 'Allow Registration',
     'admin.settings.require_verify': 'Force Email Verification',
     'admin.settings.allow_guest': 'Allow Guest Mode',
+    'admin.settings.email_2fa_enabled': 'Enable Email 2FA Method',
     'admin.settings.domains': 'Allowed Domains (empty = all)',
     'admin.settings.blocked_domains': 'Blacklisted Domains',
     'admin.settings.domains_hint': 'Comma separated list.',
@@ -169,5 +186,22 @@ export const FALLBACK = {
     'profile.title': 'Your Profile',
     'profile.about_me': 'About Me - Tell something exciting!',
     'profile.btn_settings': 'Account Security & Settings',
-    'profile.saved': 'Profile saved.'
+    'profile.saved': 'Profile saved.',
+
+    // Settings
+    'settings.title': 'Account Settings',
+    'settings.change_mail': 'Change Email Address',
+    'settings.change_pw': 'Change Password',
+    'settings.curr_pw': 'Current Password (confirm)',
+    'settings.new_pw': 'New Password',
+    'settings.delete_acc': 'Permanently Delete Account',
+    'settings.delete_confirm': 'Are you sure? All data will be lost.',
+    'settings.success': 'Successfully updated.',
+    'settings.reverify': 'Please verify your new email address.',
+    'settings.2fa_title': 'Two-Factor Authentication (2FA)',
+    'settings.2fa_current': 'Current Method:',
+    'settings.btn_setup_totp': 'Setup TOTP (App)',
+    'settings.btn_setup_email': 'Use Email 2FA',
+    'settings.btn_setup_passkey': 'Register Passkey',
+    'settings.btn_disable_2fa': 'Disable 2FA'
 };
