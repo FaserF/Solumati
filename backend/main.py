@@ -13,23 +13,51 @@ import smtplib
 import secrets
 import socket
 import urllib.request
+import asyncio
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 
+# SECURITY: Use bcrypt directly for future-proof hashing
+import bcrypt
+
 # Import local modules
-from database import engine, Base, get_db
+from database import engine, Base, get_db, SessionLocal
 import models, schemas
 import i18n
 from logging_config import logger
 
 # --- LOGGING CONFIGURATION ---
 logging.basicConfig(level=logging.INFO)
+# Ensure we use the logger configured in logging_config
 logger = logging.getLogger(__name__)
 
 TEST_MODE = os.getenv("TEST_MODE", "false").lower() in ("true", "1", "yes")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
+
+# --- SECURITY HELPER FUNCTIONS ---
+# Using bcrypt directly removes the dependency on unmaintained libraries like passlib
+def hash_password(password: str) -> str:
+    """Hashes a password using bcrypt with a generated salt."""
+    # bcrypt requires bytes for input
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode('utf-8') # Return as string for DB storage
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifies a plain password against the stored bcrypt hash."""
+    try:
+        pwd_bytes = plain_password.encode('utf-8')
+        hash_bytes = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(pwd_bytes, hash_bytes)
+    except ValueError:
+        # Handles cases where the hash format in DB might be invalid/legacy
+        return False
+    except Exception as e:
+        logger.error(f"Password verification error: {e}")
+        return False
 
 # --- VERSION SYNC ---
 def get_app_version():
@@ -72,9 +100,54 @@ app.add_middleware(
 os.makedirs("static/images", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# --- Startup: DB Migration Check ---
+# --- Background Tasks for Maintenance ---
+
+async def cleanup_unverified_users():
+    """
+    Deletes users who registered more than 7 days ago but never verified their email.
+    """
+    logger.info("Starting cleanup of expired unverified accounts...")
+    db = SessionLocal()
+    try:
+        # Calculate the threshold date (7 days ago)
+        expiration_threshold = datetime.utcnow() - timedelta(days=7)
+
+        # Query for unverified users created before the threshold
+        users_to_delete = db.query(models.User).filter(
+            models.User.is_verified == False,
+            models.User.created_at < expiration_threshold
+        ).all()
+
+        count = 0
+        for user in users_to_delete:
+            logger.info(f"Deleting expired unverified user: {user.email} (Created: {user.created_at})")
+            db.delete(user)
+            count += 1
+
+        if count > 0:
+            db.commit()
+            logger.info(f"Cleanup complete. Deleted {count} expired users.")
+        else:
+            logger.info("Cleanup complete. No expired users found.")
+
+    except Exception as e:
+        logger.error(f"Error during user cleanup task: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+async def periodic_cleanup_task():
+    """
+    Runs the cleanup task periodically (e.g., every 24 hours).
+    """
+    while True:
+        await cleanup_unverified_users()
+        # Wait for 24 hours (86400 seconds)
+        await asyncio.sleep(86400)
+
+# --- Startup: DB Migration Check & Tasks ---
 @app.on_event("startup")
-def startup_check_schema():
+async def startup_check_schema():
     """Checks if new columns exist in DB and adds them if missing (Auto-Migration)."""
     db = next(get_db())
     try:
@@ -102,6 +175,9 @@ def startup_check_schema():
         logger.error(f"Schema check failed: {e}")
     finally:
         db.close()
+
+    # Start the background cleanup task
+    asyncio.create_task(periodic_cleanup_task())
 
 # --- Dependency: Auth & Role Check ---
 def get_current_user_from_header(x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)):
@@ -160,12 +236,7 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
     if server_domain.endswith("/"): server_domain = server_domain[:-1]
 
     # Use a fallback logo URL if server_domain is localhost, otherwise construct path
-    logo_url = f"{server_domain}/static/logo.png"
-    # Note: Ensure a logo.png exists in backend/static/ or static/images/ and served via app.mount
-    # The frontend has public/logo/Solumati.png. We should ideally make sure this is available statically from backend too or use frontend URL.
-    # Assuming frontend hosts the logo typically, but for email, we need a public URL.
-    # We will use the 'server_domain' which should point to the public instance.
-    logo_src = f"{server_domain}/logo/Solumati.png" # Assuming frontend structure
+    logo_src = f"{server_domain}/logo/Solumati.png"
 
     html = f"""
     <!DOCTYPE html>
@@ -187,7 +258,6 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
     <body>
         <div class="container">
             <div class="header">
-                <!-- Fallback to text if image breaks, but try to load logo -->
                 <img src="{logo_src}" alt="Solumati" class="logo" onerror="this.style.display='none'">
                 <h2 style="color: white; margin: 10px 0 0 0; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Solumati</h2>
             </div>
@@ -241,7 +311,6 @@ def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
         logger.info(f"Email sent successfully to {to_email}")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
-        # We generally don't raise here in background tasks to avoid crashing the task runner, but logging is critical
         pass
 
 # --- Core Logic Helpers ---
@@ -269,7 +338,8 @@ def ensure_guest_user(db: Session):
         if not guest:
             logger.info("Creating Guest User (ID 0)...")
             guest = models.User(
-                id=0, email="guest@solumati.local", hashed_password="NOPASSWORD",
+                id=0, email="guest@solumati.local",
+                hashed_password=hash_password("NOPASSWORD"), # Secure hash
                 real_name="Gast", username="Gast", about_me="System Guest",
                 is_active=True, is_verified=True, is_guest=True, intent="casual",
                 answers=[3,3,3,3], created_at=datetime.utcnow(), role='guest',
@@ -289,7 +359,7 @@ def ensure_admin_user(db: Session):
             initial_password = secrets.token_urlsafe(16)
             admin = models.User(
                 email="admin@solumati.local",
-                hashed_password=initial_password + "salt",
+                hashed_password=hash_password(initial_password),
                 real_name="Administrator",
                 username="admin",
                 about_me="System Administrator",
@@ -315,7 +385,9 @@ def populate_test_data(db: Session):
             email = f"dummy{i}_{name.lower()}@solumati.local"
             if db.query(models.User).filter(models.User.email == email).first(): continue
             u = models.User(
-                email=email, hashed_password="pw" + "salt", real_name=name,
+                email=email,
+                hashed_password=hash_password("pw"),
+                real_name=name,
                 username=generate_unique_username(db, name),
                 intent=random.choice(intents), answers=[random.randint(1,5) for _ in range(4)],
                 is_active=True, is_verified=True, created_at=datetime.utcnow(), role='user',
@@ -339,6 +411,8 @@ def startup_event():
             save_setting(db, "registration", schemas.RegistrationConfig().dict())
         if get_setting(db, "mail", None) is None:
             save_setting(db, "mail", schemas.MailConfig().dict())
+        if get_setting(db, "legal", None) is None:
+            save_setting(db, "legal", schemas.LegalConfig().dict())
         if TEST_MODE: populate_test_data(db)
     except Exception as e:
         logger.critical(f"Startup failed (Database might be unreachable): {e}")
@@ -352,6 +426,11 @@ def get_public_config(db: Session = Depends(get_db)):
         "registration_enabled": reg_config.enabled,
         "test_mode": TEST_MODE
     }
+
+# NEW: Public endpoint to fetch legal texts (Imprint/Privacy)
+@app.get("/public/legal", response_model=schemas.LegalConfig)
+def get_public_legal(db: Session = Depends(get_db)):
+    return get_setting(db, "legal", schemas.LegalConfig())
 
 @app.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -381,13 +460,21 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
     # Generate Secure Code
     secure_code = secrets.token_urlsafe(32)
 
+    # Determine verification status based on settings
+    is_verified = not reg_config.require_verification
+    verification_code = secure_code if reg_config.require_verification else None
+
+    # HASH THE PASSWORD SECURELY
+    hashed_pw = hash_password(user.password)
+
     new_user = models.User(
-        email=user.email, hashed_password=user.password + "salt",
+        email=user.email,
+        hashed_password=hashed_pw,
         real_name=user.real_name, username=generate_unique_username(db, user.real_name),
         intent=user.intent, answers=user.answers,
         is_active=True,
-        is_verified=not reg_config.require_verification,
-        verification_code=secure_code if reg_config.require_verification else None,
+        is_verified=is_verified,
+        verification_code=verification_code,
         role="user",
         is_visible_in_matches=True,
         created_at=datetime.utcnow()
@@ -395,10 +482,10 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    logger.info(f"User created: ID {new_user.id}, Username {new_user.username}")
+    logger.info(f"User created: ID {new_user.id}, Username {new_user.username}, Verified: {is_verified}")
 
-    # Send Verification Email if required
-    if not new_user.is_verified:
+    # Send Verification Email ONLY if required
+    if reg_config.require_verification and not new_user.is_verified:
         # Use configured server domain for the link
         server_url = reg_config.server_domain.rstrip('/')
         verification_link = f"{server_url}/verify?id={new_user.id}&code={secure_code}"
@@ -406,7 +493,8 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         email_content = f"""
         Hello {new_user.real_name},<br><br>
         Welcome to Solumati! We are excited to have you on board.<br>
-        To start connecting with like-minded people, please confirm your email address.
+        To start connecting with like-minded people, please confirm your email address.<br>
+        Unconfirmed accounts will be deleted automatically after 7 days.
         """
 
         html_email = create_html_email(
@@ -418,6 +506,8 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         )
 
         background_tasks.add_task(send_mail_sync, user.email, "Welcome to Solumati - Verify your Email", html_email, db)
+    else:
+        logger.info(f"Email verification skipped for {user.email} (Disabled in config).")
 
     return new_user
 
@@ -428,7 +518,9 @@ def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
         or_(models.User.email == creds.login, models.User.username == creds.login)
     ).first()
 
-    if not user or user.hashed_password != (creds.password + "salt"):
+    # Check password using direct bcrypt call
+    if not user or not verify_password(creds.password, user.hashed_password):
+        logger.warning(f"Login failed: Invalid credentials for {creds.login}")
         raise HTTPException(401, "Invalid credentials")
 
     if not user.is_active:
@@ -460,8 +552,9 @@ def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
             if custom_text: msg += f" Reason: {custom_text}"
             raise HTTPException(403, detail=msg)
 
+    # Check verification if required by system settings
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
-    if not user.is_verified and reg_config.require_verification:
+    if reg_config.require_verification and not user.is_verified:
         raise HTTPException(403, "Please verify your email address.")
 
     user.last_login = datetime.utcnow()
@@ -493,7 +586,7 @@ def verify_email(id: int, code: str, db: Session = Depends(get_db)):
         logger.warning(f"Verification failed: Missing code for User {user.username}")
         raise HTTPException(400, "Invalid verification code.")
 
-    # Use constant time comparison to be extra safe (though standard string cmp is fine here)
+    # Use constant time comparison to be extra safe
     if not secrets.compare_digest(code, user.verification_code):
         logger.warning(f"Verification failed: Invalid code provided for User {user.username}")
         raise HTTPException(400, "Invalid verification code.")
@@ -591,7 +684,8 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
         user.is_verified = False
 
     if update.password is not None and update.password.strip() != "":
-        user.hashed_password = update.password + "salt"
+        # HASH UPDATE for admin password change
+        user.hashed_password = hash_password(update.password)
 
     if update.is_verified is not None:
         user.is_verified = update.is_verified
@@ -683,12 +777,14 @@ def admin_resolve_report(report_id: int, db: Session = Depends(get_db), current_
 def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     mail = get_setting(db, "mail", schemas.MailConfig())
     reg = get_setting(db, "registration", schemas.RegistrationConfig())
-    return {"mail": mail, "registration": reg}
+    legal = get_setting(db, "legal", schemas.LegalConfig()) # Fetch Legal Settings
+    return {"mail": mail, "registration": reg, "legal": legal} # Include Legal Settings in Response
 
 @app.put("/admin/settings")
 def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     save_setting(db, "mail", settings.mail.dict())
     save_setting(db, "registration", settings.registration.dict())
+    save_setting(db, "legal", settings.legal.dict()) # Save Legal Settings
     logger.info(f"Admin {current_admin.username} updated system settings.")
     return {"status": "updated"}
 

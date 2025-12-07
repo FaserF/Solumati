@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Login = ({ email, setEmail, password, setPassword, onLogin, onBack, t }) => (
+const Login = ({ email, setEmail, password, setPassword, onLogin, onBack, onForgotPassword, t }) => (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
             {/* Logo path fixed */}
@@ -18,7 +18,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onBack, t }) =
                     onKeyDown={e => e.key === 'Enter' && onLogin()}
                 />
             </div>
-            <div className="mb-6 text-left">
+            <div className="mb-2 text-left">
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('label.password')}</label>
                 <input
                     className="w-full p-4 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-500"
@@ -29,6 +29,13 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onBack, t }) =
                     onKeyDown={e => e.key === 'Enter' && onLogin()}
                 />
             </div>
+
+            <div className="text-right mb-6">
+                <button onClick={onForgotPassword} className="text-xs text-pink-500 hover:text-pink-700 font-bold">
+                    Passwort vergessen?
+                </button>
+            </div>
+
             <button onClick={onLogin} className="w-full bg-black text-white py-4 rounded-lg font-bold hover:bg-gray-800 transition">
                 {t('btn.login')}
             </button>

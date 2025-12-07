@@ -1,5 +1,4 @@
 export const API_URL = "http://localhost:7777";
-// Use the version injected by Vite from package.json
 export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
 
 export const FALLBACK = {
@@ -57,7 +56,7 @@ export const FALLBACK = {
     'admin.tab.users': 'Users',
     'admin.tab.reports': 'Reports',
     'admin.tab.settings': 'Settings',
-    'admin.tab.diagnostics': 'Diagnostics', // NEW
+    'admin.tab.diagnostics': 'Diagnostics',
     'admin.btn.refresh': 'Refresh',
 
     // Admin Users
@@ -77,13 +76,13 @@ export const FALLBACK = {
     'admin.btn.delete': 'Delete',
     'admin.btn.promote': 'Make Mod',
     'admin.btn.demote': 'Demote',
-    'admin.btn.make_guest': 'Make Guest', // NEW
+    'admin.btn.make_guest': 'Make Guest',
     'admin.btn.edit': 'Edit User',
     'admin.btn.verify': 'Verify User',
     'admin.no_users': 'No users found.',
     'admin.ban_until': 'Banned until',
-    'admin.tooltip.visible': 'Visible in Matches', // NEW
-    'admin.tooltip.hidden': 'Hidden from Matches', // NEW
+    'admin.tooltip.visible': 'Visible in Matches',
+    'admin.tooltip.hidden': 'Hidden from Matches',
 
     // Admin Reports
     'admin.reports.reporter': 'Reporter',
@@ -100,9 +99,9 @@ export const FALLBACK = {
     'admin.settings.require_verify': 'Force Email Verification',
     'admin.settings.allow_guest': 'Allow Guest Mode',
     'admin.settings.domains': 'Allowed Domains (empty = all)',
-    'admin.settings.blocked_domains': 'Blacklisted Domains', // NEW
+    'admin.settings.blocked_domains': 'Blacklisted Domains',
     'admin.settings.domains_hint': 'Comma separated list.',
-    'admin.settings.server_domain': 'Server Domain (e.g. https://myapp.com)', // NEW
+    'admin.settings.server_domain': 'Server Domain (e.g. https://myapp.com)',
     'admin.settings.mail_title': 'SMTP Mail Server',
     'admin.settings.mail_active': 'Enable Mail Sending',
     'admin.settings.host': 'Host',
@@ -114,13 +113,24 @@ export const FALLBACK = {
     'admin.settings.test_mail_btn': 'Send Test Email',
     'admin.settings.saved': 'Settings saved!',
     'admin.settings.save_error': 'Error saving settings.',
-    'admin.settings.unsaved_warning': 'Please save changes first!', // NEW
+    'admin.settings.unsaved_warning': 'Please save changes first!',
     'admin.settings.encryption': 'Encryption',
     'admin.settings.enc_none': 'None',
     'admin.settings.enc_tls': 'STARTTLS',
     'admin.settings.enc_ssl': 'SSL',
     'admin.settings.enc_recommended': 'Recommended',
-
+    'admin.settings.legal_title': 'Legal Company Data',
+    'admin.settings.imprint': 'Imprint (Generated)',
+    'admin.settings.privacy': 'Privacy (Generated)',
+    'admin.settings.company_name': 'Company Name',
+    'admin.settings.address_street': 'Street & Number',
+    'admin.settings.address_zip_city': 'ZIP & City',
+    'admin.settings.contact_email': 'Contact Email',
+    'admin.settings.contact_phone': 'Contact Phone',
+    'admin.settings.ceo_name': 'CEO / Representative',
+    'admin.settings.register_court': 'Register Court',
+    'admin.settings.register_number': 'Register Number',
+    'admin.settings.vat_id': 'VAT ID',
 
     // Admin Modal
     'admin.modal.punish_title': 'Block User',
@@ -153,5 +163,11 @@ export const FALLBACK = {
     'admin.diag.offline': 'Offline',
     'admin.diag.connected': 'Connected',
     'admin.diag.disconnected': 'Error',
-    'admin.diag.free': 'Free'
+    'admin.diag.free': 'Free',
+
+    // Profile
+    'profile.title': 'Your Profile',
+    'profile.about_me': 'About Me - Tell something exciting!',
+    'profile.btn_settings': 'Account Security & Settings',
+    'profile.saved': 'Profile saved.'
 };

@@ -24,6 +24,10 @@ class User(Base):
     # Secure verification code (random string), cleared after successful verification
     verification_code = Column(String, nullable=True)
 
+    # Password Reset Token
+    reset_token = Column(String, nullable=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+
     # New Flag: Controls if user appears in matches.
     is_visible_in_matches = Column(Boolean, default=True)
 

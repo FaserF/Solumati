@@ -122,7 +122,6 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
         handleAction(id, 'delete');
     };
 
-    // --- User Edit Logic ---
     const openEditModal = (user) => {
         setEditForm({
             username: user.username,
@@ -235,7 +234,6 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
         });
     };
 
-    // Helper for TLS/SSL select
     const getEncryptionMode = () => {
         if (!settings?.mail) return 'none';
         if (settings.mail.smtp_ssl) return 'ssl';
@@ -428,7 +426,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                     </div>
                 )}
 
-                {/* 2. REPORTS TAB (Unchanged) */}
+                {/* 2. REPORTS TAB */}
                 {activeTab === 'reports' && canViewReports && (
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <div className="p-4 border-b flex justify-end bg-gray-50">
@@ -472,6 +470,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 {/* 3. SETTINGS TAB */}
                 {activeTab === 'settings' && canManageSettings && settings && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* GENERAL SETTINGS */}
                         <div className="bg-white p-6 rounded-xl shadow h-fit">
                             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">{t('admin.settings.registration_title')}</h2>
                             <div className="space-y-4">
@@ -490,7 +489,6 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                     />
                                 </label>
 
-                                {/* Server Domain Setting (NEW) */}
                                 <div>
                                     <label className="block text-sm font-bold text-gray-500 mb-1">{t('admin.settings.server_domain')}</label>
                                     <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none"
@@ -509,7 +507,6 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                     />
                                     <p className="text-xs text-gray-400 mt-1">{t('admin.settings.domains_hint')}</p>
                                 </div>
-                                {/* Blacklist */}
                                 <div>
                                     <label className="block text-sm font-bold text-gray-500 mb-1 text-red-600">{t('admin.settings.blocked_domains')}</label>
                                     <input className="w-full p-2 border rounded border-red-200 focus:ring-2 focus:ring-red-500 focus:outline-none" placeholder="spam.com, bad.net"
@@ -521,6 +518,52 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             </div>
                         </div>
 
+                        {/* LEGAL SETTINGS - TEMPLATE FIELDS */}
+                        <div className="bg-white p-6 rounded-xl shadow h-fit">
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">{t('admin.settings.legal_title')}</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.company_name')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.company_name} onChange={e => updateSetting('legal', 'company_name', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.ceo_name')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.ceo_name} onChange={e => updateSetting('legal', 'ceo_name', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.address_street')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.address_street} onChange={e => updateSetting('legal', 'address_street', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.address_zip_city')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.address_zip_city} onChange={e => updateSetting('legal', 'address_zip_city', e.target.value)} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">{t('admin.settings.contact_email')}</label>
+                                        <input className="w-full p-2 border rounded" value={settings.legal.contact_email} onChange={e => updateSetting('legal', 'contact_email', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500">{t('admin.settings.contact_phone')}</label>
+                                        <input className="w-full p-2 border rounded" value={settings.legal.contact_phone} onChange={e => updateSetting('legal', 'contact_phone', e.target.value)} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.register_court')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.register_court} onChange={e => updateSetting('legal', 'register_court', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.register_number')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.register_number} onChange={e => updateSetting('legal', 'register_number', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.vat_id')}</label>
+                                    <input className="w-full p-2 border rounded" value={settings.legal.vat_id} onChange={e => updateSetting('legal', 'vat_id', e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* MAIL SETTINGS */}
                         <div className="bg-white p-6 rounded-xl shadow h-fit">
                             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">{t('admin.settings.mail_title')}</h2>
                             <div className="space-y-4">
@@ -561,7 +604,6 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                         onChange={e => updateSetting('mail', 'smtp_password', e.target.value)}
                                     />
                                 </div>
-                                {/* Updated TLS/SSL Selection with i18n */}
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 mb-1 block">{t('admin.settings.encryption')}</label>
                                     <select
@@ -614,10 +656,9 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                     </div>
                 )}
 
-                {/* 4. DIAGNOSTICS TAB (Unchanged) */}
+                {/* 4. DIAGNOSTICS TAB */}
                 {activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
                     <div className="space-y-6">
-                        {/* Status Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Version Card */}
                             <div className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500">
@@ -719,7 +760,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 )}
             </div>
 
-            {/* Punish Modal (Unchanged) */}
+            {/* Punish Modal */}
             {punishModal.show && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
@@ -754,7 +795,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 </div>
             )}
 
-            {/* Edit User Modal (Updated with i18n keys) */}
+            {/* Edit User Modal */}
             {editModal.show && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">

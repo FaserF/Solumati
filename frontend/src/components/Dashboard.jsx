@@ -1,7 +1,7 @@
 import React from 'react';
-import { AlertTriangle, EyeOff, User, CheckCircle, Shield, Activity } from 'lucide-react';
+import { AlertTriangle, EyeOff, User, CheckCircle, Shield, Activity, Settings } from 'lucide-react';
 
-const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, t, testMode }) => {
+const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, onProfileClick, t, testMode }) => {
 
     // Check if user has special roles
     const isAdminOrMod = user && (user.role === 'admin' || user.role === 'moderator');
@@ -44,11 +44,22 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                             {t('dashboard.admin_panel', 'Admin Panel')}
                         </button>
                     )}
-                    <span className="text-gray-600 text-sm hidden md:inline">
-                        {user?.username}
-                    </span>
-                    <button onClick={onLogout} className="text-sm text-gray-500 hover:text-red-500 font-medium">
-                        {t('btn.back')} (Logout)
+
+                    {/* User Profile Link - Clickable now! */}
+                    {!isGuest && (
+                        <button onClick={onProfileClick} className="flex items-center gap-2 text-gray-600 hover:text-pink-600 font-medium transition group">
+                            <span className="hidden md:inline group-hover:underline">{user?.username}</span>
+                            <div className="bg-gray-100 p-1 rounded-full group-hover:bg-pink-50">
+                                <User size={20} />
+                            </div>
+                        </button>
+                    )}
+                    {isGuest && (
+                        <span className="text-gray-400 text-sm hidden md:inline">Guest</span>
+                    )}
+
+                    <button onClick={onLogout} className="text-sm text-gray-500 hover:text-red-500 font-medium ml-2">
+                        {t('btn.logout', 'Logout')}
                     </button>
                 </div>
             </nav>

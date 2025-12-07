@@ -8,6 +8,11 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import AdminPanel from './components/AdminPanel';
+import UserProfile from './components/UserProfile';
+import AccountSettings from './components/AccountSettings';
+import Legal from './components/Legal';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 function App() {
     // --- Global State ---
@@ -27,9 +32,10 @@ function App() {
     const [intent, setIntent] = useState("longterm");
     const [answers, setAnswers] = useState({});
 
-    // --- Verification State ---
-    const [verificationStatus, setVerificationStatus] = useState(null); // 'success', 'error', 'loading'
+    // --- Verification & Reset State ---
+    const [verificationStatus, setVerificationStatus] = useState(null);
     const [verificationMsg, setVerificationMsg] = useState("");
+    const [resetToken, setResetToken] = useState(null);
 
     // --- I18n State ---
     const [i18n, setI18n] = useState({});
@@ -40,7 +46,7 @@ function App() {
 
     // --- Startup: Verification, I18n, Config ---
     useEffect(() => {
-        // Fetch Global Config (TestMode etc)
+        // Fetch Global Config
         fetch(`${API_URL}/public-config`)
             .then(res => res.json())
             .then(data => {
@@ -65,21 +71,31 @@ function App() {
                 console.error("[App] Could not load translations.", e);
             });
 
-        // --- Verification Logic ---
+        // --- URL Param Handling (Verify & Reset) ---
         const params = new URLSearchParams(window.location.search);
+
+        // 1. Password Reset Token
+        const rToken = params.get('reset_token');
+        if (rToken) {
+            setResetToken(rToken);
+            setView('reset_pw');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return; // Skip verify check if resetting pw
+        }
+
+        // 2. Verification
         const verifyId = params.get('id');
         const verifyCode = params.get('code');
 
         if (verifyId && verifyCode) {
             setVerificationStatus('loading');
-            // Call API to verify
             fetch(`${API_URL}/verify?id=${verifyId}&code=${verifyCode}`, { method: 'POST' })
                 .then(async res => {
                     const data = await res.json();
                     if (res.ok) {
                         setVerificationStatus('success');
                         setVerificationMsg(t('verify.success', 'E-Mail erfolgreich verifiziert!'));
-                        // Remove params from URL without refresh to be clean
                         window.history.replaceState({}, document.title, window.location.pathname);
                     } else {
                         setVerificationStatus('error');
@@ -112,7 +128,6 @@ function App() {
                 console.log("[App] Login success:", data);
                 setUser(data);
                 setIsGuest(data.role === 'guest' || data.is_guest);
-                // Clear verification banners on login
                 setVerificationStatus(null);
 
                 if (data.role === 'admin') {
@@ -158,7 +173,6 @@ function App() {
                     fetchMatches(data.id);
                     setView('dashboard');
                 } else {
-                    // Show message and go to landing
                     alert(t('register.check_mail', "Account erstellt! Bitte überprüfe deine E-Mails, um den Account zu aktivieren."));
                     setView('landing');
                 }
@@ -203,22 +217,17 @@ function App() {
         } catch (e) { console.error("Match fetch failed", e); }
     };
 
-    // --- Verification Banner ---
     const renderVerificationBanner = () => {
         if (!verificationStatus) return null;
-
         const isSuccess = verificationStatus === 'success';
         const bgColor = isSuccess ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800';
         const Icon = isSuccess ? CheckCircle : XCircle;
 
         return (
-            <div className={`fixed top-0 left-0 right-0 p-4 border-b-2 ${bgColor} flex items-center justify-center gap-2 z-50 shadow-md animate-fade-in-down`}>
+            <div className={`fixed top-0 left-0 right-0 p-4 border-b-2 ${bgColor} flex items-center justify-center gap-2 z-50 shadow-md`}>
                 <Icon size={20} />
                 <span className="font-bold">{verificationMsg}</span>
-                <button
-                    onClick={() => setVerificationStatus(null)}
-                    className="ml-4 text-sm underline opacity-70 hover:opacity-100"
-                >
+                <button onClick={() => setVerificationStatus(null)} className="ml-4 text-sm underline opacity-70 hover:opacity-100">
                     {t('btn.close', 'Schließen')}
                 </button>
             </div>
@@ -234,8 +243,8 @@ function App() {
                     onLogin={() => setView('login')}
                     onRegister={() => setView('register')}
                     onGuest={handleGuest}
-                    onAdmin={() => setView('login')} // Admin login is same entry point but different logic if needed, or separate
-                    onLegal={() => alert("Impressum/Datenschutz placeholder")} // Should route to component
+                    onAdmin={() => setView('login')}
+                    onLegal={() => setView('legal')}
                     t={t}
                 />
             )}
@@ -246,6 +255,22 @@ function App() {
                     password={password} setPassword={setPassword}
                     onLogin={handleLogin}
                     onBack={() => setView('landing')}
+                    onForgotPassword={() => setView('forgot_pw')}
+                    t={t}
+                />
+            )}
+
+            {view === 'forgot_pw' && (
+                <ForgotPassword
+                    onBack={() => setView('login')}
+                    t={t}
+                />
+            )}
+
+            {view === 'reset_pw' && (
+                <ResetPassword
+                    token={resetToken}
+                    onSuccess={() => setView('login')}
                     t={t}
                 />
             )}
@@ -272,6 +297,32 @@ function App() {
                     onLogout={() => { setUser(null); setView('landing'); }}
                     onRegisterClick={() => setView('register')}
                     onAdminClick={() => setView('adminPanel')}
+                    onProfileClick={() => setView('profile')}
+                    t={t}
+                />
+            )}
+
+            {view === 'profile' && user && (
+                <UserProfile
+                    user={user}
+                    onBack={() => setView('dashboard')}
+                    onOpenSettings={() => setView('settings')}
+                    t={t}
+                />
+            )}
+
+            {view === 'settings' && user && (
+                <AccountSettings
+                    user={user}
+                    onBack={() => setView('profile')}
+                    onLogout={() => { setUser(null); setView('landing'); }}
+                    t={t}
+                />
+            )}
+
+            {view === 'legal' && (
+                <Legal
+                    onBack={() => setView('landing')}
                     t={t}
                 />
             )}

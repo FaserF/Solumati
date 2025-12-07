@@ -109,9 +109,15 @@ class RegistrationConfig(BaseModel):
     # Domain used for generating links in emails (e.g., https://mysolumati.com)
     server_domain: str = "http://localhost:3000"
 
+# NEW: Configuration for Legal Texts (Imprint, Privacy) with Defaults
+class LegalConfig(BaseModel):
+    imprint: str = "<h1>Impressum</h1><p>Angaben gemäß § 5 TMG</p><p>Bitte Angaben im Admin-Panel ergänzen.</p>"
+    privacy: str = "<h1>Datenschutz</h1><p>Wir nehmen den Schutz Ihrer persönlichen Daten sehr ernst.</p><p>Bitte Angaben im Admin-Panel ergänzen.</p>"
+
 class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
+    legal: LegalConfig # Added legal field to match response requirements
 
 class PublicConfig(BaseModel):
     registration_enabled: bool

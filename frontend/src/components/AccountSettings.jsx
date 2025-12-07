@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Trash2, ChevronLeft } from 'lucide-react';
+import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { API_URL } from '../config';
 
 const AccountSettings = ({ user, onBack, onLogout, t }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
+
+    // State to toggle visibility of the new password field
+    const [showNewPassword, setShowNewPassword] = useState(false);
+
     const [loading, setLoading] = useState(false);
 
     const handleUpdate = async () => {
@@ -83,12 +87,20 @@ const AccountSettings = ({ user, onBack, onLogout, t }) => {
                         <div className="flex items-center border rounded-lg bg-gray-50 px-3">
                             <Lock size={18} className="text-gray-400" />
                             <input
-                                type="password"
+                                type={showNewPassword ? "text" : "password"}
                                 className="w-full p-3 bg-transparent focus:outline-none"
                                 placeholder={t('settings.new_pw')}
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                             />
+                            {/* Toggle Button for Password Visibility */}
+                            <button
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="text-gray-400 hover:text-gray-600 focus:outline-none p-1"
+                                type="button"
+                            >
+                                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                     </div>
 
