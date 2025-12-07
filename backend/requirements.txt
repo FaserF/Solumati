@@ -6,6 +6,6 @@ pydantic==2.12.5
 pydantic-settings==2.12.0
 python-multipart==0.0.20
 email-validator==2.3.0
-bcrypt==4.3.0
+bcrypt==5.0.0
 pyotp==2.9.0
 webauthn==1.11.1
