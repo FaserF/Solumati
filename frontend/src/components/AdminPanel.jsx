@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
@@ -730,7 +730,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 <FileText size={20} className="text-gray-600" /> {t('admin.diag.changelog')}
                             </h2>
                             {changelog.length === 0 ? (
-                                <p className="text-gray-400 italic">Keine Release-Informationen gefunden.</p>
+                                <p className="text-gray-400 italic">No release information found.</p>
                             ) : (
                                 <div className="space-y-6">
                                     {changelog.map((release, i) => (
@@ -748,7 +748,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                             </div>
                                             {release.html_url && (
                                                 <a href={release.html_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs mt-2 inline-block">
-                                                    Auf GitHub ansehen
+                                                    View on GitHub
                                                 </a>
                                             )}
                                         </div>

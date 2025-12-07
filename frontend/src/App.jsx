@@ -25,7 +25,7 @@ function App() {
     // Global Config
     const [testMode, setTestMode] = useState(false);
 
-    // --- 2FA State (New) ---
+    // --- 2FA State ---
     const [tempAuth, setTempAuth] = useState(null); // Stores intermediate login state for 2FA
 
     // --- Form State ---
