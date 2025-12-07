@@ -74,6 +74,13 @@ export const FALLBACK = {
     'admin.tab.settings': 'Settings',
     'admin.tab.diagnostics': 'Diagnostics',
     'admin.btn.refresh': 'Refresh',
+    'admin.btn.roles': 'Roles Info',
+    'admin.roles.title': 'System Role Overview',
+    'role.admin.desc': 'Full access to all system settings and user data.',
+    'role.moderator.desc': 'Can moderate users and content, but cannot change system settings.',
+    'role.user.desc': 'Standard user with access to matching and profile functions.',
+    'role.guest.desc': 'Restricted read access (blurred images, no chat).',
+    'role.test.desc': 'Technical test user. Full "User" capabilities but restricted from changing security data (Email/Password).',
 
     // Admin Users
     'admin.table.id': 'ID',
@@ -93,6 +100,7 @@ export const FALLBACK = {
     'admin.btn.promote': 'Make Mod',
     'admin.btn.demote': 'Demote',
     'admin.btn.make_guest': 'Make Guest',
+    'admin.btn.make_test': 'Make Test User',
     'admin.btn.edit': 'Edit User',
     'admin.btn.verify': 'Verify User',
     'admin.no_users': 'No users found.',
@@ -190,6 +198,12 @@ export const FALLBACK = {
 
     // Settings
     'settings.title': 'Account Settings',
+    'settings.tab_app': 'App Settings',
+    'settings.tab_account': 'Account & Security',
+    'settings.push_title': 'Notifications',
+    'settings.push_label': 'Push Notifications',
+    'settings.push_desc': 'Receive updates about new matches and messages.',
+    'settings.display_title': 'Display',
     'settings.change_mail': 'Change Email Address',
     'settings.change_pw': 'Change Password',
     'settings.curr_pw': 'Current Password (confirm)',

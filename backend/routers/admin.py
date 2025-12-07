@@ -19,6 +19,18 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin")
 
+# --- Dynamic Roles Endpoint ---
+@router.get("/roles")
+def get_system_roles(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    """Returns a list of all available system roles with translation keys."""
+    return [
+        {"name": "admin", "description_key": "role.admin.desc"},
+        {"name": "moderator", "description_key": "role.moderator.desc"},
+        {"name": "user", "description_key": "role.user.desc"},
+        {"name": "guest", "description_key": "role.guest.desc"},
+        {"name": "test", "description_key": "role.test.desc"}
+    ]
+
 @router.get("/users", response_model=List[schemas.UserDisplay])
 def admin_get_users(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     logger.info(f"Admin {current_admin.username} fetched users.")
@@ -64,6 +76,9 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
     elif action.action == "demote_user":
         user.role = "user"
         logger.info(f"User {user.username} demoted to regular user.")
+    elif action.action == "demote_test": # NEW ACTION
+        user.role = "test"
+        logger.info(f"User {user.username} changed to test user.")
     elif action.action == "demote_guest":
         user.role = "guest"
     elif action.action == "verify": user.is_verified = True

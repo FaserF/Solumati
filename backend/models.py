@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ARRAY, DateTime, Foreig
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
+import json
 
 class User(Base):
     __tablename__ = "users"
@@ -60,9 +61,22 @@ class User(Base):
     # Temporary challenge for WebAuthn ceremonies
     webauthn_challenge = Column(String, nullable=True)
 
+    # --- NEW: App Settings & Push ---
+    # Stores generic app settings like theme, language pref, etc. as JSON string
+    app_settings = Column(Text, default='{"notifications_enabled": false, "theme": "system"}')
+
+    # Stores the raw Web Push Subscription object (JSON)
+    push_subscription = Column(Text, nullable=True)
+
     @property
     def is_admin(self):
         return self.role == 'admin'
+
+    def get_settings_dict(self):
+        try:
+            return json.loads(self.app_settings) if self.app_settings else {}
+        except:
+            return {}
 
 class Message(Base):
     __tablename__ = "messages"

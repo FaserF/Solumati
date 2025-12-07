@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import shutil
 import secrets
+import json
 from typing import List
 
 # Local modules
@@ -31,6 +32,7 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
     is_verified = not reg_config.require_verification
     verification_code = secure_code if reg_config.require_verification else None
 
+    # ID is handled by sequence (starts at 10000)
     new_user = models.User(
         email=user.email,
         hashed_password=hashed_pw,
@@ -110,12 +112,14 @@ def upload_image(user_id: int, file: UploadFile = File(...), db: Session = Depen
 
 @router.put("/users/{user_id}/account")
 def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
-    """Self-service account update for normal users."""
+    """Self-service account update for normal users (Email/Password)."""
     if user.id != user_id:
         raise HTTPException(403, "Forbidden")
 
-    # Check current password (using the field passed in body if needed, currently schema might need adjustment or we use a new schema)
-    # Simplified: Assuming UserAdminUpdate for now but usually we want a specific schema
+    # RESTRICTION FOR TEST USERS
+    if user.role == 'test':
+        raise HTTPException(403, "Test users cannot change sensitive account settings (Email/Password).")
+
     if update.email and update.email != user.email:
         if db.query(models.User).filter(models.User.email == update.email).first():
             raise HTTPException(400, "Email already in use")
@@ -128,6 +132,36 @@ def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, user:
 
     db.commit()
     return {"status": "updated", "reverify_needed": not user.is_verified}
+
+@router.put("/users/{user_id}/preferences")
+def update_user_preferences(user_id: int, settings: schemas.UserSettingsUpdate, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """Updates app-specific settings like push notifications and theme."""
+    if user.id != user_id:
+        raise HTTPException(403, "Forbidden")
+
+    current_settings = {}
+    try:
+        current_settings = json.loads(user.app_settings) if user.app_settings else {}
+    except:
+        current_settings = {}
+
+    # Update Generic JSON Settings
+    if settings.notifications_enabled is not None:
+        current_settings["notifications_enabled"] = settings.notifications_enabled
+
+    if settings.theme is not None:
+        current_settings["theme"] = settings.theme
+
+    # Store Push Subscription separately (could be large)
+    if settings.push_subscription is not None:
+        # If subscription is sent, we store it. If empty dict/null, we might clear it.
+        user.push_subscription = json.dumps(settings.push_subscription)
+
+    user.app_settings = json.dumps(current_settings)
+    db.commit()
+
+    logger.info(f"User {user.username} updated preferences.")
+    return {"status": "success", "settings": current_settings}
 
 @router.delete("/users/{user_id}")
 def delete_own_account(user_id: int, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
@@ -142,7 +176,14 @@ def delete_own_account(user_id: int, user: models.User = Depends(get_current_use
 def request_password_reset(body: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email = body.get("email")
     user = db.query(models.User).filter(models.User.email == email).first()
+
     if user:
+        # RESTRICTION FOR TEST USERS
+        if user.role == 'test':
+            logger.warning(f"Password reset blocked for test user: {email}")
+            # We return success to prevent enumeration, but do NOT send email
+            return {"status": "ok", "message": "If the email exists, a reset link has been sent."}
+
         logger.info(f"Password reset requested for: {email}")
         token = secrets.token_urlsafe(32)
         user.reset_token = token
@@ -169,6 +210,10 @@ def confirm_password_reset(body: dict, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.reset_token == token).first()
     if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
         raise HTTPException(400, "Invalid or expired token")
+
+    # Extra check just in case
+    if user.role == 'test':
+        raise HTTPException(403, "Test users cannot change password.")
 
     user.hashed_password = hash_password(new_password)
     user.reset_token = None

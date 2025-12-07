@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
@@ -32,6 +32,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
     // Edit User Modal State
     const [editModal, setEditModal] = useState({ show: false, user: null });
     const [editForm, setEditForm] = useState({ username: '', email: '', password: '', is_visible_in_matches: true });
+
+    // Roles Modal State
+    const [rolesModalOpen, setRolesModalOpen] = useState(false);
+    const [systemRoles, setSystemRoles] = useState([]);
 
     // Test Mail
     const [testMailTarget, setTestMailTarget] = useState("");
@@ -96,6 +100,19 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
             if (changeRes.ok) setChangelog(await changeRes.json());
         } catch (e) { setError("Diagnostics failed."); }
         setLoading(false);
+    };
+
+    // --- Roles Logic ---
+    const openRolesModal = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/roles`, { headers: authHeaders });
+            if (res.ok) {
+                setSystemRoles(await res.json());
+                setRolesModalOpen(true);
+            } else {
+                alert("Konnte Rollen nicht laden.");
+            }
+        } catch (e) { alert("Netzwerkfehler"); }
     };
 
     const handleAction = async (id, action) => {
@@ -325,8 +342,13 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 {/* 1. USERS TAB */}
                 {activeTab === 'users' && canManageUsers && (
                     <div className="bg-white rounded-xl shadow overflow-hidden">
-                        <div className="p-4 border-b flex justify-end bg-gray-50">
-                            <button onClick={fetchUsers} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium"><RefreshCw size={14} /> {t('admin.btn.refresh')}</button>
+                        <div className="p-4 border-b flex justify-between bg-gray-50">
+                            <button onClick={openRolesModal} className="text-sm text-blue-600 hover:text-blue-800 flex gap-2 font-bold items-center border border-blue-200 px-3 py-1 rounded bg-blue-50">
+                                <Info size={14} /> {t('admin.btn.roles', 'Rolleninfo')}
+                            </button>
+                            <button onClick={fetchUsers} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium items-center">
+                                <RefreshCw size={14} /> {t('admin.btn.refresh')}
+                            </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
@@ -355,7 +377,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                                     {u.role === 'admin' ? <span className="text-red-600 font-bold flex items-center gap-1"><Shield size={12} /> Admin</span> :
                                                         u.role === 'moderator' ? <span className="text-blue-600 font-bold flex items-center gap-1"><Shield size={12} /> Mod</span> :
                                                             u.role === 'guest' ? <span className="text-gray-500 font-bold flex items-center gap-1"><UserX size={12} /> Guest</span> :
-                                                                <span className="text-gray-500">User</span>}
+                                                                u.role === 'test' ? <span className="text-orange-500 font-bold flex items-center gap-1"><Activity size={12} /> Test</span> :
+                                                                    <span className="text-gray-500">User</span>}
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     {u.is_visible_in_matches ?
@@ -394,12 +417,16 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                                                 <button title={t('admin.btn.promote')} onClick={() => handleAction(u.id, 'promote_moderator')} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Crown size={16} /></button>
                                                             )}
                                                             {/* Demotion Logic */}
-                                                            {u.role === 'moderator' && (
+                                                            {(u.role === 'moderator' || u.role === 'test') && (
                                                                 <button title={t('admin.btn.demote')} onClick={() => handleAction(u.id, 'demote_user')} className="text-gray-400 hover:bg-gray-100 p-1 rounded"><UserMinus size={16} /></button>
                                                             )}
                                                             {/* Make Guest Logic */}
                                                             {u.role !== 'guest' && (
                                                                 <button title={t('admin.btn.make_guest')} onClick={() => handleAction(u.id, 'demote_guest')} className="text-gray-400 hover:bg-gray-100 p-1 rounded"><Ban size={16} /></button>
+                                                            )}
+                                                            {/* Make Test Logic */}
+                                                            {u.role !== 'test' && u.role !== 'guest' && (
+                                                                <button title={t('admin.btn.make_test', 'Make Test User')} onClick={() => handleAction(u.id, 'demote_test')} className="text-orange-500 hover:bg-orange-50 p-1 rounded"><Beaker size={16} /></button>
                                                             )}
                                                         </>
                                                     )}
@@ -843,6 +870,31 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
                             <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
                             <button onClick={saveUserEdit} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md transition transform active:scale-95">{t('btn.save')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Roles Info Modal */}
+            {rolesModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 border border-gray-200 relative">
+                        <button onClick={() => setRolesModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black">
+                            <XCircle size={24} />
+                        </button>
+                        <h3 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                            <Info size={20} className="text-blue-600" /> {t('admin.roles.title', 'System Rollen')}
+                        </h3>
+
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                            {systemRoles.map((role, idx) => (
+                                <div key={idx} className="border-b last:border-0 pb-4 last:pb-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-bold uppercase text-sm bg-gray-100 px-2 py-1 rounded">{role.name}</span>
+                                    </div>
+                                    <p className="text-sm text-gray-600">{t(role.description_key)}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

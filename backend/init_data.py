@@ -24,7 +24,9 @@ def check_schema(db: Session):
             "webauthn_credentials": "TEXT DEFAULT '[]'",
             "webauthn_challenge": "VARCHAR",
             "reset_token": "VARCHAR",
-            "reset_token_expires": "TIMESTAMP"
+            "reset_token_expires": "TIMESTAMP",
+            "app_settings": "TEXT DEFAULT '{}'",
+            "push_subscription": "TEXT"
         }
 
         for col, definition in columns_to_check.items():
@@ -62,29 +64,44 @@ def ensure_guest_user(db: Session):
 
 def ensure_admin_user(db: Session):
     try:
-        admin = db.query(models.User).filter(models.User.username == "admin").first()
+        # Check by ID 1 first (strict requirement: Admin = 1)
+        admin = db.query(models.User).filter(models.User.id == 1).first()
+
         if not admin:
-            logger.info("No 'admin' user found. Creating initial admin account...")
-            initial_password = secrets.token_urlsafe(16)
-            admin = models.User(
-                email="admin@solumati.local",
-                hashed_password=hash_password(initial_password),
-                real_name="Administrator", username="admin",
-                about_me="System Administrator",
-                is_active=True, is_verified=True, is_guest=False, role="admin",
-                intent="admin", answers=[3,3,3,3], created_at=datetime.utcnow(),
-                is_visible_in_matches=False
-            )
-            db.add(admin)
-            db.commit()
-            sep = "=" * 60
-            logger.warning(f"\n{sep}\nINITIAL ADMIN USER CREATED\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER\n{sep}\n")
-        else:
-            # Ensure admin has an email (migration fix)
-            if not admin.email:
-                admin.email = "admin@solumati.local"
+            # Check by username if ID 1 not found (migration scenario)
+            admin_by_name = db.query(models.User).filter(models.User.username == "admin").first()
+
+            if admin_by_name:
+                if admin_by_name.id != 1:
+                    logger.warning(f"Admin user exists but ID is {admin_by_name.id}, not 1. Skipping ID enforcement to prevent data corruption.")
+                else:
+                    logger.info("Admin user exists with ID 1.")
+            else:
+                logger.info("No 'admin' user found. Creating initial admin account with ID 1...")
+                initial_password = secrets.token_urlsafe(16)
+                admin = models.User(
+                    id=1,
+                    email="admin@solumati.local",
+                    hashed_password=hash_password(initial_password),
+                    real_name="Administrator", username="admin",
+                    about_me="System Administrator",
+                    is_active=True, is_verified=True, is_guest=False, role="admin",
+                    intent="admin", answers=[3,3,3,3], created_at=datetime.utcnow(),
+                    is_visible_in_matches=False
+                )
+                db.add(admin)
                 db.commit()
-                logger.info("Admin user found but has no email. Updating to admin@solumati.local to satisfy schema.")
+                sep = "=" * 60
+                logger.warning(f"\n{sep}\nINITIAL ADMIN USER CREATED (ID: 1)\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER\n{sep}\n")
+
+        try:
+            db.execute(text("SELECT setval('users_id_seq', 10000, false);"))
+            db.commit()
+            logger.info("Database sequence 'users_id_seq' adjusted to start at 10000.")
+        except Exception as seq_e:
+            logger.warning(f"Could not adjust sequence (might be first run or unsupported DB): {seq_e}")
+            db.rollback()
+
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to ensure admin user: {e}")
@@ -104,7 +121,7 @@ def generate_dummy_data(db: Session):
     # List of names for realistic dummies
     first_names = [
         "Anna", "Max", "Julia", "Lukas", "Sarah", "Felix", "Laura", "Tim", "Lisa", "Jan", "Lorenz", "Niklas", "Michelle",
-        "Maria", "Paul", "Sophie", "Jonas", "Lena", "Leon", "Emily", "David", "Hannah", "Niklas", "Fabian", "Kai", "Adrian"
+        "Maria", "Paul", "Sophie", "Jonas", "Lena", "Leon", "Emily", "David", "Hannah", "Thomas", "Fabian", "Kai", "Adrian"
     ]
 
     try:
@@ -125,7 +142,7 @@ def generate_dummy_data(db: Session):
                 is_active=True,
                 is_verified=True,
                 is_guest=False,
-                role="user",
+                role="test",
                 intent=random.choice(intents),
                 answers=[random.randint(1, 5) for _ in range(4)],
                 created_at=datetime.utcnow(),

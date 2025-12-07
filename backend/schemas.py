@@ -44,6 +44,9 @@ class UserDisplay(UserBase):
     banned_until: Optional[datetime] = None
     two_factor_method: Optional[str] = 'none'
 
+    # New fields
+    app_settings: Optional[str] = None
+
     class Config:
         from_attributes = True
 
@@ -57,6 +60,12 @@ class UserAdminUpdate(BaseModel):
     is_verified: Optional[bool] = None
     is_visible_in_matches: Optional[bool] = None
     two_factor_method: Optional[str] = None
+
+# New Schema for App Settings Update
+class UserSettingsUpdate(BaseModel):
+    notifications_enabled: Optional[bool] = None
+    theme: Optional[str] = None
+    push_subscription: Optional[Dict[str, Any]] = None # To store VAPID subscription
 
 class MatchResult(BaseModel):
     user_id: int
@@ -176,6 +185,7 @@ class TwoFactorLoginResponse(BaseModel):
     role: Optional[str] = None
     is_guest: Optional[bool] = None
     is_admin: Optional[bool] = None
+    app_settings: Optional[str] = None # Return settings on login
 
 # WebAuthn DTOs
 class WebAuthnRegistrationOptions(BaseModel):
