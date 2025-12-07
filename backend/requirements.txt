@@ -8,4 +8,4 @@ python-multipart==0.0.20
 email-validator==2.3.0
 bcrypt==5.0.0
 pyotp==2.9.0
-webauthn==1.11.1
+webauthn==2.7.0
