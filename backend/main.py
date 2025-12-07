@@ -228,6 +228,80 @@ def save_setting(db: Session, key: str, value: dict):
         logger.error(f"DB Error in save_setting: {e}")
         db.rollback()
 
+# --- Legal Text Generator Helper ---
+def generate_legal_html_content(config: schemas.LegalConfig) -> schemas.LegalConfig:
+    """
+    Generates HTML for Imprint and Privacy Policy based on the fields in LegalConfig.
+    If fields are missing, placeholders are used.
+    """
+
+    # 1. Generate IMPRINT (Impressum) - German specific legal requirement
+    imprint_html = f"""
+    <h1>Impressum</h1>
+    <h2>Angaben gemäß § 5 TMG</h2>
+    <p>
+        <strong>{config.company_name or '[Firmenname]'}</strong><br>
+        {config.address_street or '[Straße Hausnummer]'}<br>
+        {config.address_zip_city or '[PLZ Stadt]'}
+    </p>
+
+    <h2>Vertreten durch</h2>
+    <p>{config.ceo_name or '[Geschäftsführer Name]'}</p>
+
+    <h2>Kontakt</h2>
+    <p>
+        E-Mail: <a href="mailto:{config.contact_email}">{config.contact_email or '[Email]'}</a><br>
+        Telefon: {config.contact_phone or '[Telefonnummer]'}
+    </p>
+
+    <h2>Registereintrag</h2>
+    <p>
+        Eintragung im Handelsregister.<br>
+        Registergericht: {config.register_court or '[Amtsgericht]'}<br>
+        Registernummer: {config.register_number or '[HRB Nummer]'}
+    </p>
+
+    <h2>Umsatzsteuer-ID</h2>
+    <p>
+        Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:<br>
+        {config.vat_id or '[DE...]'}
+    </p>
+    """
+
+    # 2. Generate PRIVACY (Datenschutz) - Basic GDPR compliant template
+    privacy_html = f"""
+    <h1>Datenschutzerklärung</h1>
+    <h2>1. Datenschutz auf einen Blick</h2>
+    <h3>Allgemeine Hinweise</h3>
+    <p>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen.</p>
+
+    <h2>2. Verantwortliche Stelle</h2>
+    <p>
+        <strong>{config.company_name or '[Firmenname]'}</strong><br>
+        {config.address_street or '[Straße]'}<br>
+        {config.address_zip_city or '[Stadt]'}<br>
+        E-Mail: {config.contact_email or '[Email]'}
+    </p>
+
+    <h2>3. Datenerfassung auf unserer Website</h2>
+    <h3>Cookies & Local Storage</h3>
+    <p>Diese App verwendet Technologien wie Local Storage, um Ihre Sitzung (Login) zu speichern. Es werden keine Third-Party-Tracking-Cookies zu Werbezwecken eingesetzt.</p>
+
+    <h3>Server-Log-Dateien</h3>
+    <p>Der Provider der Seiten erhebt und speichert automatisch Informationen in so genannten Server-Log-Dateien (IP-Adresse, Browser, Uhrzeit). Dies dient der Sicherheit und Fehleranalyse.</p>
+
+    <h3>Registrierung auf dieser Website</h3>
+    <p>Wenn Sie sich auf unserer Website registrieren, speichern wir die von Ihnen eingegebenen Daten (E-Mail, Benutzername, Persönlichkeitsmerkmale) zum Zwecke der Nutzung des Dating-Dienstes. Ihre Daten werden vertraulich behandelt und nur für das Matching verwendet.</p>
+
+    <h2>4. Ihre Rechte</h2>
+    <p>Sie haben jederzeit das Recht auf unentgeltliche Auskunft über Herkunft, Empfänger und Zweck Ihrer gespeicherten personenbezogenen Daten. Sie haben außerdem ein Recht, die Berichtigung oder Löschung dieser Daten zu verlangen. Hierzu können Sie sich jederzeit unter der oben angegebenen Adresse an uns wenden.</p>
+    """
+
+    # Assign generated HTML to the config object (doesn't save to DB here, just for response)
+    config.imprint = imprint_html
+    config.privacy = privacy_html
+    return config
+
 # --- HTML Email Helper ---
 def create_html_email(title: str, content: str, action_url: str = None, action_text: str = None, server_domain: str = ""):
     """Creates a responsive, professional HTML email with Solumati styling."""
@@ -412,6 +486,7 @@ def startup_event():
         if get_setting(db, "mail", None) is None:
             save_setting(db, "mail", schemas.MailConfig().dict())
         if get_setting(db, "legal", None) is None:
+            # Initialize with empty defaults, which will trigger the placeholders in generate_legal_html_content
             save_setting(db, "legal", schemas.LegalConfig().dict())
         if TEST_MODE: populate_test_data(db)
     except Exception as e:
@@ -427,10 +502,11 @@ def get_public_config(db: Session = Depends(get_db)):
         "test_mode": TEST_MODE
     }
 
-# NEW: Public endpoint to fetch legal texts (Imprint/Privacy)
+# UPDATED: Now dynamically generates HTML from structured data
 @app.get("/public/legal", response_model=schemas.LegalConfig)
 def get_public_legal(db: Session = Depends(get_db)):
-    return get_setting(db, "legal", schemas.LegalConfig())
+    config = schemas.LegalConfig(**get_setting(db, "legal", {}))
+    return generate_legal_html_content(config)
 
 @app.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
