@@ -1,24 +1,33 @@
 import React from 'react';
-import { AlertTriangle, EyeOff, User, CheckCircle, Shield } from 'lucide-react';
+import { AlertTriangle, EyeOff, User, CheckCircle, Shield, Activity } from 'lucide-react';
 
-const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, t }) => {
+const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, t, testMode }) => {
 
     // Check if user has special roles
     const isAdminOrMod = user && (user.role === 'admin' || user.role === 'moderator');
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {isGuest && (
-                <div className="bg-yellow-400 text-yellow-900 p-3 text-center font-bold flex justify-center items-center gap-2 shadow-sm sticky top-0 z-50">
-                    <AlertTriangle size={20} />
-                    {t('dashboard.guest_warning')}
-                    <button onClick={onRegisterClick} className="ml-4 bg-black text-white text-xs px-3 py-1 rounded hover:bg-gray-800">
-                        {t('landing.btn_register')}
-                    </button>
-                </div>
-            )}
+            {/* Sticky Warnings Container */}
+            <div className="sticky top-0 z-50">
+                {isGuest && (
+                    <div className="bg-yellow-400 text-yellow-900 p-3 text-center font-bold flex justify-center items-center gap-2 shadow-sm">
+                        <AlertTriangle size={20} />
+                        {t('dashboard.guest_warning')}
+                        <button onClick={onRegisterClick} className="ml-4 bg-black text-white text-xs px-3 py-1 rounded hover:bg-gray-800">
+                            {t('landing.btn_register')}
+                        </button>
+                    </div>
+                )}
+                {testMode && (
+                    <div className="bg-orange-500 text-white p-2 text-center font-bold text-sm flex justify-center items-center gap-2 shadow-sm">
+                        <Activity size={16} />
+                        {t('alert.test_mode_active', 'Test Mode Active')}
+                    </div>
+                )}
+            </div>
 
-            <nav className="bg-white shadow p-4 flex justify-between items-center sticky top-0 z-40">
+            <nav className="bg-white shadow p-4 flex justify-between items-center z-40 relative">
                 <div className="flex items-center gap-3">
                     {/* Logo in Navbar - Path fixed */}
                     <img

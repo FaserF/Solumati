@@ -29,6 +29,8 @@ services:
     volumes:
       # Mount code for hot-reloading during dev
       - ./backend:/app
+      # Mount frontend package.json to sync version
+      - ./frontend/package.json:/app/frontend_package.json
     ports:
       - "7777:7777"
     environment:

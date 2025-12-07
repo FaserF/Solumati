@@ -16,11 +16,12 @@ export const FALLBACK = {
     'landing.btn_register': 'Register',
     'landing.btn_guest': 'Browse as guest',
     'landing.opensource': 'Free & Open Source',
-    'landing.admin': 'Admin', // Legacy key, might be unused now
+    'landing.admin': 'Admin',
+    'landing.legal': 'Legal',
 
     // Login
     'login.title': 'Welcome back',
-    'label.email_user': 'Email or Username', // Updated label
+    'label.email_user': 'Email or Username',
     'label.password': 'Password',
     'btn.login': 'Log in',
 
@@ -41,7 +42,7 @@ export const FALLBACK = {
     'dashboard.title': 'Your Matches',
     'dashboard.match_score': 'Match Score',
     'match.pairing_text': 'Fits your values & goals',
-    'dashboard.admin_panel': 'Admin Panel', // New Key
+    'dashboard.admin_panel': 'Admin Panel',
 
     // Admin Common
     'admin.title': 'Admin Console',
@@ -50,6 +51,7 @@ export const FALLBACK = {
     'admin.tab.users': 'Users',
     'admin.tab.reports': 'Reports',
     'admin.tab.settings': 'Settings',
+    'admin.tab.diagnostics': 'Diagnostics', // NEW
     'admin.btn.refresh': 'Refresh',
 
     // Admin Users
@@ -58,7 +60,7 @@ export const FALLBACK = {
     'admin.table.status': 'Status',
     'admin.table.registered': 'Registered',
     'admin.table.last_login': 'Last Login',
-    'admin.table.role': 'Role', // New
+    'admin.table.role': 'Role',
     'admin.table.actions': 'Actions',
     'admin.status.active': 'Active',
     'admin.status.inactive': 'Inactive',
@@ -67,12 +69,15 @@ export const FALLBACK = {
     'admin.btn.deactivate': 'Block',
     'admin.btn.activate': 'Unblock',
     'admin.btn.delete': 'Delete',
-    'admin.btn.promote': 'Make Mod', // New
-    'admin.btn.demote': 'Demote', // New
-    'admin.btn.edit': 'Edit User', // New
-    'admin.btn.verify': 'Verify User', // New
+    'admin.btn.promote': 'Make Mod',
+    'admin.btn.demote': 'Demote',
+    'admin.btn.make_guest': 'Make Guest', // NEW
+    'admin.btn.edit': 'Edit User',
+    'admin.btn.verify': 'Verify User',
     'admin.no_users': 'No users found.',
-    'admin.ban_until': 'Banned until', // New
+    'admin.ban_until': 'Banned until',
+    'admin.tooltip.visible': 'Visible in Matches', // NEW
+    'admin.tooltip.hidden': 'Hidden from Matches', // NEW
 
     // Admin Reports
     'admin.reports.reporter': 'Reporter',
@@ -89,6 +94,7 @@ export const FALLBACK = {
     'admin.settings.require_verify': 'Force Email Verification',
     'admin.settings.allow_guest': 'Allow Guest Mode',
     'admin.settings.domains': 'Allowed Domains (empty = all)',
+    'admin.settings.blocked_domains': 'Blacklisted Domains', // NEW
     'admin.settings.domains_hint': 'Comma separated list.',
     'admin.settings.mail_title': 'SMTP Mail Server',
     'admin.settings.mail_active': 'Enable Mail Sending',
@@ -101,17 +107,34 @@ export const FALLBACK = {
     'admin.settings.test_mail_btn': 'Send Test Email',
     'admin.settings.saved': 'Settings saved!',
     'admin.settings.save_error': 'Error saving settings.',
+    'admin.settings.unsaved_warning': 'Please save changes first!', // NEW
 
     // Admin Modal
     'admin.modal.punish_title': 'Block User',
-    'admin.modal.edit_title': 'Edit User', // New
+    'admin.modal.edit_title': 'Edit User',
     'admin.modal.reason': 'Type',
-    'admin.modal.custom_reason': 'Reason text (visible to user)', // New
+    'admin.modal.custom_reason': 'Reason text (visible to user)',
     'admin.reason.reported': 'Reported (Violation)',
     'admin.reason.manual': 'Manual Deactivation',
     'admin.reason.tempban': 'Temporary Ban',
     'admin.reason.unknown': 'Other / Unknown',
     'admin.modal.duration': 'Duration (Hours)',
     'admin.modal.duration_hint': 'Account will be reactivated automatically after this time.',
-    'admin.btn.execute_ban': 'Execute Ban'
+    'admin.btn.execute_ban': 'Execute Ban',
+
+    // Admin Diagnostics
+    'admin.diag.system_status': 'System Status',
+    'admin.diag.version': 'Version',
+    'admin.diag.internet': 'Internet Connection',
+    'admin.diag.disk': 'Disk Space',
+    'admin.diag.database': 'Database',
+    'admin.diag.api': 'API Reachability',
+    'admin.diag.changelog': 'Changelog',
+    'admin.diag.update_available': 'Update Available!',
+    'admin.diag.up_to_date': 'Up to date',
+    'admin.diag.online': 'Online',
+    'admin.diag.offline': 'Offline',
+    'admin.diag.connected': 'Connected',
+    'admin.diag.disconnected': 'Error',
+    'admin.diag.free': 'Free'
 };

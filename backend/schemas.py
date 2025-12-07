@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
 
@@ -40,6 +40,7 @@ class UserDisplay(UserBase):
     is_guest: bool
     is_active: bool
     is_verified: bool
+    is_visible_in_matches: bool = True # New field
     role: str
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
@@ -60,6 +61,7 @@ class UserAdminUpdate(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None # Plaintext password to be hashed
     is_verified: Optional[bool] = None
+    is_visible_in_matches: Optional[bool] = None # New field
 
 class MatchResult(BaseModel):
     user_id: int
@@ -101,7 +103,7 @@ class MailConfig(BaseModel):
     smtp_ssl: bool = False
     smtp_tls: bool = True
     from_email: str = "noreply@solumati.local"
-    sender_name: str = "Solumati" # Added Sender Name
+    sender_name: str = "Solumati"
 
 class TestMailRequest(BaseModel):
     target_email: str
@@ -109,8 +111,8 @@ class TestMailRequest(BaseModel):
 class RegistrationConfig(BaseModel):
     enabled: bool = True
     allowed_domains: str = ""
+    blocked_domains: str = ""
     require_verification: bool = True
-    # guest_mode_enabled removed, logic now depends on Guest User (ID 0) status
 
 class SystemSettings(BaseModel):
     mail: MailConfig
@@ -118,3 +120,23 @@ class SystemSettings(BaseModel):
 
 class PublicConfig(BaseModel):
     registration_enabled: bool
+    test_mode: bool = False
+
+# --- Diagnostics Schemas ---
+class SystemDiagnostics(BaseModel):
+    current_version: str
+    latest_version: Optional[str] = "Unknown"
+    update_available: bool
+    internet_connected: bool
+    disk_total_gb: float
+    disk_free_gb: float
+    disk_percent: float
+    database_connected: bool
+    api_reachable: bool
+
+class ChangelogRelease(BaseModel):
+    tag_name: str
+    name: Optional[str]
+    body: Optional[str]
+    published_at: Optional[str]
+    html_url: Optional[str]

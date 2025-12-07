@@ -7,7 +7,6 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import AdminPanel from './components/AdminPanel';
-// Removed legacy AdminLogin import
 
 function App() {
     // --- Global State ---
@@ -16,10 +15,13 @@ function App() {
     const [matches, setMatches] = useState([]);
     const [isGuest, setIsGuest] = useState(false);
 
+    // Global Config
+    const [testMode, setTestMode] = useState(false);
+
     // --- Form State ---
-    const [emailOrUser, setEmailOrUser] = useState(""); // Changed from email to emailOrUser
+    const [emailOrUser, setEmailOrUser] = useState("");
     const [password, setPassword] = useState("");
-    const [email, setEmail] = useState(""); // Still needed for register
+    const [email, setEmail] = useState("");
     const [realName, setRealName] = useState("");
     const [intent, setIntent] = useState("longterm");
     const [answers, setAnswers] = useState({});
@@ -31,14 +33,23 @@ function App() {
         return i18n[key] || FALLBACK[key] || defaultText || key;
     };
 
-    // --- Verification & Language Logic ---
+    // --- Startup: Verification, I18n, Config ---
     useEffect(() => {
+        // Verification Check
         const params = new URLSearchParams(window.location.search);
         if (params.get('verify_code') || window.location.pathname === '/verify') {
             console.log("Verification intent detected");
         }
 
-        // --- I18N FETCHING DEBUGGING ---
+        // Fetch Global Config (TestMode etc)
+        fetch(`${API_URL}/public-config`)
+            .then(res => res.json())
+            .then(data => {
+                setTestMode(data.test_mode || false);
+            })
+            .catch(e => console.error("Config fetch error", e));
+
+        // Fetch Translations
         const browserLang = navigator.language;
         const shortLang = browserLang.split('-')[0] || 'en';
         console.log(`[App] Browser language detected: ${browserLang} -> Requesting: ${shortLang}`);
@@ -72,15 +83,21 @@ function App() {
             const res = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ login: emailOrUser, password }) // Changed field name
+                body: JSON.stringify({ login: emailOrUser, password })
             });
             if (res.ok) {
                 const data = await res.json();
                 console.log("[App] Login success:", data);
                 setUser(data);
-                setIsGuest(false);
-                fetchMatches(data.user_id);
-                setView('dashboard');
+                setIsGuest(data.role === 'guest' || data.is_guest);
+
+                if (data.role === 'admin') {
+                    setView('adminPanel');
+                } else {
+                    fetchMatches(data.user_id);
+                    setView('dashboard');
+                }
+
             } else {
                 const err = await res.json();
                 console.warn("[App] Login failed:", err);
@@ -138,7 +155,7 @@ function App() {
                 const data = await res.json();
                 setMatches(data);
                 setIsGuest(true);
-                setUser({ user_id: 0, username: t('user.guest', "Gast"), role: 'user' });
+                setUser({ user_id: 0, username: t('user.guest', "Gast"), role: 'guest' });
                 setView('dashboard');
             } else {
                 const err = await res.json();
@@ -166,7 +183,7 @@ function App() {
             onLogin={() => setView('login')}
             onRegister={() => setView('register')}
             onGuest={handleGuest}
-            onAdmin={() => setView('login')} // Admin now uses central login
+            onAdmin={() => setView('login')}
             t={t}
         />
     );
@@ -199,6 +216,7 @@ function App() {
             user={user}
             matches={matches}
             isGuest={isGuest}
+            testMode={testMode}
             onLogout={() => { setUser(null); setView('landing'); }}
             onRegisterClick={() => setView('register')}
             onAdminClick={() => setView('adminPanel')}
@@ -209,6 +227,7 @@ function App() {
     if (view === 'adminPanel') return (
         <AdminPanel
             user={user}
+            testMode={testMode}
             onLogout={() => { setUser(null); setView('landing'); }}
             onBack={() => setView('dashboard')}
             t={t}

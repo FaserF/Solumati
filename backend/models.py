@@ -15,12 +15,15 @@ class User(Base):
     about_me = Column(Text, default="Ich bin neu hier!")
     image_url = Column(String, nullable=True)
 
-    # REFACTORED: Replaced is_admin with role based access
     # Roles: 'user', 'moderator', 'admin'
     role = Column(String, default="user")
 
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+
+    # New Flag: Controls if user appears in matches.
+    # Enables distinction between "Admin only" (False) and "Admin & User" (True)
+    is_visible_in_matches = Column(Boolean, default=True)
 
     intent = Column(String)
     answers = Column(ARRAY(Integer))
@@ -35,8 +38,6 @@ class User(Base):
     deactivated_at = Column(DateTime, nullable=True)
     banned_until = Column(DateTime, nullable=True) # If set, user is temp-banned until this time
 
-    # Helper property to maintain backward compatibility check if needed,
-    # though usage should migrate to checking role == 'admin'
     @property
     def is_admin(self):
         return self.role == 'admin'

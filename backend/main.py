@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, B
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, text
 from typing import List, Optional
 import logging
 import os
@@ -11,6 +11,8 @@ import shutil
 import json
 import smtplib
 import secrets
+import socket
+import urllib.request
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -29,6 +31,24 @@ logger = logging.getLogger(__name__)
 TEST_MODE = os.getenv("TEST_MODE", "false").lower() in ("true", "1", "yes")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 
+# --- VERSION SYNC ---
+def get_app_version():
+    """Tries to read version from mounted frontend package.json, falls back to default."""
+    try:
+        pkg_path = "/app/frontend_package.json"
+        if os.path.exists(pkg_path):
+            with open(pkg_path, 'r') as f:
+                data = json.load(f)
+                version = data.get('version')
+                if version:
+                    logger.info(f"Version synced from package.json: {version}")
+                    return version
+    except Exception as e:
+        logger.warning(f"Could not read version from package.json: {e}")
+    return "0.5.3" # Fallback
+
+CURRENT_VERSION = get_app_version()
+
 # Initialize DB Tables
 try:
     Base.metadata.create_all(bind=engine)
@@ -36,7 +56,7 @@ try:
 except Exception as e:
     logger.error(f"Error creating database tables: {e}")
 
-app = FastAPI(title="Solumati API", version="0.5.2")
+app = FastAPI(title="Solumati API", version=CURRENT_VERSION)
 
 # --- CORS SETTINGS ---
 app.add_middleware(
@@ -51,6 +71,26 @@ app.add_middleware(
 # Static files for images
 os.makedirs("static/images", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# --- Startup: DB Migration Check ---
+@app.on_event("startup")
+def startup_check_schema():
+    """Checks if new columns exist in DB and adds them if missing (Auto-Migration)."""
+    db = next(get_db())
+    try:
+        # Check for 'is_visible_in_matches'
+        try:
+            db.execute(text("SELECT is_visible_in_matches FROM users LIMIT 1"))
+        except Exception:
+            db.rollback()
+            logger.warning("Column 'is_visible_in_matches' missing in 'users'. Attempting to add it.")
+            db.execute(text("ALTER TABLE users ADD COLUMN is_visible_in_matches BOOLEAN DEFAULT TRUE"))
+            db.commit()
+            logger.info("Migration successful: Added 'is_visible_in_matches'.")
+    except Exception as e:
+        logger.error(f"Schema check failed: {e}")
+    finally:
+        db.close()
 
 # --- Dependency: Auth & Role Check ---
 def get_current_user_from_header(x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)):
@@ -111,7 +151,6 @@ def send_mail_sync(to_email: str, subject: str, body: str, db: Session):
             return
 
         msg = MIMEMultipart()
-        # Use formataddr to combine name and email correctly: "Solumati <noreply@...>"
         msg['From'] = formataddr((config.sender_name, config.from_email))
         msg['To'] = to_email
         msg['Subject'] = subject
@@ -130,7 +169,7 @@ def send_mail_sync(to_email: str, subject: str, body: str, db: Session):
         logger.info(f"Email sent successfully to {to_email}")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
-        raise e # Re-raise to let caller know if needed (e.g. test mail)
+        raise e
 
 # --- Core Logic Helpers ---
 def generate_unique_username(db: Session, real_name: str) -> str:
@@ -150,21 +189,27 @@ def calculate_compatibility(answers_a, answers_b, intent_a, intent_b) -> float:
     max_diff = len(answers_a) * 4
     return round(max(0, 100 - ((diff_sum / max_diff) * 100)), 2)
 
-# --- Startup ---
+# --- Startup Data ---
 def ensure_guest_user(db: Session):
     try:
         guest = db.query(models.User).filter(models.User.id == 0).first()
         if not guest:
             logger.info("Creating Guest User (ID 0)...")
+            # CHANGED: Role is now 'guest' instead of 'user'
             guest = models.User(
                 id=0, email="guest@solumati.local", hashed_password="NOPASSWORD",
                 real_name="Gast", username="Gast", about_me="System Guest",
                 is_active=True, is_verified=True, is_guest=True, intent="casual",
-                answers=[3,3,3,3], created_at=datetime.utcnow(), role='user'
+                answers=[3,3,3,3], created_at=datetime.utcnow(), role='guest',
+                is_visible_in_matches=False
             )
             db.add(guest)
             db.commit()
-            logger.info("Guest user created.")
+        elif guest.role != 'guest':
+            # Fix existing guest role if necessary
+            logger.info("Fixing guest user role to 'guest'...")
+            guest.role = 'guest'
+            db.commit()
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create or update guest user: {e}")
@@ -181,22 +226,14 @@ def ensure_admin_user(db: Session):
                 real_name="Administrator",
                 username="admin",
                 about_me="System Administrator",
-                is_active=True,
-                is_verified=True,
-                is_guest=False,
-                role="admin",
-                intent="admin",
-                answers=[3,3,3,3],
-                created_at=datetime.utcnow()
+                is_active=True, is_verified=True, is_guest=False, role="admin",
+                intent="admin", answers=[3,3,3,3], created_at=datetime.utcnow(),
+                is_visible_in_matches=False # Default admin hidden
             )
             db.add(admin)
             db.commit()
             separator = "=" * 60
-            logger.warning(f"\n{separator}\nINITIAL ADMIN USER CREATED\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER (Feature pending)\n{separator}\n")
-        elif admin.email is None or admin.email == "admin@example.com":
-             logger.info("Admin user found with invalid/old email. Updating to admin@solumati.local.")
-             admin.email = "admin@solumati.local"
-             db.commit()
+            logger.warning(f"\n{separator}\nINITIAL ADMIN USER CREATED\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER\n{separator}\n")
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to ensure admin user: {e}")
@@ -214,7 +251,8 @@ def populate_test_data(db: Session):
                 email=email, hashed_password="pw" + "salt", real_name=name,
                 username=generate_unique_username(db, name),
                 intent=random.choice(intents), answers=[random.randint(1,5) for _ in range(4)],
-                is_active=True, is_verified=True, created_at=datetime.utcnow(), role='user'
+                is_active=True, is_verified=True, created_at=datetime.utcnow(), role='user',
+                is_visible_in_matches=True
             )
             db.add(u)
         db.commit()
@@ -243,17 +281,32 @@ def startup_event():
 @app.get("/public-config", response_model=schemas.PublicConfig)
 def get_public_config(db: Session = Depends(get_db)):
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
-    return {"registration_enabled": reg_config.enabled}
+    return {
+        "registration_enabled": reg_config.enabled,
+        "test_mode": TEST_MODE
+    }
 
 @app.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info(f"Attempting to register new user: {user.email}")
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
-    if not reg_config.enabled: raise HTTPException(403, "Registration disabled.")
+
+    if not reg_config.enabled:
+        raise HTTPException(403, "Registration disabled.")
+
+    domain = user.email.split('@')[-1].lower()
+
+    # Whitelist logic
     if reg_config.allowed_domains:
-        domain = user.email.split('@')[-1].lower()
-        if domain not in [d.strip().lower() for d in reg_config.allowed_domains.split(',')]:
+        if domain not in [d.strip().lower() for d in reg_config.allowed_domains.split(',') if d.strip()]:
             raise HTTPException(403, f"Domain '{domain}' not allowed.")
+
+    # Blacklist logic (NEW)
+    if reg_config.blocked_domains:
+        if domain in [d.strip().lower() for d in reg_config.blocked_domains.split(',') if d.strip()]:
+            logger.warning(f"Registration blocked for domain {domain} (Blacklisted)")
+            raise HTTPException(403, f"Registration is not allowed for domain '{domain}'.")
+
     if db.query(models.User).filter(models.User.email == user.email).first():
         logger.warning(f"Registration failed: Email {user.email} already exists.")
         raise HTTPException(400, "Email already registered.")
@@ -264,6 +317,7 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         intent=user.intent, answers=user.answers,
         is_active=True, is_verified=not reg_config.require_verification,
         role="user",
+        is_visible_in_matches=True, # Default for normal users
         created_at=datetime.utcnow()
     )
     db.add(new_user)
@@ -279,13 +333,11 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
 @app.post("/login")
 def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
     logger.info(f"Login attempt for: {creds.login}")
-
     user = db.query(models.User).filter(
         or_(models.User.email == creds.login, models.User.username == creds.login)
     ).first()
 
     if not user or user.hashed_password != (creds.password + "salt"):
-        logger.warning(f"Login failed for {creds.login}: Invalid credentials.")
         raise HTTPException(401, "Invalid credentials")
 
     if not user.is_active:
@@ -299,35 +351,44 @@ def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
         else:
             reason = user.deactivation_reason or "Unknown"
             custom_text = user.ban_reason_text or ""
-            logger.info(f"Login denied for {user.username}. Account inactive (Reason: {reason}).")
-
             msg = "Account deactivated."
+
+            # --- Enhanced Ban Message Logic ---
             if reason.startswith("TempBan") and user.banned_until:
-                hours = int((user.banned_until - datetime.utcnow()).total_seconds() / 3600) + 1
-                msg = f"Account temporarily suspended. Time remaining: approx. {hours}h."
+                now = datetime.utcnow()
+                diff = user.banned_until - now
+                total_seconds = int(diff.total_seconds())
+
+                if total_seconds > 0:
+                    hours = total_seconds // 3600
+                    minutes = (total_seconds % 3600) // 60
+                    # Format: YYYY-MM-DD HH:MM
+                    unban_time_str = user.banned_until.strftime("%Y-%m-%d %H:%M UTC")
+
+                    msg = (f"Account temporarily suspended. "
+                           f"You are banned until: {unban_time_str}. "
+                           f"Remaining time: {hours}h {minutes}m.")
+            # ----------------------------------
+
             elif reason == "Reported":
                 msg = "Account deactivated due to policy violations."
-            elif reason == "AdminDeactivation":
-                msg = "Account deactivated by administrator."
 
             if custom_text:
-                msg += f" Reason provided: {custom_text}"
+                msg += f" Reason: {custom_text}"
 
             raise HTTPException(403, detail=msg)
 
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
     if not user.is_verified and reg_config.require_verification:
-        logger.info(f"Login denied for {user.username}. Email not verified.")
         raise HTTPException(403, "Please verify your email address.")
 
     user.last_login = datetime.utcnow()
     db.commit()
-    logger.info(f"User {user.username} (Role: {user.role}) logged in successfully.")
-
     return {
         "user_id": user.id,
         "username": user.username,
         "role": user.role,
+        "is_guest": user.is_guest,
         "is_admin": user.role == 'admin'
     }
 
@@ -342,10 +403,8 @@ def verify_email(id: int, code: str, db: Session = Depends(get_db)):
 @app.get("/matches/{user_id}", response_model=List[schemas.MatchResult])
 def get_matches(user_id: int, db: Session = Depends(get_db)):
     if user_id == 0:
-        # GUEST LOGIN: Now checks the status of the guest user (ID 0) in DB
         guest_user = db.query(models.User).filter(models.User.id == 0).first()
-        if not guest_user or not guest_user.is_active:
-             raise HTTPException(403, "Guest mode disabled")
+        if not guest_user or not guest_user.is_active: raise HTTPException(403, "Guest mode disabled")
         curr_answ, curr_int, exc_id = [3,3,3,3], "longterm", 0
     else:
         u = db.query(models.User).filter(models.User.id == user_id).first()
@@ -353,8 +412,16 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
         curr_answ, curr_int, exc_id = u.answers, u.intent, user_id
 
     res = []
-    # Exclude ID 0 (Guest) from being matched
-    for other in db.query(models.User).filter(models.User.id != exc_id, models.User.is_active == True, models.User.id != 0).all():
+    # UPDATED QUERY: Filter out users who are not visible in matches (e.g. Admin-only accounts)
+    query = db.query(models.User).filter(
+        models.User.id != exc_id,
+        models.User.is_active == True,
+        models.User.id != 0,
+        models.User.is_visible_in_matches == True,
+        models.User.role != 'admin' # Ensure admins don't show up in matches generally unless specifically opted in? Actually is_visible_in_matches handles this.
+    )
+
+    for other in query.all():
         s = calculate_compatibility(curr_answ, other.answers, curr_int, other.intent)
         if s > 0: res.append(schemas.MatchResult(user_id=other.id, username=other.username, about_me=other.about_me, image_url=other.image_url, score=s))
     res.sort(key=lambda x: x.score, reverse=True)
@@ -397,7 +464,6 @@ def report_user(report: schemas.ReportCreate, db: Session = Depends(get_db)):
 def admin_get_users(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     try:
         users = db.query(models.User).order_by(models.User.id).all()
-        logger.info(f"Admin {current_admin.username} fetched users.")
         return users
     except Exception as e:
         logger.error(f"DB Error fetching users: {e}")
@@ -408,8 +474,6 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user: raise HTTPException(404, "User not found")
 
-    logger.info(f"Admin {current_admin.username} updating user {user_id}")
-
     if update.username is not None and update.username != user.username:
         if db.query(models.User).filter(models.User.username == update.username).first():
             raise HTTPException(400, "Username already exists")
@@ -419,7 +483,6 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
         if db.query(models.User).filter(models.User.email == update.email).first():
             raise HTTPException(400, "Email already exists")
         user.email = update.email
-        # Automatically unverify if email changes, unless explicitly set otherwise later in logic
         user.is_verified = False
 
     if update.password is not None and update.password.strip() != "":
@@ -428,23 +491,41 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
     if update.is_verified is not None:
         user.is_verified = update.is_verified
 
-    db.commit()
-    return {"status": "success", "user": {"id": user.id, "username": user.username, "email": user.email, "is_verified": user.is_verified}}
+    # Allow admin to set match visibility
+    if update.is_visible_in_matches is not None:
+        user.is_visible_in_matches = update.is_visible_in_matches
+        logger.info(f"Admin {current_admin.username} changed match visibility for {user.username} to {update.is_visible_in_matches}")
 
+    db.commit()
+    return {"status": "success", "user": {"id": user.id}}
 
 @app.put("/admin/users/{user_id}/punish")
 def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user: raise HTTPException(404, "User not found")
 
-    logger.info(f"Admin {current_admin.username} executing action {action.action} on user {user_id}")
+    # Protection for Root Admin (assuming username is 'admin')
+    if user.username == 'admin' and action.action in ['delete', 'deactivate', 'demote_user', 'demote_guest']:
+        logger.warning(f"Admin {current_admin.username} tried to punish root admin.")
+        raise HTTPException(400, "Cannot perform this action on the root admin.")
+
+    # Protection for System Guest (ID 0)
+    if user.id == 0:
+        if action.action == 'delete':
+            raise HTTPException(400, "Cannot delete system guest. Deactivate instead.")
+        if action.action == 'promote_moderator':
+            raise HTTPException(400, "Cannot promote guest user.")
+
+    # Guest user role logic checks
+    if user.role == 'guest' and action.action == 'promote_moderator':
+         raise HTTPException(400, "Cannot promote guest user.")
+
 
     if action.action == "delete":
         db.delete(user)
     elif action.action == "reactivate":
         user.is_active = True
         user.deactivation_reason = None
-        user.ban_reason_text = None
         user.banned_until = None
     elif action.action == "deactivate":
         user.is_active = False
@@ -456,20 +537,22 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
             user.deactivation_reason = f"TempBan{action.duration_hours}"
     elif action.action == "promote_moderator":
         user.role = "moderator"
-        logger.info(f"User {user.username} promoted to moderator.")
+        user.is_guest = False
     elif action.action == "demote_user":
         user.role = "user"
-        logger.info(f"User {user.username} demoted to regular user.")
-    elif action.action == "verify": # Manual Verify Action
+        user.is_guest = False
+    elif action.action == "demote_guest":
+        user.role = "guest"
+        user.is_guest = True
+    elif action.action == "verify":
         user.is_verified = True
-        logger.info(f"User {user.username} manually verified by admin.")
 
     db.commit()
+    logger.info(f"Admin {current_admin.username} executed action {action.action} on user {user.id}")
     return {"status": "success"}
 
 @app.get("/admin/reports", response_model=List[schemas.ReportDisplay])
 def admin_get_reports(db: Session = Depends(get_db), current_user: models.User = Depends(require_moderator_or_admin)):
-    logger.info(f"User {current_user.username} (Role: {current_user.role}) fetching reports.")
     reports = db.query(models.Report).filter(models.Report.resolved == False).all()
     results = []
     for r in reports:
@@ -489,7 +572,6 @@ def admin_get_reports(db: Session = Depends(get_db), current_user: models.User =
 
 @app.delete("/admin/reports/{report_id}")
 def admin_resolve_report(report_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(require_moderator_or_admin)):
-    logger.info(f"User {current_user.username} resolving report {report_id}")
     report = db.query(models.Report).filter(models.Report.id == report_id).first()
     if report:
         db.delete(report)
@@ -504,25 +586,94 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
 
 @app.put("/admin/settings")
 def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
-    logger.info(f"Admin {current_admin.username} updated system settings.")
     save_setting(db, "mail", settings.mail.dict())
     save_setting(db, "registration", settings.registration.dict())
+    logger.info(f"Admin {current_admin.username} updated system settings.")
     return {"status": "updated"}
 
 @app.post("/admin/settings/test-mail")
 def send_test_mail(req: schemas.TestMailRequest, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     try:
-        send_mail_sync(req.target_email, "Solumati Test Mail", "<h1>It Works!</h1><p>This is a test email from your Solumati instance.</p>", db)
+        send_mail_sync(req.target_email, "Solumati Test Mail", "<h1>It Works!</h1>", db)
         return {"status": "sent"}
     except Exception as e:
+        logger.error(f"SMTP Test Failed: {e}")
         raise HTTPException(500, detail=str(e))
+
+# --- NEW: Diagnostics Endpoints ---
+
+@app.get("/admin/diagnostics", response_model=schemas.SystemDiagnostics)
+def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    """
+    Performs system checks: DB connection, Internet connectivity, Disk usage, Version check.
+    """
+    # 1. Database Check (Implicitly working if we are here, but let's query explicit)
+    db_ok = True
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        logger.error(f"Diagnostics: Database check failed: {e}")
+        db_ok = False
+
+    # 2. Internet Check (Ping GitHub or Google DNS)
+    internet_ok = False
+    try:
+        # Connect to 8.8.8.8 port 53 (Google Public DNS) - reliable and fast
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        internet_ok = True
+    except OSError:
+        internet_ok = False
+
+    # 3. Disk Usage
+    total, used, free = shutil.disk_usage(".")
+    disk_total_gb = round(total / (2**30), 2)
+    disk_free_gb = round(free / (2**30), 2)
+    disk_percent = round((used / total) * 100, 1)
+
+    # 4. Version Check (Fetch latest tag from GitHub)
+    latest_version = "Unknown"
+    update_available = False
+    if internet_ok:
+        try:
+            with urllib.request.urlopen("https://api.github.com/repos/FaserF/Solumati/releases/latest", timeout=5) as response:
+                if response.status == 200:
+                    data = json.loads(response.read().decode())
+                    latest_version = data.get("tag_name", "Unknown").lstrip('v')
+                    if latest_version != "Unknown" and latest_version != CURRENT_VERSION:
+                        update_available = True
+        except Exception as e:
+            logger.warning(f"Diagnostics: Could not fetch latest version: {e}")
+
+    return {
+        "current_version": CURRENT_VERSION,
+        "latest_version": latest_version,
+        "update_available": update_available,
+        "internet_connected": internet_ok,
+        "disk_total_gb": disk_total_gb,
+        "disk_free_gb": disk_free_gb,
+        "disk_percent": disk_percent,
+        "database_connected": db_ok,
+        "api_reachable": True
+    }
+
+@app.get("/admin/changelog", response_model=List[schemas.ChangelogRelease])
+def get_changelog(current_admin: models.User = Depends(require_admin)):
+    """Fetches the last 5 releases from GitHub."""
+    try:
+        url = "https://api.github.com/repos/FaserF/Solumati/releases?per_page=5"
+        req = urllib.request.Request(url, headers={"User-Agent": "Solumati-Backend"})
+        with urllib.request.urlopen(req, timeout=5) as response:
+             if response.status == 200:
+                 data = json.loads(response.read().decode())
+                 return data
+    except Exception as e:
+        logger.error(f"Failed to fetch changelog: {e}")
+    return []
+
 
 @app.get('/api/i18n/{lang}')
 async def get_i18n(lang: str):
-    logger.info(f"i18n requested for language code: {lang}")
     translations = i18n.get_translations(i18n.normalize_lang_code(lang))
-    if not translations:
-        logger.warning(f"No translations found for {lang}, returning default or empty.")
     return {"lang": lang, "translations": translations}
 
 @app.get('/health')
