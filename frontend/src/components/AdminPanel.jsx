@@ -270,6 +270,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
         setUnsavedChanges(true);
     };
 
+    const isMailConfigured = () => {
+        if (!settings?.mail) return false;
+        // Simple check: Host and User or Host and Port
+        return settings.mail.smtp_host && settings.mail.smtp_host.length > 0;
+    };
+
     return (
         <div className="min-h-screen bg-gray-100 p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
@@ -515,6 +521,15 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                         onChange={e => updateSetting('registration', 'require_verification', e.target.checked)}
                                     />
                                 </label>
+                                <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition">
+                                    <span className={`font-medium ${!isMailConfigured() ? 'text-gray-400' : ''}`}>{t('admin.settings.email_2fa_enabled', 'Enable Email 2FA')}</span>
+                                    <input type="checkbox" className="w-5 h-5 accent-pink-600 disabled:opacity-50"
+                                        checked={settings.registration.email_2fa_enabled && isMailConfigured()}
+                                        disabled={!isMailConfigured()}
+                                        onChange={e => updateSetting('registration', 'email_2fa_enabled', e.target.checked)}
+                                    />
+                                </label>
+                                {!isMailConfigured() && <p className="text-xs text-orange-500">Note: Configure Mail Server to enable 2FA via Email.</p>}
 
                                 <div>
                                     <label className="block text-sm font-bold text-gray-500 mb-1">{t('admin.settings.server_domain')}</label>

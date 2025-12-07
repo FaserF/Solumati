@@ -69,6 +69,14 @@ def verify_email(id: int, code: str, db: Session = Depends(get_db)):
     logger.info(f"User {user.username} (ID {id}) successfully verified.")
     return {"message": "Success", "status": "verified"}
 
+# --- NEW: Get Own Profile Endpoint ---
+@router.get("/users/{user_id}", response_model=schemas.UserDisplay)
+def get_user_profile(user_id: int, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """Fetch own user profile details (including email and settings)."""
+    if user.id != user_id:
+        raise HTTPException(403, "Forbidden")
+    return user
+
 @router.get("/matches/{user_id}", response_model=List[schemas.MatchResult])
 def get_matches(user_id: int, db: Session = Depends(get_db)):
     if user_id == 0:

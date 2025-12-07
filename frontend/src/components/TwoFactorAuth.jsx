@@ -1,23 +1,7 @@
 import React, { useState, useEffect } from 'react';
-// Korrektur: Nutze den neuen absoluten Pfad-Alias '~/config.js'
 import { API_URL } from '~/config.js';
 import { Shield, Smartphone, Mail, Fingerprint } from 'lucide-react';
-// import { startAuthentication } from '@simplewebauthn/browser'; // Removed static import
-
-// Function to dynamically load the WebAuthn authentication function with built-in error handling
-const loadStartAuthentication = async () => {
-    try {
-        // Dynamic import mit robustem Catch, um den Build zu beruhigen
-        const { startAuthentication } = await import('@simplewebauthn/browser');
-        return startAuthentication;
-    } catch (e) {
-        console.error("Failed to load @simplewebauthn/browser dynamically (Authentication):", e);
-        // Dummy-Funktion für die Laufzeit, falls das Paket fehlt
-        return () => {
-            throw new Error("WebAuthn package missing (Authentication). Bitte prüfen Sie die Node-Abhängigkeiten.");
-        };
-    }
-};
+import { startAuthentication } from '@simplewebauthn/browser';
 
 const TwoFactorAuth = ({ tempAuth, onVerified, onCancel, t }) => {
     const [code, setCode] = useState("");
@@ -29,7 +13,7 @@ const TwoFactorAuth = ({ tempAuth, onVerified, onCancel, t }) => {
         if (tempAuth.method === 'passkey') {
             handlePasskey();
         }
-    }, [tempAuth.method]); // Dependency added for safety
+    }, [tempAuth.method]);
 
     const handleSubmit = async () => {
         if (!code && tempAuth.method !== 'passkey') return;
@@ -56,9 +40,6 @@ const TwoFactorAuth = ({ tempAuth, onVerified, onCancel, t }) => {
     const handlePasskey = async () => {
         setLoading(true);
         try {
-            // Dynamically load startAuthentication function
-            const startAuthentication = await loadStartAuthentication();
-
             // 1. Get Options
             const resp = await fetch(`${API_URL}/auth/2fa/webauthn/options`, {
                 method: 'POST',

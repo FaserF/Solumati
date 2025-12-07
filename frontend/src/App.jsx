@@ -13,7 +13,7 @@ import AccountSettings from './components/AccountSettings';
 import Legal from './components/Legal';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
-import TwoFactorAuth from './components/TwoFactorAuth'; // NEW: 2FA Component
+import TwoFactorAuth from './components/TwoFactorAuth';
 
 function App() {
     // --- Global State ---
@@ -23,10 +23,14 @@ function App() {
     const [isGuest, setIsGuest] = useState(false);
 
     // Global Config
-    const [testMode, setTestMode] = useState(false);
+    const [globalConfig, setGlobalConfig] = useState({
+        test_mode: false,
+        registration_enabled: true,
+        email_2fa_enabled: false
+    });
 
     // --- 2FA State ---
-    const [tempAuth, setTempAuth] = useState(null); // Stores intermediate login state for 2FA
+    const [tempAuth, setTempAuth] = useState(null);
 
     // --- Form State ---
     const [emailOrUser, setEmailOrUser] = useState("");
@@ -54,7 +58,7 @@ function App() {
         fetch(`${API_URL}/public-config`)
             .then(res => res.json())
             .then(data => {
-                setTestMode(data.test_mode || false);
+                setGlobalConfig(data);
             })
             .catch(e => console.error("Config fetch error", e));
 
@@ -83,9 +87,8 @@ function App() {
         if (rToken) {
             setResetToken(rToken);
             setView('reset_pw');
-            // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            return; // Skip verify check if resetting pw
+            return;
         }
 
         // 2. Verification
@@ -117,7 +120,7 @@ function App() {
         { id: 0, text: t('q.0', "Ich bevorzuge ruhige Abende.") },
         { id: 1, text: t('q.1', "Karriere ist wichtiger als Familie.") },
         { id: 2, text: t('q.2', "Glaube/Spiritualität ist mir wichtig.") },
-        { id: 3, text: t('q.3', "Ich diskutiere gerne Politik.") }
+        { id: 3, text: t('q.3', "Ich diskutiere gern über Politik.") }
     ];
 
     // Helper to finalize login (used by handleLogin and 2FA)
@@ -126,7 +129,24 @@ function App() {
         setUser(data);
         setIsGuest(data.role === 'guest' || data.is_guest);
         setVerificationStatus(null);
-        setTempAuth(null); // Clear 2FA temp state
+        setTempAuth(null);
+
+        // --- Apply Theme from Login Data (if available) ---
+        if (data.app_settings) {
+            try {
+                const s = JSON.parse(data.app_settings);
+                if (s.theme) {
+                    const root = document.documentElement;
+                    if (s.theme === 'dark') root.classList.add('dark');
+                    else if (s.theme === 'light') root.classList.remove('dark');
+                    else {
+                        // System
+                        if (window.matchMedia('(prefers-color-scheme: dark)').matches) root.classList.add('dark');
+                        else root.classList.remove('dark');
+                    }
+                }
+            } catch (e) { console.error("Theme apply error", e); }
+        }
 
         if (data.role === 'admin') {
             setView('adminPanel');
@@ -197,7 +217,6 @@ function App() {
                 }
             } else {
                 const err = await res.json();
-                // Original robust error handling preserved
                 const errorMsg = typeof err.detail === 'object' ? JSON.stringify(err.detail, null, 2) : err.detail;
                 alert("Fehler: " + errorMsg);
             }
@@ -283,7 +302,6 @@ function App() {
                 />
             )}
 
-            {/* New 2FA Verification View */}
             {view === 'verify_2fa' && tempAuth && (
                 <TwoFactorAuth
                     tempAuth={tempAuth}
@@ -326,7 +344,7 @@ function App() {
                     user={user}
                     matches={matches}
                     isGuest={isGuest}
-                    testMode={testMode}
+                    testMode={globalConfig.test_mode}
                     onLogout={() => { setUser(null); setView('landing'); }}
                     onRegisterClick={() => setView('register')}
                     onAdminClick={() => setView('adminPanel')}
@@ -347,8 +365,10 @@ function App() {
             {view === 'settings' && user && (
                 <AccountSettings
                     user={user}
+                    globalConfig={globalConfig}
                     onBack={() => setView('profile')}
                     onLogout={() => { setUser(null); setView('landing'); }}
+                    onResetPassword={() => { setUser(null); setView('forgot_pw'); }}
                     t={t}
                 />
             )}
@@ -363,7 +383,7 @@ function App() {
             {view === 'adminPanel' && (
                 <AdminPanel
                     user={user}
-                    testMode={testMode}
+                    testMode={globalConfig.test_mode}
                     onLogout={() => { setUser(null); setView('landing'); }}
                     onBack={() => setView('dashboard')}
                     t={t}

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 import urllib.request
+import urllib.error
 import json
 import shutil
 import logging
@@ -76,7 +77,7 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
     elif action.action == "demote_user":
         user.role = "user"
         logger.info(f"User {user.username} demoted to regular user.")
-    elif action.action == "demote_test": # NEW ACTION
+    elif action.action == "demote_test":
         user.role = "test"
         logger.info(f"User {user.username} changed to test user.")
     elif action.action == "demote_guest":
@@ -118,6 +119,11 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
                 latest_version = data.get('tag_name', 'Unknown')
                 if latest_version != CURRENT_VERSION and latest_version != "Unknown":
                     update_available = True
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            logger.info("Diagnostics: No latest release found on GitHub (404). This is normal for new repos.")
+        else:
+            logger.warning(f"Diagnostics: GitHub API error: {e}")
     except Exception as e:
         logger.warning(f"Diagnostics: Could not fetch latest version: {e}")
 

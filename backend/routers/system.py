@@ -13,6 +13,7 @@ def get_public_config(db: Session = Depends(get_db)):
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
     return {
         "registration_enabled": reg_config.enabled,
+        "email_2fa_enabled": reg_config.email_2fa_enabled,
         "test_mode": TEST_MODE
     }
 

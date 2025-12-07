@@ -61,11 +61,10 @@ class UserAdminUpdate(BaseModel):
     is_visible_in_matches: Optional[bool] = None
     two_factor_method: Optional[str] = None
 
-# New Schema for App Settings Update
 class UserSettingsUpdate(BaseModel):
     notifications_enabled: Optional[bool] = None
     theme: Optional[str] = None
-    push_subscription: Optional[Dict[str, Any]] = None # To store VAPID subscription
+    push_subscription: Optional[Dict[str, Any]] = None
 
 class MatchResult(BaseModel):
     user_id: int
@@ -141,6 +140,7 @@ class SystemSettings(BaseModel):
 
 class PublicConfig(BaseModel):
     registration_enabled: bool
+    email_2fa_enabled: bool = False
     test_mode: bool = False
 
 class SystemDiagnostics(BaseModel):
@@ -172,20 +172,17 @@ class TotpVerifyRequest(BaseModel):
 
 class TwoFactorAuthRequest(BaseModel):
     user_id: int
-    code: Optional[str] = None # For TOTP/Email
-    # For Passkey, logic is more complex, handled via specific endpoints
+    code: Optional[str] = None
 
 class TwoFactorLoginResponse(BaseModel):
     require_2fa: bool
     user_id: Optional[int] = None
     method: Optional[str] = None
-
-    # Standard login fields if 2fa not required
     username: Optional[str] = None
     role: Optional[str] = None
     is_guest: Optional[bool] = None
     is_admin: Optional[bool] = None
-    app_settings: Optional[str] = None # Return settings on login
+    app_settings: Optional[str] = None
 
 # WebAuthn DTOs
 class WebAuthnRegistrationOptions(BaseModel):

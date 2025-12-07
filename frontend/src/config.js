@@ -208,6 +208,7 @@ export const FALLBACK = {
     'settings.change_pw': 'Change Password',
     'settings.curr_pw': 'Current Password (confirm)',
     'settings.new_pw': 'New Password',
+    'settings.btn_reset_pw': 'Reset Password (Logout)',
     'settings.delete_acc': 'Permanently Delete Account',
     'settings.delete_confirm': 'Are you sure? All data will be lost.',
     'settings.success': 'Successfully updated.',
