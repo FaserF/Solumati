@@ -4,7 +4,6 @@ from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
 
 class UserBase(BaseModel):
-    # CHANGED: EmailStr to str + custom validator to allow .local domains
     email: str
     intent: Optional[str] = None
     real_name: Optional[str] = None
@@ -12,11 +11,8 @@ class UserBase(BaseModel):
     @field_validator('email')
     @classmethod
     def validate_email_address(cls, v: str) -> str:
-        # Whitelist our local domain specifically
         if v.endswith("@solumati.local"):
             return v
-
-        # For all other emails, use strict validation but don't crash on deliverability checks
         try:
             valid = validate_email(v, check_deliverability=False)
             return valid.normalized
@@ -28,23 +24,21 @@ class UserCreate(UserBase):
     answers: List[int]
 
 class UserLogin(BaseModel):
-    login: str # Can be email or username
+    login: str
     password: str
 
 class UserDisplay(UserBase):
     id: int
     username: str
-    # email inherited from UserBase
     about_me: Optional[str] = None
     image_url: Optional[str] = None
     is_guest: bool
     is_active: bool
     is_verified: bool
-    is_visible_in_matches: bool = True # New field
+    is_visible_in_matches: bool = True
     role: str
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
-    # Admin fields
     deactivation_reason: Optional[str] = None
     ban_reason_text: Optional[str] = None
     banned_until: Optional[datetime] = None
@@ -55,13 +49,12 @@ class UserDisplay(UserBase):
 class UserUpdate(BaseModel):
     about_me: str
 
-# New Schema for Admin editing users
 class UserAdminUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
-    password: Optional[str] = None # Plaintext password to be hashed
+    password: Optional[str] = None
     is_verified: Optional[bool] = None
-    is_visible_in_matches: Optional[bool] = None # New field
+    is_visible_in_matches: Optional[bool] = None
 
 class MatchResult(BaseModel):
     user_id: int
@@ -113,6 +106,8 @@ class RegistrationConfig(BaseModel):
     allowed_domains: str = ""
     blocked_domains: str = ""
     require_verification: bool = True
+    # Domain used for generating links in emails (e.g., https://mysolumati.com)
+    server_domain: str = "http://localhost:3000"
 
 class SystemSettings(BaseModel):
     mail: MailConfig
@@ -122,7 +117,6 @@ class PublicConfig(BaseModel):
     registration_enabled: bool
     test_mode: bool = False
 
-# --- Diagnostics Schemas ---
 class SystemDiagnostics(BaseModel):
     current_version: str
     latest_version: Optional[str] = "Unknown"

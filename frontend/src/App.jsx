@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL, FALLBACK } from './config';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 // Import Components
 import Landing from './components/Landing';
@@ -26,6 +27,10 @@ function App() {
     const [intent, setIntent] = useState("longterm");
     const [answers, setAnswers] = useState({});
 
+    // --- Verification State ---
+    const [verificationStatus, setVerificationStatus] = useState(null); // 'success', 'error', 'loading'
+    const [verificationMsg, setVerificationMsg] = useState("");
+
     // --- I18n State ---
     const [i18n, setI18n] = useState({});
 
@@ -35,12 +40,6 @@ function App() {
 
     // --- Startup: Verification, I18n, Config ---
     useEffect(() => {
-        // Verification Check
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('verify_code') || window.location.pathname === '/verify') {
-            console.log("Verification intent detected");
-        }
-
         // Fetch Global Config (TestMode etc)
         fetch(`${API_URL}/public-config`)
             .then(res => res.json())
@@ -60,15 +59,38 @@ function App() {
                 return res.json();
             })
             .then(data => {
-                console.log("[App] Translations loaded:", data);
-                if (!data.translations || Object.keys(data.translations).length === 0) {
-                    console.warn("[App] Received empty translations object. Falling back to default.");
-                }
                 setI18n(data.translations || {});
             })
             .catch(e => {
-                console.error("[App] Could not load translations. Check Network/CORS.", e);
+                console.error("[App] Could not load translations.", e);
             });
+
+        // --- Verification Logic ---
+        const params = new URLSearchParams(window.location.search);
+        const verifyId = params.get('id');
+        const verifyCode = params.get('code');
+
+        if (verifyId && verifyCode) {
+            setVerificationStatus('loading');
+            // Call API to verify
+            fetch(`${API_URL}/verify?id=${verifyId}&code=${verifyCode}`, { method: 'POST' })
+                .then(async res => {
+                    const data = await res.json();
+                    if (res.ok) {
+                        setVerificationStatus('success');
+                        setVerificationMsg(t('verify.success', 'E-Mail erfolgreich verifiziert!'));
+                        // Remove params from URL without refresh to be clean
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } else {
+                        setVerificationStatus('error');
+                        setVerificationMsg(data.detail || t('verify.error', 'Verifizierungslink ungültig oder abgelaufen.'));
+                    }
+                })
+                .catch(() => {
+                    setVerificationStatus('error');
+                    setVerificationMsg("Netzwerkfehler bei der Verifizierung.");
+                });
+        }
     }, []);
 
     const questions = [
@@ -90,6 +112,8 @@ function App() {
                 console.log("[App] Login success:", data);
                 setUser(data);
                 setIsGuest(data.role === 'guest' || data.is_guest);
+                // Clear verification banners on login
+                setVerificationStatus(null);
 
                 if (data.role === 'admin') {
                     setView('adminPanel');
@@ -134,7 +158,8 @@ function App() {
                     fetchMatches(data.id);
                     setView('dashboard');
                 } else {
-                    alert("Account erstellt! Bitte überprüfe deine E-Mails, um den Account zu aktivieren.");
+                    // Show message and go to landing
+                    alert(t('register.check_mail', "Account erstellt! Bitte überprüfe deine E-Mails, um den Account zu aktivieren."));
                     setView('landing');
                 }
             } else {
@@ -178,63 +203,90 @@ function App() {
         } catch (e) { console.error("Match fetch failed", e); }
     };
 
-    if (view === 'landing') return (
-        <Landing
-            onLogin={() => setView('login')}
-            onRegister={() => setView('register')}
-            onGuest={handleGuest}
-            onAdmin={() => setView('login')}
-            t={t}
-        />
-    );
+    // --- Verification Banner ---
+    const renderVerificationBanner = () => {
+        if (!verificationStatus) return null;
 
-    if (view === 'login') return (
-        <Login
-            email={emailOrUser} setEmail={setEmailOrUser}
-            password={password} setPassword={setPassword}
-            onLogin={handleLogin}
-            onBack={() => setView('landing')}
-            t={t}
-        />
-    );
+        const isSuccess = verificationStatus === 'success';
+        const bgColor = isSuccess ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800';
+        const Icon = isSuccess ? CheckCircle : XCircle;
 
-    if (view === 'register') return (
-        <Register
-            realName={realName} setRealName={setRealName}
-            email={email} setEmail={setEmail}
-            password={password} setPassword={setPassword}
-            answers={answers} setAnswers={setAnswers}
-            questions={questions}
-            onRegister={handleRegister}
-            onBack={() => setView('landing')}
-            t={t}
-        />
-    );
+        return (
+            <div className={`fixed top-0 left-0 right-0 p-4 border-b-2 ${bgColor} flex items-center justify-center gap-2 z-50 shadow-md animate-fade-in-down`}>
+                <Icon size={20} />
+                <span className="font-bold">{verificationMsg}</span>
+                <button
+                    onClick={() => setVerificationStatus(null)}
+                    className="ml-4 text-sm underline opacity-70 hover:opacity-100"
+                >
+                    {t('btn.close', 'Schließen')}
+                </button>
+            </div>
+        );
+    };
 
-    if (view === 'dashboard') return (
-        <Dashboard
-            user={user}
-            matches={matches}
-            isGuest={isGuest}
-            testMode={testMode}
-            onLogout={() => { setUser(null); setView('landing'); }}
-            onRegisterClick={() => setView('register')}
-            onAdminClick={() => setView('adminPanel')}
-            t={t}
-        />
-    );
+    return (
+        <>
+            {renderVerificationBanner()}
 
-    if (view === 'adminPanel') return (
-        <AdminPanel
-            user={user}
-            testMode={testMode}
-            onLogout={() => { setUser(null); setView('landing'); }}
-            onBack={() => setView('dashboard')}
-            t={t}
-        />
-    );
+            {view === 'landing' && (
+                <Landing
+                    onLogin={() => setView('login')}
+                    onRegister={() => setView('register')}
+                    onGuest={handleGuest}
+                    onAdmin={() => setView('login')} // Admin login is same entry point but different logic if needed, or separate
+                    onLegal={() => alert("Impressum/Datenschutz placeholder")} // Should route to component
+                    t={t}
+                />
+            )}
 
-    return null;
+            {view === 'login' && (
+                <Login
+                    email={emailOrUser} setEmail={setEmailOrUser}
+                    password={password} setPassword={setPassword}
+                    onLogin={handleLogin}
+                    onBack={() => setView('landing')}
+                    t={t}
+                />
+            )}
+
+            {view === 'register' && (
+                <Register
+                    realName={realName} setRealName={setRealName}
+                    email={email} setEmail={setEmail}
+                    password={password} setPassword={setPassword}
+                    answers={answers} setAnswers={setAnswers}
+                    questions={questions}
+                    onRegister={handleRegister}
+                    onBack={() => setView('landing')}
+                    t={t}
+                />
+            )}
+
+            {view === 'dashboard' && (
+                <Dashboard
+                    user={user}
+                    matches={matches}
+                    isGuest={isGuest}
+                    testMode={testMode}
+                    onLogout={() => { setUser(null); setView('landing'); }}
+                    onRegisterClick={() => setView('register')}
+                    onAdminClick={() => setView('adminPanel')}
+                    t={t}
+                />
+            )}
+
+            {view === 'adminPanel' && (
+                <AdminPanel
+                    user={user}
+                    testMode={testMode}
+                    onLogout={() => { setUser(null); setView('landing'); }}
+                    onBack={() => setView('dashboard')}
+                    t={t}
+                />
+            )}
+        </>
+    );
 }
 
 export default App;

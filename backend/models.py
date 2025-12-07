@@ -21,8 +21,10 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
+    # Secure verification code (random string), cleared after successful verification
+    verification_code = Column(String, nullable=True)
+
     # New Flag: Controls if user appears in matches.
-    # Enables distinction between "Admin only" (False) and "Admin & User" (True)
     is_visible_in_matches = Column(Boolean, default=True)
 
     intent = Column(String)
@@ -33,10 +35,10 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
 
     # Ban system extensions
-    deactivation_reason = Column(String, nullable=True) # Technical reason enum
-    ban_reason_text = Column(Text, nullable=True) # Human readable text shown to user
+    deactivation_reason = Column(String, nullable=True)
+    ban_reason_text = Column(Text, nullable=True)
     deactivated_at = Column(DateTime, nullable=True)
-    banned_until = Column(DateTime, nullable=True) # If set, user is temp-banned until this time
+    banned_until = Column(DateTime, nullable=True)
 
     @property
     def is_admin(self):
@@ -65,7 +67,6 @@ class Report(Base):
     resolved = Column(Boolean, default=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships for easier query handling in Admin Panel
     reporter = relationship("User", foreign_keys=[reporter_id])
     reported_user = relationship("User", foreign_keys=[reported_user_id])
 

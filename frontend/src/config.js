@@ -9,6 +9,7 @@ export const FALLBACK = {
     'btn.cancel': 'Cancel',
     'btn.save': 'Save',
     'btn.logout': 'Logout',
+    'btn.close': 'Close',
 
     // Landing
     'landing.tagline': 'Stop Swiping. Start Connecting.',
@@ -35,6 +36,11 @@ export const FALLBACK = {
     'register.disabled_title': 'Registration disabled',
     'register.disabled_msg': 'The administrator has currently disabled new registrations. Please try again later.',
     'register.btn_back_home': 'Back to home',
+    'register.check_mail': 'Account created! Please check your emails to activate the account.',
+
+    // Verification
+    'verify.success': 'Email successfully verified!',
+    'verify.error': 'Verification link invalid or expired.',
 
     // Dashboard
     'dashboard.guest_warning': 'Guest mode: Images are blurred & chat is disabled.',
@@ -96,6 +102,7 @@ export const FALLBACK = {
     'admin.settings.domains': 'Allowed Domains (empty = all)',
     'admin.settings.blocked_domains': 'Blacklisted Domains', // NEW
     'admin.settings.domains_hint': 'Comma separated list.',
+    'admin.settings.server_domain': 'Server Domain (e.g. https://myapp.com)', // NEW
     'admin.settings.mail_title': 'SMTP Mail Server',
     'admin.settings.mail_active': 'Enable Mail Sending',
     'admin.settings.host': 'Host',
@@ -108,6 +115,12 @@ export const FALLBACK = {
     'admin.settings.saved': 'Settings saved!',
     'admin.settings.save_error': 'Error saving settings.',
     'admin.settings.unsaved_warning': 'Please save changes first!', // NEW
+    'admin.settings.encryption': 'Encryption',
+    'admin.settings.enc_none': 'None',
+    'admin.settings.enc_tls': 'STARTTLS',
+    'admin.settings.enc_ssl': 'SSL',
+    'admin.settings.enc_recommended': 'Recommended',
+
 
     // Admin Modal
     'admin.modal.punish_title': 'Block User',
@@ -121,6 +134,10 @@ export const FALLBACK = {
     'admin.modal.duration': 'Duration (Hours)',
     'admin.modal.duration_hint': 'Account will be reactivated automatically after this time.',
     'admin.btn.execute_ban': 'Execute Ban',
+    'admin.user.visible': 'Visible in Matches',
+    'admin.user.visible_hint': 'Uncheck if this account is strictly for administration.',
+    'admin.user.pw_reset': 'Password (Reset)',
+    'admin.user.pw_new': 'New Password',
 
     // Admin Diagnostics
     'admin.diag.system_status': 'System Status',

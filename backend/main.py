@@ -45,7 +45,7 @@ def get_app_version():
                     return version
     except Exception as e:
         logger.warning(f"Could not read version from package.json: {e}")
-    return "0.5.3" # Fallback
+    return "0.5.3"
 
 CURRENT_VERSION = get_app_version()
 
@@ -78,7 +78,7 @@ def startup_check_schema():
     """Checks if new columns exist in DB and adds them if missing (Auto-Migration)."""
     db = next(get_db())
     try:
-        # Check for 'is_visible_in_matches'
+        # 1. Check for 'is_visible_in_matches'
         try:
             db.execute(text("SELECT is_visible_in_matches FROM users LIMIT 1"))
         except Exception:
@@ -87,6 +87,17 @@ def startup_check_schema():
             db.execute(text("ALTER TABLE users ADD COLUMN is_visible_in_matches BOOLEAN DEFAULT TRUE"))
             db.commit()
             logger.info("Migration successful: Added 'is_visible_in_matches'.")
+
+        # 2. Check for 'verification_code'
+        try:
+            db.execute(text("SELECT verification_code FROM users LIMIT 1"))
+        except Exception:
+            db.rollback()
+            logger.warning("Column 'verification_code' missing in 'users'. Attempting to add it.")
+            db.execute(text("ALTER TABLE users ADD COLUMN verification_code VARCHAR"))
+            db.commit()
+            logger.info("Migration successful: Added 'verification_code'.")
+
     except Exception as e:
         logger.error(f"Schema check failed: {e}")
     finally:
@@ -141,8 +152,67 @@ def save_setting(db: Session, key: str, value: dict):
         logger.error(f"DB Error in save_setting: {e}")
         db.rollback()
 
+# --- HTML Email Helper ---
+def create_html_email(title: str, content: str, action_url: str = None, action_text: str = None, server_domain: str = ""):
+    """Creates a responsive, professional HTML email with Solumati styling."""
+
+    # Ensure server_domain doesn't end with slash for consistency
+    if server_domain.endswith("/"): server_domain = server_domain[:-1]
+
+    # Use a fallback logo URL if server_domain is localhost, otherwise construct path
+    logo_url = f"{server_domain}/static/logo.png"
+    # Note: Ensure a logo.png exists in backend/static/ or static/images/ and served via app.mount
+    # The frontend has public/logo/Solumati.png. We should ideally make sure this is available statically from backend too or use frontend URL.
+    # Assuming frontend hosts the logo typically, but for email, we need a public URL.
+    # We will use the 'server_domain' which should point to the public instance.
+    logo_src = f"{server_domain}/logo/Solumati.png" # Assuming frontend structure
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 0; }}
+            .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }}
+            .header {{ background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); padding: 30px; text-align: center; }}
+            .logo {{ max-height: 80px; width: auto; background-color: white; padding: 10px; border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            .content {{ padding: 40px 30px; line-height: 1.6; color: #51545E; }}
+            .button {{ display: inline-block; background-color: #ec4899; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; margin-top: 20px; }}
+            .footer {{ background-color: #f4f4f7; padding: 20px; text-align: center; font-size: 12px; color: #a8aaaf; }}
+            .footer a {{ color: #a8aaaf; text-decoration: underline; margin: 0 5px; }}
+            h1 {{ color: #333; font-size: 24px; margin-bottom: 20px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <!-- Fallback to text if image breaks, but try to load logo -->
+                <img src="{logo_src}" alt="Solumati" class="logo" onerror="this.style.display='none'">
+                <h2 style="color: white; margin: 10px 0 0 0; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Solumati</h2>
+            </div>
+            <div class="content">
+                <h1>{title}</h1>
+                <p>{content}</p>
+                {f'<div style="text-align: center;"><a href="{action_url}" class="button">{action_text}</a></div>' if action_url else ''}
+                {f'<p style="margin-top: 30px; font-size: 12px; color: #999;">If the button does not work, copy this link:<br>{action_url}</p>' if action_url else ''}
+            </div>
+            <div class="footer">
+                <p>&copy; {datetime.now().year} Solumati. All rights reserved.</p>
+                <p>
+                    <a href="{server_domain}/legal">Imprint</a> |
+                    <a href="{server_domain}/legal">Privacy Policy</a>
+                </p>
+                <p>You received this email because you registered on Solumati.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
 # --- Mail Helper ---
-def send_mail_sync(to_email: str, subject: str, body: str, db: Session):
+def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
     try:
         config_dict = get_setting(db, "mail", schemas.MailConfig())
         config = schemas.MailConfig(**config_dict)
@@ -150,11 +220,13 @@ def send_mail_sync(to_email: str, subject: str, body: str, db: Session):
             logger.info(f"Mail sending disabled. To: {to_email}")
             return
 
-        msg = MIMEMultipart()
+        msg = MIMEMultipart('alternative')
         msg['From'] = formataddr((config.sender_name, config.from_email))
         msg['To'] = to_email
         msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
+
+        # Attach HTML part
+        msg.attach(MIMEText(html_body, 'html'))
 
         if config.smtp_ssl:
             server = smtplib.SMTP_SSL(config.smtp_host, config.smtp_port)
@@ -169,7 +241,8 @@ def send_mail_sync(to_email: str, subject: str, body: str, db: Session):
         logger.info(f"Email sent successfully to {to_email}")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
-        raise e
+        # We generally don't raise here in background tasks to avoid crashing the task runner, but logging is critical
+        pass
 
 # --- Core Logic Helpers ---
 def generate_unique_username(db: Session, real_name: str) -> str:
@@ -195,7 +268,6 @@ def ensure_guest_user(db: Session):
         guest = db.query(models.User).filter(models.User.id == 0).first()
         if not guest:
             logger.info("Creating Guest User (ID 0)...")
-            # CHANGED: Role is now 'guest' instead of 'user'
             guest = models.User(
                 id=0, email="guest@solumati.local", hashed_password="NOPASSWORD",
                 real_name="Gast", username="Gast", about_me="System Guest",
@@ -204,11 +276,6 @@ def ensure_guest_user(db: Session):
                 is_visible_in_matches=False
             )
             db.add(guest)
-            db.commit()
-        elif guest.role != 'guest':
-            # Fix existing guest role if necessary
-            logger.info("Fixing guest user role to 'guest'...")
-            guest.role = 'guest'
             db.commit()
     except Exception as e:
         db.rollback()
@@ -228,7 +295,7 @@ def ensure_admin_user(db: Session):
                 about_me="System Administrator",
                 is_active=True, is_verified=True, is_guest=False, role="admin",
                 intent="admin", answers=[3,3,3,3], created_at=datetime.utcnow(),
-                is_visible_in_matches=False # Default admin hidden
+                is_visible_in_matches=False
             )
             db.add(admin)
             db.commit()
@@ -301,7 +368,7 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         if domain not in [d.strip().lower() for d in reg_config.allowed_domains.split(',') if d.strip()]:
             raise HTTPException(403, f"Domain '{domain}' not allowed.")
 
-    # Blacklist logic (NEW)
+    # Blacklist logic
     if reg_config.blocked_domains:
         if domain in [d.strip().lower() for d in reg_config.blocked_domains.split(',') if d.strip()]:
             logger.warning(f"Registration blocked for domain {domain} (Blacklisted)")
@@ -311,13 +378,18 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         logger.warning(f"Registration failed: Email {user.email} already exists.")
         raise HTTPException(400, "Email already registered.")
 
+    # Generate Secure Code
+    secure_code = secrets.token_urlsafe(32)
+
     new_user = models.User(
         email=user.email, hashed_password=user.password + "salt",
         real_name=user.real_name, username=generate_unique_username(db, user.real_name),
         intent=user.intent, answers=user.answers,
-        is_active=True, is_verified=not reg_config.require_verification,
+        is_active=True,
+        is_verified=not reg_config.require_verification,
+        verification_code=secure_code if reg_config.require_verification else None,
         role="user",
-        is_visible_in_matches=True, # Default for normal users
+        is_visible_in_matches=True,
         created_at=datetime.utcnow()
     )
     db.add(new_user)
@@ -325,9 +397,28 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
     db.refresh(new_user)
     logger.info(f"User created: ID {new_user.id}, Username {new_user.username}")
 
+    # Send Verification Email if required
     if not new_user.is_verified:
-        link = f"{APP_BASE_URL}/verify?id={new_user.id}&code=dummy"
-        background_tasks.add_task(send_mail_sync, user.email, "Solumati Verify", f"Link: {link}", db)
+        # Use configured server domain for the link
+        server_url = reg_config.server_domain.rstrip('/')
+        verification_link = f"{server_url}/verify?id={new_user.id}&code={secure_code}"
+
+        email_content = f"""
+        Hello {new_user.real_name},<br><br>
+        Welcome to Solumati! We are excited to have you on board.<br>
+        To start connecting with like-minded people, please confirm your email address.
+        """
+
+        html_email = create_html_email(
+            title="Verify your Account",
+            content=email_content,
+            action_url=verification_link,
+            action_text="Verify Email",
+            server_domain=server_url
+        )
+
+        background_tasks.add_task(send_mail_sync, user.email, "Welcome to Solumati - Verify your Email", html_email, db)
+
     return new_user
 
 @app.post("/login")
@@ -353,29 +444,20 @@ def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
             custom_text = user.ban_reason_text or ""
             msg = "Account deactivated."
 
-            # --- Enhanced Ban Message Logic ---
             if reason.startswith("TempBan") and user.banned_until:
                 now = datetime.utcnow()
                 diff = user.banned_until - now
                 total_seconds = int(diff.total_seconds())
-
                 if total_seconds > 0:
                     hours = total_seconds // 3600
                     minutes = (total_seconds % 3600) // 60
-                    # Format: YYYY-MM-DD HH:MM
                     unban_time_str = user.banned_until.strftime("%Y-%m-%d %H:%M UTC")
-
-                    msg = (f"Account temporarily suspended. "
-                           f"You are banned until: {unban_time_str}. "
-                           f"Remaining time: {hours}h {minutes}m.")
-            # ----------------------------------
-
+                    msg = (f"Account temporarily suspended. Until: {unban_time_str}. "
+                           f"Remaining: {hours}h {minutes}m.")
             elif reason == "Reported":
                 msg = "Account deactivated due to policy violations."
 
-            if custom_text:
-                msg += f" Reason: {custom_text}"
-
+            if custom_text: msg += f" Reason: {custom_text}"
             raise HTTPException(403, detail=msg)
 
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
@@ -394,11 +476,35 @@ def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
 
 @app.post("/verify")
 def verify_email(id: int, code: str, db: Session = Depends(get_db)):
+    """Verifies a user by checking ID and the secure random code."""
+    logger.info(f"Verification attempt for User ID {id}")
+
     user = db.query(models.User).filter(models.User.id == id).first()
-    if not user: raise HTTPException(404, "User not found")
+
+    if not user:
+        logger.warning(f"Verification failed: User ID {id} not found.")
+        raise HTTPException(404, "User not found")
+
+    if user.is_verified:
+        return {"message": "User already verified", "status": "already_verified"}
+
+    # Strict check: Code must not be empty and must match database
+    if not code or not user.verification_code:
+        logger.warning(f"Verification failed: Missing code for User {user.username}")
+        raise HTTPException(400, "Invalid verification code.")
+
+    # Use constant time comparison to be extra safe (though standard string cmp is fine here)
+    if not secrets.compare_digest(code, user.verification_code):
+        logger.warning(f"Verification failed: Invalid code provided for User {user.username}")
+        raise HTTPException(400, "Invalid verification code.")
+
+    # Success: verify user and clear code
     user.is_verified = True
+    user.verification_code = None # Clear code from DB
     db.commit()
-    return {"message": "Success"}
+
+    logger.info(f"User {user.username} (ID {user.id}) successfully verified.")
+    return {"message": "Success", "status": "verified"}
 
 @app.get("/matches/{user_id}", response_model=List[schemas.MatchResult])
 def get_matches(user_id: int, db: Session = Depends(get_db)):
@@ -412,13 +518,12 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
         curr_answ, curr_int, exc_id = u.answers, u.intent, user_id
 
     res = []
-    # UPDATED QUERY: Filter out users who are not visible in matches (e.g. Admin-only accounts)
     query = db.query(models.User).filter(
         models.User.id != exc_id,
         models.User.is_active == True,
         models.User.id != 0,
         models.User.is_visible_in_matches == True,
-        models.User.role != 'admin' # Ensure admins don't show up in matches generally unless specifically opted in? Actually is_visible_in_matches handles this.
+        models.User.role != 'admin'
     )
 
     for other in query.all():
@@ -449,7 +554,7 @@ def upload_image(user_id: int, file: UploadFile = File(...), db: Session = Depen
 @app.post("/report")
 def report_user(report: schemas.ReportCreate, db: Session = Depends(get_db)):
     new_report = models.Report(
-        reporter_id=1,
+        reporter_id=1, # Default reporter if generic
         reported_user_id=report.reported_user_id,
         reported_message_id=report.reported_message_id,
         reason=report.reason
@@ -491,7 +596,6 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
     if update.is_verified is not None:
         user.is_verified = update.is_verified
 
-    # Allow admin to set match visibility
     if update.is_visible_in_matches is not None:
         user.is_visible_in_matches = update.is_visible_in_matches
         logger.info(f"Admin {current_admin.username} changed match visibility for {user.username} to {update.is_visible_in_matches}")
@@ -504,22 +608,18 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user: raise HTTPException(404, "User not found")
 
-    # Protection for Root Admin (assuming username is 'admin')
     if user.username == 'admin' and action.action in ['delete', 'deactivate', 'demote_user', 'demote_guest']:
         logger.warning(f"Admin {current_admin.username} tried to punish root admin.")
         raise HTTPException(400, "Cannot perform this action on the root admin.")
 
-    # Protection for System Guest (ID 0)
     if user.id == 0:
         if action.action == 'delete':
             raise HTTPException(400, "Cannot delete system guest. Deactivate instead.")
         if action.action == 'promote_moderator':
             raise HTTPException(400, "Cannot promote guest user.")
 
-    # Guest user role logic checks
     if user.role == 'guest' and action.action == 'promote_moderator':
          raise HTTPException(400, "Cannot promote guest user.")
-
 
     if action.action == "delete":
         db.delete(user)
@@ -546,6 +646,7 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
         user.is_guest = True
     elif action.action == "verify":
         user.is_verified = True
+        user.verification_code = None
 
     db.commit()
     logger.info(f"Admin {current_admin.username} executed action {action.action} on user {user.id}")
@@ -594,20 +695,27 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
 @app.post("/admin/settings/test-mail")
 def send_test_mail(req: schemas.TestMailRequest, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     try:
-        send_mail_sync(req.target_email, "Solumati Test Mail", "<h1>It Works!</h1>", db)
+        # Use HTML email for test as well
+        reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+        server_url = reg_config.server_domain
+
+        html = create_html_email(
+            title="Test Email",
+            content="This is a test email from your Solumati instance. If you see this, your SMTP configuration is correct.",
+            action_url=server_url,
+            action_text="Go to Solumati",
+            server_domain=server_url
+        )
+
+        send_mail_sync(req.target_email, "Solumati Test Mail", html, db)
         return {"status": "sent"}
     except Exception as e:
         logger.error(f"SMTP Test Failed: {e}")
         raise HTTPException(500, detail=str(e))
 
-# --- NEW: Diagnostics Endpoints ---
-
+# --- Diagnostics Endpoints ---
 @app.get("/admin/diagnostics", response_model=schemas.SystemDiagnostics)
 def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
-    """
-    Performs system checks: DB connection, Internet connectivity, Disk usage, Version check.
-    """
-    # 1. Database Check (Implicitly working if we are here, but let's query explicit)
     db_ok = True
     try:
         db.execute(text("SELECT 1"))
@@ -615,22 +723,18 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
         logger.error(f"Diagnostics: Database check failed: {e}")
         db_ok = False
 
-    # 2. Internet Check (Ping GitHub or Google DNS)
     internet_ok = False
     try:
-        # Connect to 8.8.8.8 port 53 (Google Public DNS) - reliable and fast
         socket.create_connection(("8.8.8.8", 53), timeout=3)
         internet_ok = True
     except OSError:
         internet_ok = False
 
-    # 3. Disk Usage
     total, used, free = shutil.disk_usage(".")
     disk_total_gb = round(total / (2**30), 2)
     disk_free_gb = round(free / (2**30), 2)
     disk_percent = round((used / total) * 100, 1)
 
-    # 4. Version Check (Fetch latest tag from GitHub)
     latest_version = "Unknown"
     update_available = False
     if internet_ok:
@@ -658,7 +762,6 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
 
 @app.get("/admin/changelog", response_model=List[schemas.ChangelogRelease])
 def get_changelog(current_admin: models.User = Depends(require_admin)):
-    """Fetches the last 5 releases from GitHub."""
     try:
         url = "https://api.github.com/repos/FaserF/Solumati/releases?per_page=5"
         req = urllib.request.Request(url, headers={"User-Agent": "Solumati-Backend"})
@@ -669,7 +772,6 @@ def get_changelog(current_admin: models.User = Depends(require_admin)):
     except Exception as e:
         logger.error(f"Failed to fetch changelog: {e}")
     return []
-
 
 @app.get('/api/i18n/{lang}')
 async def get_i18n(lang: str):

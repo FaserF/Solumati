@@ -431,7 +431,6 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 {/* 2. REPORTS TAB (Unchanged) */}
                 {activeTab === 'reports' && canViewReports && (
                     <div className="bg-white rounded-xl shadow overflow-hidden">
-                        {/* ... Same as before ... */}
                         <div className="p-4 border-b flex justify-end bg-gray-50">
                             <button onClick={fetchReports} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium"><RefreshCw size={14} /> {t('admin.btn.refresh')}</button>
                         </div>
@@ -490,6 +489,18 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                         onChange={e => updateSetting('registration', 'require_verification', e.target.checked)}
                                     />
                                 </label>
+
+                                {/* Server Domain Setting (NEW) */}
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-500 mb-1">{t('admin.settings.server_domain')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                        placeholder="http://localhost:3000"
+                                        value={settings.registration.server_domain || ""}
+                                        onChange={e => updateSetting('registration', 'server_domain', e.target.value)}
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">Domain for email links.</p>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-gray-500 mb-1">{t('admin.settings.domains')}</label>
                                     <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="gmail.com, firma.de"
@@ -498,7 +509,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                     />
                                     <p className="text-xs text-gray-400 mt-1">{t('admin.settings.domains_hint')}</p>
                                 </div>
-                                {/* NEW: Blacklist */}
+                                {/* Blacklist */}
                                 <div>
                                     <label className="block text-sm font-bold text-gray-500 mb-1 text-red-600">{t('admin.settings.blocked_domains')}</label>
                                     <input className="w-full p-2 border rounded border-red-200 focus:ring-2 focus:ring-red-500 focus:outline-none" placeholder="spam.com, bad.net"
@@ -751,7 +762,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             <Edit2 size={20} className="text-blue-600" /> {t('admin.modal.edit_title')}
                         </h3>
                         <div className="mb-4">
-                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.realname')} / Username</label>
+                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.realname')}</label>
                             <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} />
                         </div>
                         <div className="mb-4">
