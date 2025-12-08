@@ -3,7 +3,7 @@ import { User, Save, Settings, ChevronLeft } from 'lucide-react';
 import { API_URL } from '../config';
 
 const UserProfile = ({ user, onBack, onOpenSettings, t }) => {
-    const [aboutMe, setAboutMe] = useState(user.about_me || "");
+    const [aboutMe, setAboutMe] = useState(user?.about_me || "");
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
@@ -39,16 +39,16 @@ const UserProfile = ({ user, onBack, onOpenSettings, t }) => {
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{t('profile.about_me')}</label>
+                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('profile.about_me')}</label>
                         <textarea
-                            className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white min-h-[150px] focus:ring-2 focus:ring-pink-500 focus:outline-none placeholder-gray-400"
+                            className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white min-h-[150px] focus:ring-2 focus:ring-pink-500 focus:outline-none placeholder-gray-400 dark:placeholder-gray-500"
                             value={aboutMe}
                             onChange={e => setAboutMe(e.target.value)}
                         />
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Intent</label>
+                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">Intent</label>
                         <select
                             className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
                             value={user.intent}

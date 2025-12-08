@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw } from 'lucide-react';
-import { API_URL } from '~/config.js';
+import { API_URL } from '../config';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useTheme } from './ThemeContext';
 
 const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalConfig }) => {
+    if (!user) return null;
     // --- Tabs ---
     const [activeTab, setActiveTab] = useState('app');
 
@@ -256,7 +257,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.push_label', 'Push-Benachrichtigungen')}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('settings.push_desc', 'Erhalte Updates zu neuen Matches und Nachrichten.')}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-300">{t('settings.push_desc', 'Erhalte Updates zu neuen Matches und Nachrichten.')}</div>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input
@@ -355,7 +356,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
                             {/* Email */}
                             <div className="mb-6">
-                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{t('settings.change_mail')}</label>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('settings.change_mail')}</label>
                                 <div className="flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3">
                                     <Mail size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
@@ -369,7 +370,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
 
                             {/* New Password */}
                             <div className="mb-4">
-                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{t('settings.change_pw')}</label>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('settings.change_pw')}</label>
                                 <div className="flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3 mb-2">
                                     <Lock size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
@@ -404,7 +405,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
 
                             {/* Current Password & Save */}
                             <div className="border-t dark:border-gray-700 pt-6 mt-6">
-                                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-2">{t('settings.curr_pw')}</label>
+                                <label className="block text-xs font-bold text-gray-700 dark:text-gray-200 uppercase mb-2">{t('settings.curr_pw')}</label>
                                 <input
                                     type="password"
                                     className="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-gray-500 focus:outline-none mb-4"
