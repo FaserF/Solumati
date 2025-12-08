@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="240" fill="#f3f4f6" />
+  <path d="M256 416C256 416 400 304 400 192C400 139 357 96 304 96C274 96 246 110 228 132C210 110 182 96 152 96C99 96 56 139 56 192C56 304 200 416 200 416L256 464L312 416" fill="url(#g1)" transform="translate(28,20) scale(0.9)" />
+  <text x="50%" y="85%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="60" fill="#374151">Solumati</text>
+</svg>

@@ -57,8 +57,11 @@ def generate_email_2fa_code(user: models.User, db: Session):
     logger.info(f"Sent Email 2FA code to {user.email}")
 
 
+from fastapi import BackgroundTasks
+from utils import send_login_notification
+
 @router.post("/login", response_model=schemas.TwoFactorLoginResponse)
-def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
+def login(creds: schemas.UserLogin, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info(f"Login attempt for: {creds.login}")
     user = db.query(models.User).filter(
         or_(models.User.email == creds.login, models.User.username == creds.login)
@@ -89,6 +92,14 @@ def login(creds: schemas.UserLogin, db: Session = Depends(get_db)):
         }
 
     # No 2FA:
+    # Trigger Notification (Background)
+    ip = request.client.host if request.client else "Unknown"
+    ua = request.headers.get("user-agent", "Unknown")
+    try:
+        background_tasks.add_task(send_login_notification, user.email, ip, ua)
+    except Exception as e:
+        logger.error(f"Failed to queue login email: {e}")
+
     user.last_login = datetime.utcnow()
     db.commit()
     logger.info(f"User {user.username} (Role: {user.role}) logged in successfully.")
