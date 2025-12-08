@@ -10,5 +10,5 @@ bcrypt==5.0.0
 pyotp==2.9.0
 webauthn==2.7.0
 pytest==8.0.0
-httpx==0.27.0
+httpx==0.28.1
 fastapi-sso==0.18.0
