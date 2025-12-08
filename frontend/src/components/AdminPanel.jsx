@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
@@ -510,17 +510,17 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* GENERAL SETTINGS */}
                         <div className="bg-white p-6 rounded-xl shadow h-fit">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">{t('admin.settings.registration_title')}</h2>
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Shield size={24} className="text-blue-600" /> {t('admin.settings.registration_title')}</h2>
                             <div className="space-y-4">
                                 <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition">
-                                    <span className="font-medium">{t('admin.settings.allow_reg')}</span>
+                                    <span className="font-bold text-gray-700">{t('admin.settings.allow_reg')}</span>
                                     <input type="checkbox" className="w-5 h-5 accent-pink-600"
                                         checked={settings.registration.enabled}
                                         onChange={e => updateSetting('registration', 'enabled', e.target.checked)}
                                     />
                                 </label>
                                 <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition">
-                                    <span className="font-medium">{t('admin.settings.require_verify')}</span>
+                                    <span className="font-bold text-gray-700">{t('admin.settings.require_verify')}</span>
                                     <input type="checkbox" className="w-5 h-5 accent-pink-600"
                                         checked={settings.registration.require_verification}
                                         onChange={e => updateSetting('registration', 'require_verification', e.target.checked)}
@@ -529,7 +529,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition border border-red-200">
                                     <div className="flex flex-col">
                                         <span className="font-bold text-red-600 flex items-center gap-2"><AlertTriangle size={16} /> Maintenance Mode</span>
-                                        <span className="text-xs text-gray-400">Only Admins can login.</span>
+                                        <span className="text-xs text-gray-500 font-semibold">Only Admins can login.</span>
                                     </div>
                                     <input type="checkbox" className="w-5 h-5 accent-red-600"
                                         checked={settings.registration.maintenance_mode}
@@ -537,95 +537,133 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                     />
                                 </label>
                                 <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition">
-                                    <span className={`font-medium ${!isMailConfigured() ? 'text-gray-400' : ''}`}>{t('admin.settings.email_2fa_enabled', 'Enable Email 2FA')}</span>
+                                    <span className={`font-bold text-gray-700 ${!isMailConfigured() ? 'text-gray-400' : ''}`}>{t('admin.settings.email_2fa_enabled', 'Enable Email 2FA')}</span>
                                     <input type="checkbox" className="w-5 h-5 accent-pink-600 disabled:opacity-50"
                                         checked={settings.registration.email_2fa_enabled && isMailConfigured()}
                                         disabled={!isMailConfigured()}
                                         onChange={e => updateSetting('registration', 'email_2fa_enabled', e.target.checked)}
                                     />
                                 </label>
-                                {!isMailConfigured() && <p className="text-xs text-orange-500">Note: Configure Mail Server to enable 2FA via Email.</p>}
+                                {!isMailConfigured() && <p className="text-xs text-orange-600 font-bold">Note: Configure Mail Server to enable 2FA via Email.</p>}
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-500 mb-1">{t('admin.settings.server_domain')}</label>
-                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.server_domain')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900"
                                         placeholder="http://localhost:3000"
                                         value={settings.registration.server_domain || ""}
                                         onChange={e => updateSetting('registration', 'server_domain', e.target.value)}
                                     />
-                                    <p className="text-xs text-gray-400 mt-1">Domain for email links.</p>
+                                    <p className="text-xs text-gray-500 font-semibold mt-1">Domain for email links.</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-500 mb-1">{t('admin.settings.domains')}</label>
-                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="gmail.com, firma.de"
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.domains')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900" placeholder="gmail.com, firma.de"
                                         value={settings.registration.allowed_domains}
                                         onChange={e => updateSetting('registration', 'allowed_domains', e.target.value)}
                                     />
-                                    <p className="text-xs text-gray-400 mt-1">{t('admin.settings.domains_hint')}</p>
+                                    <p className="text-xs text-gray-500 font-semibold mt-1">{t('admin.settings.domains_hint')}</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-500 mb-1 text-red-600">{t('admin.settings.blocked_domains')}</label>
-                                    <input className="w-full p-2 border rounded border-red-200 focus:ring-2 focus:ring-red-500 focus:outline-none" placeholder="spam.com, bad.net"
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 text-red-600">{t('admin.settings.blocked_domains')}</label>
+                                    <input className="w-full p-2 border rounded border-red-200 focus:ring-2 focus:ring-red-500 focus:outline-none bg-red-50 text-gray-900" placeholder="spam.com, bad.net"
                                         value={settings.registration.blocked_domains}
                                         onChange={e => updateSetting('registration', 'blocked_domains', e.target.value)}
                                     />
-                                    <p className="text-xs text-gray-400 mt-1">{t('admin.settings.domains_hint')}</p>
+                                    <p className="text-xs text-gray-500 font-semibold mt-1">{t('admin.settings.domains_hint')}</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* LEGAL SETTINGS - TEMPLATE FIELDS */}
+                        {/* OAUTH SETTINGS (NEW) */}
                         <div className="bg-white p-6 rounded-xl shadow h-fit">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">{t('admin.settings.legal_title')}</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.company_name')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.company_name} onChange={e => updateSetting('legal', 'company_name', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.ceo_name')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.ceo_name} onChange={e => updateSetting('legal', 'ceo_name', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.address_street')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.address_street} onChange={e => updateSetting('legal', 'address_street', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.address_zip_city')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.address_zip_city} onChange={e => updateSetting('legal', 'address_zip_city', e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Zap size={24} className="text-yellow-500" /> OAuth Providers</h2>
+                            <p className="text-sm text-gray-600 mb-4 font-semibold">
+                                Configure Client ID and Secret for each provider. Secrets are masked (******).
+                            </p>
+
+                            {/* GitHub */}
+                            <div className="mb-4 border-b pb-4">
+                                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><Github size={16} /> GitHub</h4>
+                                <div className="grid grid-cols-1 gap-2">
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">{t('admin.settings.contact_email')}</label>
-                                        <input className="w-full p-2 border rounded" value={settings.legal.contact_email} onChange={e => updateSetting('legal', 'contact_email', e.target.value)} />
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client ID</label>
+                                        <input
+                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
+                                            value={settings.oauth?.github?.client_id || ""}
+                                            onChange={e => updateSetting('oauth', 'github', { ...settings.oauth?.github, client_id: e.target.value })}
+                                        />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">{t('admin.settings.contact_phone')}</label>
-                                        <input className="w-full p-2 border rounded" value={settings.legal.contact_phone} onChange={e => updateSetting('legal', 'contact_phone', e.target.value)} />
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
+                                        <input
+                                            type="password"
+                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
+                                            value={settings.oauth?.github?.client_secret || ""}
+                                            onChange={e => updateSetting('oauth', 'github', { ...settings.oauth?.github, client_secret: e.target.value })}
+                                            placeholder={settings.oauth?.github?.client_secret ? "******" : ""}
+                                        />
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.register_court')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.register_court} onChange={e => updateSetting('legal', 'register_court', e.target.value)} />
+                            </div>
+
+                            {/* Google */}
+                            <div className="mb-4 border-b pb-4">
+                                <h4 className="font-bold text-gray-800 mb-2">Google</h4>
+                                <div className="grid grid-cols-1 gap-2">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client ID</label>
+                                        <input
+                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
+                                            value={settings.oauth?.google?.client_id || ""}
+                                            onChange={e => updateSetting('oauth', 'google', { ...settings.oauth?.google, client_id: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
+                                        <input
+                                            type="password"
+                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
+                                            value={settings.oauth?.google?.client_secret || ""}
+                                            onChange={e => updateSetting('oauth', 'google', { ...settings.oauth?.google, client_secret: e.target.value })}
+                                            placeholder={settings.oauth?.google?.client_secret ? "******" : ""}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.register_number')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.register_number} onChange={e => updateSetting('legal', 'register_number', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.vat_id')}</label>
-                                    <input className="w-full p-2 border rounded" value={settings.legal.vat_id} onChange={e => updateSetting('legal', 'vat_id', e.target.value)} />
+                            </div>
+
+                            {/* Microsoft */}
+                            <div>
+                                <h4 className="font-bold text-gray-800 mb-2">Microsoft</h4>
+                                <div className="grid grid-cols-1 gap-2">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client ID</label>
+                                        <input
+                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
+                                            value={settings.oauth?.microsoft?.client_id || ""}
+                                            onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth?.microsoft, client_id: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
+                                        <input
+                                            type="password"
+                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
+                                            value={settings.oauth?.microsoft?.client_secret || ""}
+                                            onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth?.microsoft, client_secret: e.target.value })}
+                                            placeholder={settings.oauth?.microsoft?.client_secret ? "******" : ""}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* MAIL SETTINGS */}
                         <div className="bg-white p-6 rounded-xl shadow h-fit">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">{t('admin.settings.mail_title')}</h2>
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Mail size={24} className="text-purple-600" /> {t('admin.settings.mail_title')}</h2>
                             <div className="space-y-4">
                                 <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition">
-                                    <span className="font-medium">{t('admin.settings.mail_active')}</span>
+                                    <span className="font-medium text-gray-700">{t('admin.settings.mail_active')}</span>
                                     <input type="checkbox" className="w-5 h-5 accent-pink-600"
                                         checked={settings.mail.enabled}
                                         onChange={e => updateSetting('mail', 'enabled', e.target.checked)}
@@ -633,38 +671,38 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="col-span-2">
-                                        <label className="text-xs font-bold text-gray-500">{t('admin.settings.host')}</label>
-                                        <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="smtp.office365.com"
+                                        <label className="text-xs font-bold text-gray-700">{t('admin.settings.host')}</label>
+                                        <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900" placeholder="smtp.office365.com"
                                             value={settings.mail.smtp_host}
                                             onChange={e => updateSetting('mail', 'smtp_host', e.target.value)}
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">{t('admin.settings.port')}</label>
-                                        <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none" type="number"
+                                        <label className="text-xs font-bold text-gray-700">{t('admin.settings.port')}</label>
+                                        <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900" type="number"
                                             value={settings.mail.smtp_port}
                                             onChange={e => updateSetting('mail', 'smtp_port', parseInt(e.target.value))}
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.user')}</label>
-                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.user')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900"
                                         value={settings.mail.smtp_user}
                                         onChange={e => updateSetting('mail', 'smtp_user', e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.pass')}</label>
-                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none" type="password" placeholder="***"
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.pass')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900" type="password" placeholder="***"
                                         value={settings.mail.smtp_password}
                                         onChange={e => updateSetting('mail', 'smtp_password', e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500 mb-1 block">{t('admin.settings.encryption')}</label>
+                                    <label className="text-xs font-bold text-gray-700 mb-1 block">{t('admin.settings.encryption')}</label>
                                     <select
-                                        className="w-full p-2 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                        className="w-full p-2 border rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
                                         value={getEncryptionMode()}
                                         onChange={(e) => setEncryptionMode(e.target.value)}
                                     >
@@ -675,15 +713,15 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.sender_name')}</label>
-                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.sender_name')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900"
                                         value={settings.mail.sender_name || "Solumati"}
                                         onChange={e => updateSetting('mail', 'sender_name', e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">{t('admin.settings.from')}</label>
-                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.from')}</label>
+                                    <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900"
                                         value={settings.mail.from_email}
                                         onChange={e => updateSetting('mail', 'from_email', e.target.value)}
                                     />
@@ -691,7 +729,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 <div className="mt-4 pt-4 border-t">
                                     <div className="flex gap-2">
                                         <input
-                                            className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none text-sm"
+                                            className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none text-sm bg-gray-50 text-gray-900"
                                             placeholder="test@example.com"
                                             value={testMailTarget}
                                             onChange={e => setTestMailTarget(e.target.value)}
@@ -700,7 +738,52 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                             {t('admin.settings.test_mail_btn')}
                                         </button>
                                     </div>
-                                    {unsavedChanges && <p className="text-xs text-orange-500 mt-1 font-bold">⚠️ {t('admin.settings.unsaved_warning', "Unsaved Changes!")}</p>}
+                                    {unsavedChanges && <p className="text-xs text-orange-600 mt-1 font-bold">⚠️ {t('admin.settings.unsaved_warning', "Unsaved Changes!")}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* LEGAL SETTINGS - TEMPLATE FIELDS */}
+                        <div className="bg-white p-6 rounded-xl shadow h-fit">
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Info size={24} className="text-gray-600" /> {t('admin.settings.legal_title')}</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.company_name')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.company_name} onChange={e => updateSetting('legal', 'company_name', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.ceo_name')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.ceo_name} onChange={e => updateSetting('legal', 'ceo_name', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.address_street')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.address_street} onChange={e => updateSetting('legal', 'address_street', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.address_zip_city')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.address_zip_city} onChange={e => updateSetting('legal', 'address_zip_city', e.target.value)} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-700">{t('admin.settings.contact_email')}</label>
+                                        <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.contact_email} onChange={e => updateSetting('legal', 'contact_email', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-700">{t('admin.settings.contact_phone')}</label>
+                                        <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.contact_phone} onChange={e => updateSetting('legal', 'contact_phone', e.target.value)} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.register_court')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.register_court} onChange={e => updateSetting('legal', 'register_court', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.register_number')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.register_number} onChange={e => updateSetting('legal', 'register_number', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700">{t('admin.settings.vat_id')}</label>
+                                    <input className="w-full p-2 border rounded bg-gray-50 text-gray-900" value={settings.legal.vat_id} onChange={e => updateSetting('legal', 'vat_id', e.target.value)} />
                                 </div>
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw } from 'lucide-react';
-import { API_URL } from '../config';
+import { API_URL, APP_VERSION } from '../config';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useTheme } from './ThemeContext';
 
