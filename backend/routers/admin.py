@@ -89,17 +89,55 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
 
 @router.get("/settings", response_model=schemas.SystemSettings)
 def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    # Fetch Settings
+    mail_conf = get_setting(db, "mail", schemas.MailConfig().dict())
+    reg_conf = get_setting(db, "registration", schemas.RegistrationConfig().dict())
+    legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
+    oauth_conf = get_setting(db, "oauth", schemas.OAuthConfig().dict()) # Get Raw
+
+    # Mask Secrets for UI
+    # We do not want to send the actual secrets to the frontend
+    if oauth_conf.get('github', {}).get('client_secret'): oauth_conf['github']['client_secret'] = "******"
+    if oauth_conf.get('google', {}).get('client_secret'): oauth_conf['google']['client_secret'] = "******"
+    if oauth_conf.get('microsoft', {}).get('client_secret'): oauth_conf['microsoft']['client_secret'] = "******"
+
     return {
-        "mail": get_setting(db, "mail", schemas.MailConfig()),
-        "registration": get_setting(db, "registration", schemas.RegistrationConfig()),
-        "legal": get_setting(db, "legal", schemas.LegalConfig())
+        "mail": mail_conf,
+        "registration": reg_conf,
+        "legal": legal_conf,
+        "oauth": oauth_conf
     }
 
 @router.put("/settings")
 def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    # Save Mail, Registration, Legal (Direct save)
     save_setting(db, "mail", settings.mail.dict())
     save_setting(db, "registration", settings.registration.dict())
     save_setting(db, "legal", settings.legal.dict())
+
+    # Save OAuth (Handle Secrets)
+    # 1. Fetch existing secrets to keep them if not changed
+    current_oauth = get_setting(db, "oauth", schemas.OAuthConfig().dict())
+
+    new_oauth = settings.oauth.dict()
+
+    for provider in ['github', 'google', 'microsoft']:
+        # If new secret is masked or empty, keep old secret?
+        # User requirement: "Secrets should after input not be readable, only overwritable"
+        # If user sends "******", we assume NO CHANGE.
+        # If user sends "", we might assume CLEARING the secret? Or NO CHANGE?
+        # Usually empty means "no change" in password fields or "clear".
+        # Let's assume: "******" = No Change. Anything else = Update.
+
+        submitted_secret = new_oauth.get(provider, {}).get('client_secret', '')
+        if submitted_secret == "******":
+            # Restore old secret
+            new_oauth[provider]['client_secret'] = current_oauth.get(provider, {}).get('client_secret', '')
+
+        # If user actually cleared it (empty string), it will be saved as empty string (disabling it).
+
+    save_setting(db, "oauth", new_oauth)
+
     logger.info(f"Admin {current_admin.username} updated system settings.")
     return {"status": "updated"}
 

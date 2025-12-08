@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL, FALLBACK } from './config';
-import { CheckCircle, XCircle } from 'lucide-react';
 import { ThemeProvider } from './components/ThemeContext';
 
 // Import Components
@@ -17,6 +16,10 @@ import ResetPassword from './components/ResetPassword';
 import TwoFactorAuth from './components/TwoFactorAuth';
 import Discover from './components/Discover';
 import Questionnaire from './components/Questionnaire';
+
+// Import Extracted Components
+import VerificationBanner from './components/common/VerificationBanner';
+import AuthLayout from './components/layout/AuthLayout';
 
 function App() {
     // --- Global State ---
@@ -268,32 +271,22 @@ function App() {
         } catch (e) { console.error("Match fetch failed", e); }
     };
 
-    const renderVerificationBanner = () => {
-        if (!verificationStatus) return null;
-        const isSuccess = verificationStatus === 'success';
-        // Material You / iOS Toast Style
-        const bgColor = isSuccess ? 'bg-green-100/90 dark:bg-green-900/90 text-green-800 dark:text-green-100' : 'bg-red-100/90 dark:bg-red-900/90 text-red-800 dark:text-red-100';
-        const Icon = isSuccess ? CheckCircle : XCircle;
-
-        return (
-            <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full ${bgColor} backdrop-blur-md flex items-center gap-3 z-50 shadow-xl border border-white/20 animate-in fade-in slide-in-from-top-4`}>
-                <Icon size={20} />
-                <span className="font-medium text-sm">{verificationMsg}</span>
-                <button onClick={() => setVerificationStatus(null)} className="ml-2 bg-black/10 hover:bg-black/20 rounded-full p-1 transition-colors">
-                    <XCircle size={16} className="opacity-50 hover:opacity-100" />
-                </button>
-            </div>
-        );
-    };
-
     // View Categories
     const isLanding = view === 'landing';
     const isLegal = view === 'legal';
     const isAuthCardView = ['login', 'register', 'forgot_pw', 'reset_pw', 'verify_2fa'].includes(view);
 
+    // Import extracted components
+    // Note: In a real environment, imports would be at the top. I'll ensure they are added there cleanly next.
+    // For now, I'm modifying the render block.
+
     return (
         <div className={`min-h-screen transition-colors duration-500 ${isAuthCardView ? 'animated-gradient overflow-hidden relative' : 'bg-gray-50 dark:bg-[#121212]'}`}>
-            {renderVerificationBanner()}
+            <VerificationBanner
+                status={verificationStatus}
+                message={verificationMsg}
+                onClose={() => setVerificationStatus(null)}
+            />
 
             <div className="w-full h-full min-h-screen">
 
@@ -320,37 +313,13 @@ function App() {
 
                 {/* 3. Auth Views (Split Screen on Desktop) */}
                 {isAuthCardView && (
-                    <div className="min-h-screen w-full flex">
-                        {/* Desktop Left Side - Branding/Hero */}
-                        <div className="hidden lg:flex w-1/2 bg-black relative overflow-hidden items-center justify-center">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-80 animated-gradient"></div>
-                            <div className="absolute inset-0 backdrop-blur-3xl"></div>
-                            <div className="relative z-10 text-white p-12 max-w-lg">
-                                <h1 className="text-5xl font-bold mb-6 tracking-tight">Solumati</h1>
-                                <p className="text-xl text-white/90 leading-relaxed">
-                                    {t('hero.tagline', "Experience the future of connection. Secure, private, and designed for you.")}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Right Side - Form Container */}
-                        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-gray-50 dark:bg-[#121212]">
-                            <div className="w-full max-w-md">
-                                {/* Mobile Logo (only visible on small screens) */}
-                                <div className="lg:hidden text-center mb-8">
-                                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-pink-500">Solumati</h1>
-                                </div>
-
-                                <div className="glass-panel relative z-10 animate-in slide-in-from-right-8 duration-500 fade-in">
-                                    {view === 'login' && <Login email={emailOrUser} setEmail={setEmailOrUser} password={password} setPassword={setPassword} onLogin={handleLogin} onBack={() => setView('landing')} onForgotPassword={() => setView('forgot_pw')} t={t} config={globalConfig} />}
-                                    {view === 'register' && <Register realName={realName} setRealName={setRealName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} answers={answers} setAnswers={setAnswers} questions={questions} onRegister={handleRegister} onBack={() => setView('landing')} t={t} config={globalConfig} />}
-                                    {view === 'forgot_pw' && <ForgotPassword onBack={() => setView('login')} t={t} />}
-                                    {view === 'reset_pw' && <ResetPassword token={resetToken} onSuccess={() => setView('login')} t={t} />}
-                                    {view === 'verify_2fa' && tempAuth && <TwoFactorAuth tempAuth={tempAuth} onVerified={finishLogin} onCancel={() => { setTempAuth(null); setView('login'); }} t={t} />}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <AuthLayout t={t}>
+                        {view === 'login' && <Login email={emailOrUser} setEmail={setEmailOrUser} password={password} setPassword={setPassword} onLogin={handleLogin} onBack={() => setView('landing')} onForgotPassword={() => setView('forgot_pw')} t={t} config={globalConfig} />}
+                        {view === 'register' && <Register realName={realName} setRealName={setRealName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} answers={answers} setAnswers={setAnswers} questions={questions} onRegister={handleRegister} onBack={() => setView('landing')} t={t} config={globalConfig} />}
+                        {view === 'forgot_pw' && <ForgotPassword onBack={() => setView('login')} t={t} />}
+                        {view === 'reset_pw' && <ResetPassword token={resetToken} onSuccess={() => setView('login')} t={t} />}
+                        {view === 'verify_2fa' && tempAuth && <TwoFactorAuth tempAuth={tempAuth} onVerified={finishLogin} onCancel={() => { setTempAuth(null); setView('login'); }} t={t} />}
+                    </AuthLayout>
                 )}
 
                 {/* 4. Dashboard / Main App Layout */}

@@ -21,38 +21,38 @@ const UserProfile = ({ user, onBack, onOpenSettings, t }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] transition-colors">
             <div className="max-w-2xl mx-auto p-4">
-                <button onClick={onBack} className="flex items-center text-gray-500 hover:text-black mb-6">
+                <button onClick={onBack} className="flex items-center text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-6">
                     <ChevronLeft size={20} /> {t('btn.back')}
                 </button>
 
-                <div className="bg-white rounded-2xl shadow-sm p-8">
+                <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-sm p-8 border dark:border-white/10">
                     <div className="flex flex-col items-center mb-8">
-                        <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4 text-pink-500">
+                        <div className="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-pink-500">
                             {user.image_url ?
                                 <img src={`${API_URL}${user.image_url}`} className="w-full h-full object-cover rounded-full" /> :
                                 <User size={48} />
                             }
                         </div>
-                        <h1 className="text-2xl font-bold">{user.username}</h1>
+                        <h1 className="text-2xl font-bold dark:text-white">{user.username}</h1>
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-500 uppercase mb-2">{t('profile.about_me')}</label>
+                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{t('profile.about_me')}</label>
                         <textarea
-                            className="w-full p-4 border rounded-xl bg-gray-50 min-h-[150px] focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                            className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white min-h-[150px] focus:ring-2 focus:ring-pink-500 focus:outline-none placeholder-gray-400"
                             value={aboutMe}
                             onChange={e => setAboutMe(e.target.value)}
                         />
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-500 uppercase mb-2">Intent</label>
+                        <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Intent</label>
                         <select
-                            className="w-full p-4 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                            className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
                             value={user.intent}
-                            disabled={true} // For now read-only or add state to edit it
+                            disabled={true}
                         >
                             <option value="longterm">Beziehung</option>
                             <option value="shortterm">Lockeres</option>

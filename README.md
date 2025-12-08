@@ -57,6 +57,11 @@ This will start:
 2.  Install dependencies: `npm install`
 3.  Start the dev server:
 ```
+```
+
+#### Homeassistant Addon
+You can find a Addon here: [Solumati Addon](https://github.com/FaserF/hassio-addons/tree/master/solumati)
+
 # Solumati - Find Your Match ❤️
 
 **Solumati** is a modern dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby.

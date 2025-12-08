@@ -136,6 +136,17 @@ class LegalConfig(BaseModel):
     register_number: str = ""
     vat_id: str = ""
 
+# --- OAuth Dynamic Config ---
+
+class OAuthProviderConfig(BaseModel):
+    client_id: Optional[str] = ""
+    client_secret: Optional[str] = ""
+
+class OAuthConfig(BaseModel):
+    github: OAuthProviderConfig = OAuthProviderConfig()
+    google: OAuthProviderConfig = OAuthProviderConfig()
+    microsoft: OAuthProviderConfig = OAuthProviderConfig()
+
 class OAuthProviders(BaseModel):
     github: bool
     google: bool
@@ -155,6 +166,7 @@ class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
     legal: LegalConfig
+    oauth: OAuthConfig = OAuthConfig()
 
 class SystemDiagnostics(BaseModel):
     current_version: str

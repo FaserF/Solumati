@@ -78,7 +78,6 @@ const Questionnaire = ({ user, onComplete, onClose, t }) => {
     const progress = Math.round(((step) / totalSteps) * 100);
 
     return (
-    return (
         <div className="fixed inset-0 z-50 bg-gray-50/95 dark:bg-black/95 backdrop-blur-sm overflow-y-auto">
             <div className="min-h-screen flex flex-col items-center py-12">
                 <div className="w-full max-w-2xl px-6">

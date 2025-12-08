@@ -229,12 +229,20 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                     >
                         {t('settings.tab_app', 'App Settings')}
                     </button>
-                    <button
-                        onClick={() => setActiveTab('account')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'account' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
-                    >
-                        {t('settings.tab_account', 'Account & Security')}
-                    </button>
+
+                    {/* Guest Check: Disable Account Tab if Guest */}
+                    {user.role !== 'guest' && !user.is_guest ? (
+                        <button
+                            onClick={() => setActiveTab('account')}
+                            className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'account' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
+                        >
+                            {t('settings.tab_account', 'Account & Security')}
+                        </button>
+                    ) : (
+                        <div className="flex-1 py-2 text-sm font-medium text-gray-300 dark:text-gray-600 text-center cursor-not-allowed" title="Not available for guests">
+                            {t('settings.tab_account', 'Account & Security')}
+                        </div>
+                    )}
                 </div>
 
                 {/* === APP SETTINGS TAB === */}
