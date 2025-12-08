@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
@@ -881,147 +881,22 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                                 <h3 className="font-bold text-lg text-gray-800">
                                                     {release.name || release.tag_name}
                                                 </h3>
-                                                <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">
-                                                    {new Date(release.published_at).toLocaleDateString()}
+                                                <span className="text-xs text-gray-500 font-mono">
+                                                    {formatDate(release.published_at)}
                                                 </span>
                                             </div>
                                             <div className="prose prose-sm max-w-none text-gray-600">
-                                                <pre className="whitespace-pre-wrap font-sans text-sm">{release.body}</pre>
+                                                <p className="whitespace-pre-wrap">{release.body}</p>
                                             </div>
-                                            {release.html_url && (
-                                                <a href={release.html_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs mt-2 inline-block">
-                                                    View on GitHub
-                                                </a>
-                                            )}
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
-                        {/* Github Link */}
-                        <div className="bg-white p-6 rounded-xl shadow border-l-4 border-gray-800 flex flex-col justify-between">
-                            <h3 className="font-bold text-gray-500 text-xs">PROJECT</h3>
-                            <a href="https://github.com/FaserF/Solumati" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 font-bold hover:underline">
-                                <Github size={20} /> GitHub Repo
-                            </a>
-                        </div>
                     </div>
                 )
             }
-
-
-            {/* Punish Modal */}
-            {
-                punishModal.show && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
-                            <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                                <UserX size={20} className="text-red-600" /> {t('admin.modal.punish_title')}
-                            </h3>
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.reason')}</label>
-                                <select className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" value={punishReason} onChange={e => setPunishReason(e.target.value)}>
-                                    <option value="Reported">{t('admin.reason.reported')}</option>
-                                    <option value="AdminDeactivation">{t('admin.reason.manual')}</option>
-                                    <option value="TempBan">{t('admin.reason.tempban')}</option>
-                                    <option value="Unknown">{t('admin.reason.unknown')}</option>
-                                </select>
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.custom_reason')}</label>
-                                <textarea className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Details regarding the ban..." value={customReason} onChange={e => setCustomReason(e.target.value)} />
-                            </div>
-                            {punishReason === 'TempBan' && (
-                                <div className="mb-6">
-                                    <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.duration')}</label>
-                                    <input type="number" min="1" className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" value={banHours} onChange={e => setBanHours(e.target.value)} />
-                                    <p className="text-xs text-gray-400 mt-1">{t('admin.modal.duration_hint')}</p>
-                                </div>
-                            )}
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                                <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
-                                <button onClick={executePunishment} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 shadow-md transition transform active:scale-95">{t('admin.btn.execute_ban')}</button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* Edit User Modal */}
-            {
-                editModal.show && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
-                            <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                                <Edit2 size={20} className="text-blue-600" /> {t('admin.modal.edit_title')}
-                            </h3>
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.realname')}</label>
-                                <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.email')}</label>
-                                <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
-                            </div>
-
-                            {/* Match Visibility Toggle */}
-                            <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="w-5 h-5 accent-pink-600"
-                                        checked={editForm.is_visible_in_matches}
-                                        onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                                    />
-                                    <div>
-                                        <span className="font-bold text-sm block">{t('admin.user.visible', 'Sichtbar in Matches')}</span>
-                                        <span className="text-xs text-gray-500">
-                                            {t('admin.user.visible_hint', 'Deaktivieren, wenn dieser Account ein reiner Admin-Account sein soll.')}
-                                        </span>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.user.pw_reset', 'Passwort (Reset)')}</label>
-                                <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder={t('admin.user.pw_new', 'Neues Passwort (leer lassen für keine Änderung)')} value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
-                            </div>
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                                <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
-                                <button onClick={saveUserEdit} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md transition transform active:scale-95">{t('btn.save')}</button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* Roles Info Modal */}
-            {
-                rolesModalOpen && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 border border-gray-200 relative">
-                            <button onClick={() => setRolesModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black">
-                                <XCircle size={24} />
-                            </button>
-                            <h3 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                                <Info size={20} className="text-blue-600" /> {t('admin.roles.title', 'System Rollen')}
-                            </h3>
-
-                            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                                {systemRoles.map((role, idx) => (
-                                    <div key={idx} className="border-b last:border-0 pb-4 last:pb-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="font-bold uppercase text-sm bg-gray-100 px-2 py-1 rounded">{role.name}</span>
-                                        </div>
-                                        <p className="text-sm text-gray-600">{t(role.description_key)}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-        </div >
+        </div>
     );
 };
 
