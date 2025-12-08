@@ -37,7 +37,7 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         email=user.email,
         hashed_password=hashed_pw,
         real_name=user.real_name, username=generate_unique_username(db, user.real_name),
-        intent=user.intent, answers=user.answers,
+        intent=user.intent, answers=json.dumps(user.answers),
         is_active=True, is_verified=is_verified, verification_code=verification_code,
         role="user", created_at=datetime.utcnow()
     )
@@ -94,16 +94,60 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
         models.User.is_visible_in_matches == True, models.User.role != 'admin'
     )
     for other in query.all():
-        s = calculate_compatibility(curr_answ, other.answers, curr_int, other.intent)
-        if s > 0: res.append(schemas.MatchResult(user_id=other.id, username=other.username, about_me=other.about_me, image_url=other.image_url, score=s))
+        compatibility = calculate_compatibility(curr_answ, other.answers, curr_int, other.intent)
+        s = compatibility["score"]
+        if s > 0:
+            res.append(schemas.MatchResult(
+                user_id=other.id,
+                username=other.username,
+                about_me=other.about_me,
+                image_url=other.image_url,
+                score=s,
+                match_details=compatibility["details"]
+            ))
     res.sort(key=lambda x: x.score, reverse=True)
     return res
+
+from questions_content import QUESTIONS
+@router.get("/questions")
+def get_questions():
+    return QUESTIONS
+
+@router.get("/users/discover", response_model=List[schemas.UserDisplay])
+def discover_users(user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """
+    Returns a list of random users for the 'Swipe' / Discover feature.
+    Excludes the current user and users already swiped (not implemented yet, just random for now).
+    """
+    # Simple implementation: Random 10 users that are not me
+    import random
+    candidates = db.query(models.User).filter(
+        models.User.id != user.id,
+        models.User.is_active == True,
+        models.User.is_visible_in_matches == True,
+        models.User.role != 'admin'  # Hide admins from discover?
+    ).limit(50).all() # Fetch a pool
+
+    if not candidates:
+        return []
+
+    # Shuffle and pick 10
+    random.shuffle(candidates)
+    return candidates[:10]
+
 
 @router.put("/users/{user_id}/profile", response_model=schemas.UserDisplay)
 def update_profile(user_id: int, update: schemas.UserUpdate, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user: raise HTTPException(404, "Not found")
-    user.about_me = update.about_me
+
+    if update.about_me is not None:
+        user.about_me = update.about_me
+    if update.intent is not None:
+        user.intent = update.intent
+    if update.answers is not None:
+        user.answers = json.dumps(update.answers)
+
     db.commit()
     db.refresh(user)
     return user

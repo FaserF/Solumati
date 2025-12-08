@@ -33,7 +33,8 @@ class User(Base):
     is_visible_in_matches = Column(Boolean, default=True)
 
     intent = Column(String)
-    answers = Column(ARRAY(Integer))
+    # Stored as JSON string: {"1": 0, "2": 3, ...}
+    answers = Column(Text, default="{}")
 
     is_guest = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)

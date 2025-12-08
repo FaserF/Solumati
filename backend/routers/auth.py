@@ -198,8 +198,15 @@ def webauthn_register_options(user: models.User = Depends(get_current_user_from_
     # Retrieve existing credentials to prevent re-registration
     existing_creds = json.loads(user.webauthn_credentials or "[]")
 
+    # Determine RP_ID from APP_BASE_URL
+    # Logic: if APP_BASE_URL is http://localhost:3000, rp_id is localhost
+    # If https://mydomain.com, rp_id is mydomain.com
+    from urllib.parse import urlparse
+    parsed = urlparse(APP_BASE_URL)
+    rp_id = parsed.hostname or "localhost"
+
     options = generate_registration_options(
-        rp_id="localhost", # IMPORTANT: Must match the domain. In dev it is localhost.
+        rp_id=rp_id,
         rp_name="Solumati",
         user_id=str(user.id).encode(),
         user_name=user.email,
@@ -227,11 +234,15 @@ def webauthn_register_verify(req: schemas.WebAuthnRegistrationResponse, request:
         raise HTTPException(400, "No registration challenge found")
 
     try:
+        from urllib.parse import urlparse
+        parsed = urlparse(APP_BASE_URL)
+        rp_id = parsed.hostname or "localhost"
+
         verification = verify_registration_response(
             credential=req.credential,
             expected_challenge=base64url_to_bytes(user.webauthn_challenge),
-            expected_origin=APP_BASE_URL, # "http://localhost:3000"
-            expected_rp_id="localhost",
+            expected_origin=APP_BASE_URL,
+            expected_rp_id=rp_id,
             require_user_verification=False # Simplifying for dev
         )
 
@@ -272,8 +283,12 @@ def webauthn_auth_options(body: dict, db: Session = Depends(get_db)):
 
     existing_creds = json.loads(user.webauthn_credentials or "[]")
 
+    from urllib.parse import urlparse
+    parsed = urlparse(APP_BASE_URL)
+    rp_id = parsed.hostname or "localhost"
+
     options = generate_authentication_options(
-        rp_id="localhost",
+        rp_id=rp_id,
         allow_credentials=[
             AuthenticationCredential(id=base64url_to_bytes(cred["id"]))
             for cred in existing_creds
@@ -302,11 +317,15 @@ def webauthn_auth_verify(req: schemas.WebAuthnAuthResponse, db: Session = Depend
         if not credential_data:
             raise HTTPException(400, "Credential not known")
 
+        from urllib.parse import urlparse
+        parsed = urlparse(APP_BASE_URL)
+        rp_id = parsed.hostname or "localhost"
+
         verification = verify_authentication_response(
             credential=req.credential,
             expected_challenge=base64url_to_bytes(user.webauthn_challenge),
             expected_origin=APP_BASE_URL,
-            expected_rp_id="localhost",
+            expected_rp_id=rp_id,
             credential_public_key=base64.urlsafe_b64decode(credential_data["public_key"] + "=="),
             credential_current_sign_count=credential_data["sign_count"]
         )

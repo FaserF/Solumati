@@ -47,6 +47,20 @@ const UserProfile = ({ user, onBack, onOpenSettings, t }) => {
                         />
                     </div>
 
+                    <div className="mb-6">
+                        <label className="block text-sm font-bold text-gray-500 uppercase mb-2">Intent</label>
+                        <select
+                            className="w-full p-4 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                            value={user.intent}
+                            disabled={true} // For now read-only or add state to edit it
+                        >
+                            <option value="longterm">Beziehung</option>
+                            <option value="shortterm">Lockeres</option>
+                            <option value="friends">Freundschaft</option>
+                        </select>
+                        <p className="text-xs text-gray-400 mt-1">Editing intent currently disabled.</p>
+                    </div>
+
                     <button
                         onClick={handleSave}
                         disabled={loading}

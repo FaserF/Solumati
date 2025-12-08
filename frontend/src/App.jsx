@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL, FALLBACK } from './config';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { ThemeProvider } from './components/ThemeContext';
 
 // Import Components
 import Landing from './components/Landing';
@@ -14,6 +15,8 @@ import Legal from './components/Legal';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import TwoFactorAuth from './components/TwoFactorAuth';
+import Discover from './components/Discover';
+import Questionnaire from './components/Questionnaire';
 
 function App() {
     // --- Global State ---
@@ -26,7 +29,8 @@ function App() {
     const [globalConfig, setGlobalConfig] = useState({
         test_mode: false,
         registration_enabled: true,
-        email_2fa_enabled: false
+        email_2fa_enabled: false,
+        legal: {}
     });
 
     // --- 2FA State ---
@@ -102,25 +106,30 @@ function App() {
                     const data = await res.json();
                     if (res.ok) {
                         setVerificationStatus('success');
-                        setVerificationMsg(t('verify.success', 'E-Mail erfolgreich verifiziert!'));
+                        setVerificationMsg(t('verify.success', 'Email successfully verified!'));
                         window.history.replaceState({}, document.title, window.location.pathname);
                     } else {
-                        setVerificationStatus('error');
-                        setVerificationMsg(data.detail || t('verify.error', 'Verifizierungslink ungültig oder abgelaufen.'));
+                        const userData = {
+                            id: oauthId,
+                            username: oauthUser,
+                            role: oauthRole || 'user',
+                            is_guest: false, // OAuth users are not guests
+                            is_verified: true
+                        };
+                        console.log("OAuth Login Detected:", userData);
+                        finishLogin(userData);
+                        // Clear URL params
+                        window.history.replaceState({}, document.title, window.location.pathname);
                     }
-                })
-                .catch(() => {
-                    setVerificationStatus('error');
-                    setVerificationMsg("Netzwerkfehler bei der Verifizierung.");
                 });
         }
     }, []);
 
     const questions = [
-        { id: 0, text: t('q.0', "Ich bevorzuge ruhige Abende.") },
-        { id: 1, text: t('q.1', "Karriere ist wichtiger als Familie.") },
-        { id: 2, text: t('q.2', "Glaube/Spiritualität ist mir wichtig.") },
-        { id: 3, text: t('q.3', "Ich diskutiere gern über Politik.") }
+        { id: 0, text: t('q.0', "I prefer quiet evenings.") },
+        { id: 1, text: t('q.1', "Career is more important than family.") },
+        { id: 2, text: t('q.2', "Faith/Spirituality is important to me.") },
+        { id: 3, text: t('q.3', "I enjoy discussing politics.") }
     ];
 
     // Helper to finalize login (used by handleLogin and 2FA)
@@ -179,11 +188,11 @@ function App() {
             } else {
                 const err = await res.json();
                 console.warn("[App] Login failed:", err);
-                alert(t('alert.login_failed', "Login fehlgeschlagen: ") + (err.detail || JSON.stringify(err)));
+                alert(t('alert.login_failed', "Login failed: ") + (err.detail || JSON.stringify(err)));
             }
         } catch (e) {
             console.error("[App] Login network error:", e);
-            alert("Verbindungsfehler zum Server.");
+            alert(t('alert.network_error', "Connection error to server."));
         }
     };
 
@@ -206,23 +215,23 @@ function App() {
             if (res.ok) {
                 const data = await res.json();
                 if (data.is_verified) {
-                    alert(t('alert.welcome', `Willkommen`) + `, ${data.username}!`);
+                    alert(t('alert.welcome', `Welcome`) + `, ${data.username}!`);
                     setUser({ user_id: data.id, username: data.username, role: data.role });
                     setIsGuest(false);
                     fetchMatches(data.id);
                     setView('dashboard');
                 } else {
-                    alert(t('register.check_mail', "Account erstellt! Bitte überprüfe deine E-Mails, um den Account zu aktivieren."));
+                    alert(t('register.check_mail', "Account created! Please check your email to activate your account."));
                     setView('landing');
                 }
             } else {
                 const err = await res.json();
                 const errorMsg = typeof err.detail === 'object' ? JSON.stringify(err.detail, null, 2) : err.detail;
-                alert("Fehler: " + errorMsg);
+                alert(t('alert.error', "Error: ") + errorMsg);
             }
         } catch (e) {
             console.error(e);
-            alert("Registrierung fehlgeschlagen (Netzwerkfehler).");
+            alert(t('alert.register_fail_network', "Registration failed (Network error)."));
         }
     };
 
@@ -233,19 +242,19 @@ function App() {
                 const data = await res.json();
                 setMatches(data);
                 setIsGuest(true);
-                setUser({ user_id: 0, username: t('user.guest', "Gast"), role: 'guest' });
+                setUser({ user_id: 0, username: t('user.guest', "Guest"), role: 'guest' });
                 setView('dashboard');
             } else {
                 const err = await res.json();
                 if (res.status === 403) {
-                    alert("Gastmodus ist leider deaktiviert. Bitte registriere dich.");
+                    alert(t('alert.guest_disabled', "Guest mode is disabled. Please register."));
                 } else {
-                    alert("Fehler beim Gast-Login.");
+                    alert(t('alert.guest_error', "Error logging in as guest."));
                 }
             }
         } catch (e) {
             console.error(e);
-            alert("Serverfehler");
+            alert(t('alert.server_error', "Server Error"));
         }
     };
 
@@ -262,135 +271,107 @@ function App() {
     const renderVerificationBanner = () => {
         if (!verificationStatus) return null;
         const isSuccess = verificationStatus === 'success';
-        const bgColor = isSuccess ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800';
+        // Material You / iOS Toast Style
+        const bgColor = isSuccess ? 'bg-green-100/90 dark:bg-green-900/90 text-green-800 dark:text-green-100' : 'bg-red-100/90 dark:bg-red-900/90 text-red-800 dark:text-red-100';
         const Icon = isSuccess ? CheckCircle : XCircle;
 
         return (
-            <div className={`fixed top-0 left-0 right-0 p-4 border-b-2 ${bgColor} flex items-center justify-center gap-2 z-50 shadow-md`}>
+            <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full ${bgColor} backdrop-blur-md flex items-center gap-3 z-50 shadow-xl border border-white/20 animate-in fade-in slide-in-from-top-4`}>
                 <Icon size={20} />
-                <span className="font-bold">{verificationMsg}</span>
-                <button onClick={() => setVerificationStatus(null)} className="ml-4 text-sm underline opacity-70 hover:opacity-100">
-                    {t('btn.close', 'Schließen')}
+                <span className="font-medium text-sm">{verificationMsg}</span>
+                <button onClick={() => setVerificationStatus(null)} className="ml-2 bg-black/10 hover:bg-black/20 rounded-full p-1 transition-colors">
+                    <XCircle size={16} className="opacity-50 hover:opacity-100" />
                 </button>
             </div>
         );
     };
 
+    // View Categories
+    const isLanding = view === 'landing';
+    const isLegal = view === 'legal';
+    const isAuthCardView = ['login', 'register', 'forgot_pw', 'reset_pw', 'verify_2fa'].includes(view);
+
     return (
-        <>
+        <div className={`min-h-screen transition-colors duration-500 ${isAuthCardView ? 'animated-gradient overflow-hidden relative' : 'bg-gray-50 dark:bg-[#121212]'}`}>
             {renderVerificationBanner()}
 
-            {view === 'landing' && (
-                <Landing
-                    onLogin={() => setView('login')}
-                    onRegister={() => setView('register')}
-                    onGuest={handleGuest}
-                    onAdmin={() => setView('login')}
-                    onLegal={() => setView('legal')}
-                    t={t}
-                />
-            )}
+            <div className="w-full h-full min-h-screen">
 
-            {view === 'login' && (
-                <Login
-                    email={emailOrUser} setEmail={setEmailOrUser}
-                    password={password} setPassword={setPassword}
-                    onLogin={handleLogin}
-                    onBack={() => setView('landing')}
-                    onForgotPassword={() => setView('forgot_pw')}
-                    t={t}
-                />
-            )}
+                {/* 1. Landing View (Full Screen) */}
+                {isLanding && (
+                    <Landing
+                        onLogin={() => setView('login')}
+                        onRegister={() => setView('register')}
+                        onGuest={handleGuest}
+                        onAdmin={() => setView('login')}
+                        onLegal={() => setView('legal')}
+                        t={t}
+                    />
+                )}
 
-            {view === 'verify_2fa' && tempAuth && (
-                <TwoFactorAuth
-                    tempAuth={tempAuth}
-                    onVerified={finishLogin}
-                    onCancel={() => { setTempAuth(null); setView('login'); }}
-                    t={t}
-                />
-            )}
+                {/* 2. Legal View (Document Style) */}
+                {isLegal && (
+                    <div className="container mx-auto max-w-4xl p-8 min-h-screen flex flex-col justify-center">
+                        <div className="glass-panel">
+                            <Legal onBack={() => setView('landing')} t={t} />
+                        </div>
+                    </div>
+                )}
 
-            {view === 'forgot_pw' && (
-                <ForgotPassword
-                    onBack={() => setView('login')}
-                    t={t}
-                />
-            )}
+                {/* 3. Auth Views (Split Screen on Desktop) */}
+                {isAuthCardView && (
+                    <div className="min-h-screen w-full flex">
+                        {/* Desktop Left Side - Branding/Hero */}
+                        <div className="hidden lg:flex w-1/2 bg-black relative overflow-hidden items-center justify-center">
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-80 animated-gradient"></div>
+                            <div className="absolute inset-0 backdrop-blur-3xl"></div>
+                            <div className="relative z-10 text-white p-12 max-w-lg">
+                                <h1 className="text-5xl font-bold mb-6 tracking-tight">Solumati</h1>
+                                <p className="text-xl text-white/90 leading-relaxed">
+                                    {t('hero.tagline', "Experience the future of connection. Secure, private, and designed for you.")}
+                                </p>
+                            </div>
+                        </div>
 
-            {view === 'reset_pw' && (
-                <ResetPassword
-                    token={resetToken}
-                    onSuccess={() => setView('login')}
-                    t={t}
-                />
-            )}
+                        {/* Right Side - Form Container */}
+                        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-gray-50 dark:bg-[#121212]">
+                            <div className="w-full max-w-md">
+                                {/* Mobile Logo (only visible on small screens) */}
+                                <div className="lg:hidden text-center mb-8">
+                                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-pink-500">Solumati</h1>
+                                </div>
 
-            {view === 'register' && (
-                <Register
-                    realName={realName} setRealName={setRealName}
-                    email={email} setEmail={setEmail}
-                    password={password} setPassword={setPassword}
-                    answers={answers} setAnswers={setAnswers}
-                    questions={questions}
-                    onRegister={handleRegister}
-                    onBack={() => setView('landing')}
-                    t={t}
-                />
-            )}
+                                <div className="glass-panel relative z-10 animate-in slide-in-from-right-8 duration-500 fade-in">
+                                    {view === 'login' && <Login email={emailOrUser} setEmail={setEmailOrUser} password={password} setPassword={setPassword} onLogin={handleLogin} onBack={() => setView('landing')} onForgotPassword={() => setView('forgot_pw')} t={t} config={globalConfig} />}
+                                    {view === 'register' && <Register realName={realName} setRealName={setRealName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} answers={answers} setAnswers={setAnswers} questions={questions} onRegister={handleRegister} onBack={() => setView('landing')} t={t} config={globalConfig} />}
+                                    {view === 'forgot_pw' && <ForgotPassword onBack={() => setView('login')} t={t} />}
+                                    {view === 'reset_pw' && <ResetPassword token={resetToken} onSuccess={() => setView('login')} t={t} />}
+                                    {view === 'verify_2fa' && tempAuth && <TwoFactorAuth tempAuth={tempAuth} onVerified={finishLogin} onCancel={() => { setTempAuth(null); setView('login'); }} t={t} />}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-            {view === 'dashboard' && (
-                <Dashboard
-                    user={user}
-                    matches={matches}
-                    isGuest={isGuest}
-                    testMode={globalConfig.test_mode}
-                    onLogout={() => { setUser(null); setView('landing'); }}
-                    onRegisterClick={() => setView('register')}
-                    onAdminClick={() => setView('adminPanel')}
-                    onProfileClick={() => setView('profile')}
-                    t={t}
-                />
-            )}
+                {/* 4. Dashboard / Main App Layout */}
+                {!isLanding && !isLegal && !isAuthCardView && (
+                    <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
+                        {view === 'dashboard' && <Dashboard user={user} matches={matches} isGuest={isGuest} testMode={globalConfig.test_mode} onLogout={() => { setUser(null); setView('landing'); }} onRegisterClick={() => setView('register')} onAdminClick={() => setView('adminPanel')} onProfileClick={() => setView('profile')} onSwipeClick={() => setView('swipe')} onQuestionnaireClick={() => setView('questionnaire')} onImprintClick={() => setView('imprint')} onPrivacyClick={() => setView('privacy')} t={t} />}
+                        {view === 'profile' && user && <UserProfile user={user} onBack={() => setView('dashboard')} onOpenSettings={() => setView('settings')} t={t} />}
+                        {view === 'swipe' && user && <Discover user={user} onBack={() => setView('dashboard')} t={t} />}
+                        {view === 'questionnaire' && user && <Questionnaire user={user} onComplete={() => { setView('dashboard'); alert("Profile updated!"); }} t={t} />}
+                        {view === 'settings' && user && <AccountSettings user={user} globalConfig={globalConfig} onBack={() => setView('profile')} onLogout={() => { setUser(null); setView('landing'); }} onResetPassword={() => { setUser(null); setView('forgot_pw'); }} t={t} />}
+                        {view === 'adminPanel' && <AdminPanel user={user} testMode={globalConfig.test_mode} onLogout={() => { setUser(null); setView('landing'); }} onBack={() => setView('dashboard')} t={t} />}
+                    </div>
+                )}
 
-            {view === 'profile' && user && (
-                <UserProfile
-                    user={user}
-                    onBack={() => setView('dashboard')}
-                    onOpenSettings={() => setView('settings')}
-                    t={t}
-                />
-            )}
-
-            {view === 'settings' && user && (
-                <AccountSettings
-                    user={user}
-                    globalConfig={globalConfig}
-                    onBack={() => setView('profile')}
-                    onLogout={() => { setUser(null); setView('landing'); }}
-                    onResetPassword={() => { setUser(null); setView('forgot_pw'); }}
-                    t={t}
-                />
-            )}
-
-            {view === 'legal' && (
-                <Legal
-                    onBack={() => setView('landing')}
-                    t={t}
-                />
-            )}
-
-            {view === 'adminPanel' && (
-                <AdminPanel
-                    user={user}
-                    testMode={globalConfig.test_mode}
-                    onLogout={() => { setUser(null); setView('landing'); }}
-                    onBack={() => setView('dashboard')}
-                    t={t}
-                />
-            )}
-        </>
+            </div>
+        </div>
     );
 }
 
-export default App;
+export default () => (
+    <ThemeProvider>
+        <App />
+    </ThemeProvider>
+);

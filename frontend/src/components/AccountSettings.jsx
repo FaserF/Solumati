@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw } from 'lucide-react';
 import { API_URL } from '~/config.js';
 import { startRegistration } from '@simplewebauthn/browser';
+import { useTheme } from './ThemeContext';
 
 const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalConfig }) => {
     // --- Tabs ---
@@ -16,11 +17,11 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
 
     // --- App Settings State ---
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-    const [theme, setTheme] = useState("system");
+
+    // Use Global Theme Context
+    const { theme, setTheme } = useTheme();
 
     const [loading, setLoading] = useState(false);
-
-    // 2FA States
     const [totpSetup, setTotpSetup] = useState(null);
     const [totpCode, setTotpCode] = useState("");
 
@@ -32,6 +33,9 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
     // --- 1. Fetch User Data on Mount ---
     useEffect(() => {
         const fetchUserData = async () => {
+            // ... Code to fetch user data ...
+            // We need to keep this but we have to be careful about setting 'theme'
+            // If we fetch user prefs, we should update the context
             try {
                 const res = await fetch(`${API_URL}/users/${user.user_id}`, { headers });
                 if (res.ok) {
@@ -42,40 +46,16 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                         try {
                             const s = typeof userData.app_settings === 'string' ? JSON.parse(userData.app_settings) : userData.app_settings;
                             setNotificationsEnabled(s.notifications_enabled || false);
-                            // Only set theme if it exists in settings, otherwise keep default 'system'
                             if (s.theme) setTheme(s.theme);
                         } catch (e) { console.error("Error parsing settings", e); }
                     }
                 }
-            } catch (e) {
-                console.error("Failed to load user profile", e);
-            }
+            } catch (e) { console.error("Failed to load user profile", e); }
         };
         fetchUserData();
     }, [user.user_id]);
 
-    // --- 2. Theme Application Logic (Fixed) ---
-    useEffect(() => {
-        const root = document.documentElement;
-        // Clean up previous classes to avoid conflicts
-
-        if (theme === 'dark') {
-            root.classList.add('dark');
-        } else if (theme === 'light') {
-            root.classList.remove('dark');
-        } else {
-            // System preference
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                root.classList.add('dark');
-            } else {
-                root.classList.remove('dark');
-            }
-        }
-
-        // Save to local storage for persistence across reloads immediately (optional but good practice)
-        localStorage.setItem('theme', theme);
-
-    }, [theme]);
+    // Removed local useEffect for theme application as ThemeContext handles it
 
     // --- App Settings Handlers ---
     const saveAppPrefs = async (newPrefs) => {
@@ -410,7 +390,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                     />
                                 </div>
                                 <button onClick={onResetPassword} className="text-xs text-blue-600 hover:underline mt-2 flex items-center gap-1 font-medium">
-                                    <RefreshCcw size={12} /> {t('settings.btn_reset_pw', 'Passwort zurücksetzen (Logout)')}
+                                    <RefreshCcw size={12} /> {t('settings.btn_reset_pw', 'Reset Password (Logout)')}
                                 </button>
                             </div>
 
@@ -437,6 +417,10 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                         )}
                     </div>
                 )}
+                <div className="mt-8 pt-6 border-t text-center text-xs text-gray-400">
+                    <p>Solumati v{globalConfig?.backend_version || "..."} (FE: {APP_VERSION})</p>
+                    <p>All rights reserved.</p>
+                </div>
             </div>
         </div>
     );

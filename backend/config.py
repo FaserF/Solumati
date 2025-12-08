@@ -7,6 +7,14 @@ from logging_config import logger
 TEST_MODE = os.getenv("TEST_MODE", "false").lower() in ("true", "1", "yes")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 
+# --- OAUTH CONFIG ---
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID")
+MICROSOFT_CLIENT_SECRET = os.getenv("MICROSOFT_CLIENT_SECRET")
+
 def get_app_version():
     """Reads the version from the frontend package.json to keep backend/frontend in sync."""
     try:
@@ -20,6 +28,13 @@ def get_app_version():
                     return version
     except Exception as e:
         logger.warning(f"Could not read version from package.json: {e}")
-    return "0.5.3"
+    return "0.0.0"
 
-CURRENT_VERSION = get_app_version()
+# Independent Backend Version (can be overriden by env or file)
+def get_backend_version():
+    return os.getenv("BACKEND_VERSION", "2025.12.0-dev")
+
+FRONTEND_VERSION = get_app_version()
+BACKEND_VERSION = get_backend_version()
+# Compatibility alias if needed, or just let main.py use BACKEND_VERSION
+CURRENT_VERSION = BACKEND_VERSION

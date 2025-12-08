@@ -92,7 +92,9 @@ def ensure_admin_user(db: Session):
                 db.add(admin)
                 db.commit()
                 sep = "=" * 60
-                logger.warning(f"\n{sep}\nINITIAL ADMIN USER CREATED (ID: 1)\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER\n{sep}\n")
+                msg = f"\n{sep}\nINITIAL ADMIN USER CREATED (ID: 1)\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER\n{sep}\n"
+                logger.warning(msg)
+                print(msg)  # Ensure visibility in Docker logs
 
         try:
             db.execute(text("SELECT setval('users_id_seq', 10000, false);"))
@@ -125,6 +127,7 @@ def generate_dummy_data(db: Session):
     ]
 
     try:
+        created_dummies = []
         for i, name in enumerate(first_names):
             email = f"{name.lower()}_dummy@solumati.local"
             username = f"{name}Dummy"
@@ -133,9 +136,10 @@ def generate_dummy_data(db: Session):
             if db.query(models.User).filter(models.User.email == email).first():
                 continue
 
+            pw = secrets.token_urlsafe(10)
             dummy = models.User(
                 email=email,
-                hashed_password=hash_password("dummy"),
+                hashed_password=hash_password(pw),
                 real_name=f"{name} Dummy",
                 username=username,
                 about_me=f"Hallo! Ich bin {name}, ein generierter Test-User. Ich mag Pizza und Code.",
@@ -144,14 +148,19 @@ def generate_dummy_data(db: Session):
                 is_guest=False,
                 role="test",
                 intent=random.choice(intents),
-                answers=[random.randint(1, 5) for _ in range(4)],
+                answers=[random.randint(1, 4) for _ in range(4)],
                 created_at=datetime.utcnow(),
                 is_visible_in_matches=True
             )
             db.add(dummy)
+            created_dummies.append(f"{username} -> {pw}")
 
         db.commit()
-        logger.info("Dummy users created successfully.")
+        if created_dummies:
+            logger.info("Dummy users created successfully. Credentials:")
+            for d in created_dummies:
+                logger.info(d)
+                print(f"Dummy User: {d}") # Print for visibility
     except Exception as e:
         logger.error(f"Failed to create dummy users: {e}")
         db.rollback()

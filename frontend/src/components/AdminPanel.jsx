@@ -66,10 +66,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 const data = await res.json();
                 setUsers(data);
             } else {
-                setError(`Fehler beim Laden der Benutzer: Status ${res.status}`);
+                setError(`Error loading users: Status ${res.status}`);
             }
         } catch (e) {
-            setError("Verbindungsfehler. Bitte prüfe die Server-Logs.");
+            setError("Connection error. Please check server logs.");
         }
     };
 
@@ -87,7 +87,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 setSettings(await res.json());
                 setUnsavedChanges(false);
             }
-        } catch (e) { setError("Konnte Einstellungen nicht laden."); }
+        } catch (e) { setError("Could not load settings."); }
     };
 
     const fetchDiagnostics = async () => {
@@ -110,9 +110,9 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 setSystemRoles(await res.json());
                 setRolesModalOpen(true);
             } else {
-                alert("Konnte Rollen nicht laden.");
+                alert("Could not load roles.");
             }
-        } catch (e) { alert("Netzwerkfehler"); }
+        } catch (e) { alert("Network Error"); }
     };
 
     const handleAction = async (id, action) => {
@@ -127,15 +127,15 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 fetchUsers();
             } else {
                 const err = await res.json();
-                alert("Fehler: " + (err.detail || "Unbekannt"));
+                alert("Error: " + (err.detail || "Unknown"));
             }
         } catch (e) {
-            alert("Netzwerkfehler");
+            alert("Network Error");
         }
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("User unwiderruflich löschen?")) return;
+        if (!confirm("Permanently delete user?")) return;
         handleAction(id, 'delete');
     };
 
@@ -160,12 +160,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
             if (res.ok) {
                 setEditModal({ show: false, user: null });
                 fetchUsers();
-                alert("Benutzer erfolgreich aktualisiert.");
+                alert("User successfully updated.");
             } else {
                 const err = await res.json();
-                alert("Fehler: " + (err.detail || "Unbekannt"));
+                alert("Error: " + (err.detail || "Unknown"));
             }
-        } catch (e) { alert("Verbindungsfehler"); }
+        } catch (e) { alert("Connection Error"); }
     };
 
     const openPunishModal = (userId, reportId = null) => {
@@ -217,22 +217,22 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
 
     const sendTestMail = async () => {
         if (unsavedChanges) {
-            alert(t('admin.settings.unsaved_warning', "Bitte speichere erst die Änderungen!"));
+            alert(t('admin.settings.unsaved_warning', "Please save changes first!"));
             return;
         }
-        if (!testMailTarget) return alert("Bitte Zieladresse eingeben.");
+        if (!testMailTarget) return alert("Please enter target address.");
         try {
             const res = await fetch(`${API_URL}/admin/settings/test-mail`, {
                 method: 'POST',
                 headers: authHeaders,
                 body: JSON.stringify({ target_email: testMailTarget })
             });
-            if (res.ok) alert("Email gesendet!");
+            if (res.ok) alert("Email sent!");
             else {
                 const err = await res.json();
-                alert("Fehler: " + err.detail);
+                alert("Error: " + err.detail);
             }
-        } catch (e) { alert("Netzwerkfehler"); }
+        } catch (e) { alert("Network Error"); }
     };
 
     const updateSetting = (section, key, value) => {
@@ -271,86 +271,87 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
     };
 
     const isMailConfigured = () => {
-        if (!settings?.mail) return false;
-        // Simple check: Host and User or Host and Port
         return settings.mail.smtp_host && settings.mail.smtp_host.length > 0;
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                            <Shield className="text-red-600" /> {t('admin.title')}
-                        </h1>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 ml-1">
-                            <span>v{APP_VERSION}</span>
-                            <span className="font-mono bg-gray-100 px-2 rounded">Role: {user.role}</span>
-                        </div>
+        <div className="w-full text-gray-900 dark:text-gray-100 font-sans">
+            {/* Admin Header / Navbar - Glass Effect */}
+            <div className="glass flex items-center justify-between p-4 md:p-6 mb-8 rounded-3xl">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl shadow-lg shadow-red-500/20">
+                        <Shield className="h-6 w-6 text-white" />
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={onBack} className="bg-white border hover:bg-gray-50 text-gray-800 px-4 py-2 rounded font-medium flex items-center gap-2">
-                            <ArrowLeft size={16} /> {t('btn.back')}
-                        </button>
-                        <button onClick={onLogout} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded font-medium">{t('btn.logout')}</button>
+                    <div>
+                        <h1 className="font-bold text-2xl tracking-tight">{isModerator ? 'Moderator Panel' : 'Admin Console'}</h1>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-mono tracking-wider uppercase">System v{APP_VERSION}</p>
                     </div>
                 </div>
+                <div className="flex items-center gap-4">
+                    <button onClick={onBack} className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-all">
+                        <ArrowLeft size={18} /> {t('btn.back')}
+                    </button>
+                </div>
+            </div>
 
-                {/* TEST MODE BANNER */}
-                {testMode && (
-                    <div className="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded shadow-sm flex items-start gap-3">
-                        <Activity className="flex-shrink-0" />
+            {/* TEST MODE BANNER */}
+            {
+                testMode && (
+                    <div className="mb-6 bg-yellow-100/80 dark:bg-yellow-900/40 border border-yellow-500/50 text-yellow-800 dark:text-yellow-200 p-4 rounded-3xl backdrop-blur-sm flex items-start gap-4">
+                        <Activity className="flex-shrink-0 mt-1" />
                         <div>
-                            <p className="font-bold">{t('alert.test_mode_active', 'WARNING: Test Mode Active')}</p>
-                            <p className="text-sm">{t('alert.test_mode_admin_info', 'Dummy users generated.')}</p>
+                            <p className="font-bold text-lg">{t('alert.test_mode_active', 'Test Mode Active')}</p>
+                            <p className="text-sm opacity-80">{t('alert.test_mode_admin_info', 'System is using generated dummy data.')}</p>
                         </div>
                     </div>
-                )}
+                )
+            }
 
-                {error && (
+            {
+                error && (
                     <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm flex items-start gap-3">
                         <XCircle className="flex-shrink-0" />
                         <div>
-                            <p className="font-bold">Ein Fehler ist aufgetreten</p>
+                            <p className="font-bold">An error occurred</p>
                             <p className="text-sm">{error}</p>
                         </div>
                     </div>
+                )
+            }
+
+            {/* Tab Navigation */}
+            <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
+                {canManageUsers && (
+                    <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'users' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                        <Users size={18} /> {t('admin.tab.users')}
+                    </button>
                 )}
+                {canViewReports && (
+                    <button onClick={() => setActiveTab('reports')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'reports' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                        <AlertTriangle size={18} /> {t('admin.tab.reports')} ({reports.length})
+                    </button>
+                )}
+                {canManageSettings && (
+                    <button onClick={() => setActiveTab('settings')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'settings' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                        <Settings size={18} /> {t('admin.tab.settings')}
+                    </button>
+                )}
+                {canViewDiagnostics && (
+                    <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                        <Activity size={18} /> {t('admin.tab.diagnostics')}
+                    </button>
+                )}
+            </div>
 
-                {/* Tab Navigation */}
-                <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
-                    {canManageUsers && (
-                        <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'users' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
-                            <Users size={18} /> {t('admin.tab.users')}
-                        </button>
-                    )}
-                    {canViewReports && (
-                        <button onClick={() => setActiveTab('reports')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'reports' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
-                            <AlertTriangle size={18} /> {t('admin.tab.reports')} ({reports.length})
-                        </button>
-                    )}
-                    {canManageSettings && (
-                        <button onClick={() => setActiveTab('settings')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'settings' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
-                            <Settings size={18} /> {t('admin.tab.settings')}
-                        </button>
-                    )}
-                    {canViewDiagnostics && (
-                        <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
-                            <Activity size={18} /> {t('admin.tab.diagnostics')}
-                        </button>
-                    )}
-                </div>
+            {/* Content Area */}
 
-                {/* Content Area */}
-
-                {/* 1. USERS TAB */}
-                {activeTab === 'users' && canManageUsers && (
+            {/* 1. USERS TAB */}
+            {
+                activeTab === 'users' && canManageUsers && (
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <div className="p-4 border-b flex justify-between bg-gray-50">
                             <button onClick={openRolesModal} className="text-sm text-blue-600 hover:text-blue-800 flex gap-2 font-bold items-center border border-blue-200 px-3 py-1 rounded bg-blue-50">
-                                <Info size={14} /> {t('admin.btn.roles', 'Rolleninfo')}
+                                <Info size={14} /> {t('admin.btn.roles', 'Role Info')}
                             </button>
                             <button onClick={fetchUsers} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium items-center">
                                 <RefreshCw size={14} /> {t('admin.btn.refresh')}
@@ -370,7 +371,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 </thead>
                                 <tbody>
                                     {users.length === 0 ? (
-                                        <tr><td colSpan="7" className="p-8 text-center text-gray-400">{loading ? "Lade..." : t('admin.no_users')}</td></tr>
+                                        <tr><td colSpan="7" className="p-8 text-center text-gray-400">{loading ? "Loading..." : t('admin.no_users')}</td></tr>
                                     ) : (
                                         users.map(u => (
                                             <tr key={u.id} className="border-b hover:bg-gray-50">
@@ -457,10 +458,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             </table>
                         </div>
                     </div>
-                )}
+                )
+            }
 
-                {/* 2. REPORTS TAB */}
-                {activeTab === 'reports' && canViewReports && (
+            {/* 2. REPORTS TAB */}
+            {
+                activeTab === 'reports' && canViewReports && (
                     <div className="bg-white rounded-xl shadow overflow-hidden">
                         <div className="p-4 border-b flex justify-end bg-gray-50">
                             <button onClick={fetchReports} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium"><RefreshCw size={14} /> {t('admin.btn.refresh')}</button>
@@ -498,10 +501,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             </table>
                         )}
                     </div>
-                )}
+                )
+            }
 
-                {/* 3. SETTINGS TAB */}
-                {activeTab === 'settings' && canManageSettings && settings && (
+            {/* 3. SETTINGS TAB */}
+            {
+                activeTab === 'settings' && canManageSettings && settings && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* GENERAL SETTINGS */}
                         <div className="bg-white p-6 rounded-xl shadow h-fit">
@@ -519,6 +524,16 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                     <input type="checkbox" className="w-5 h-5 accent-pink-600"
                                         checked={settings.registration.require_verification}
                                         onChange={e => updateSetting('registration', 'require_verification', e.target.checked)}
+                                    />
+                                </label>
+                                <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition border border-red-200">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-red-600 flex items-center gap-2"><AlertTriangle size={16} /> Maintenance Mode</span>
+                                        <span className="text-xs text-gray-400">Only Admins can login.</span>
+                                    </div>
+                                    <input type="checkbox" className="w-5 h-5 accent-red-600"
+                                        checked={settings.registration.maintenance_mode}
+                                        onChange={e => updateSetting('registration', 'maintenance_mode', e.target.checked)}
                                     />
                                 </label>
                                 <label className="flex items-center justify-between p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition">
@@ -653,8 +668,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                         value={getEncryptionMode()}
                                         onChange={(e) => setEncryptionMode(e.target.value)}
                                     >
-                                        <option value="none">{t('admin.settings.enc_none', 'Keine')}</option>
-                                        <option value="tls">{t('admin.settings.enc_tls', 'STARTTLS')} ({t('admin.settings.enc_recommended', 'Empfohlen')})</option>
+                                        <option value="none">{t('admin.settings.enc_none', 'None')}</option>
+                                        <option value="tls">{t('admin.settings.enc_tls', 'STARTTLS')} ({t('admin.settings.enc_recommended', 'Recommended')})</option>
                                         <option value="ssl">{t('admin.settings.enc_ssl', 'SSL')} (Port 465)</option>
                                     </select>
                                 </div>
@@ -685,7 +700,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                             {t('admin.settings.test_mail_btn')}
                                         </button>
                                     </div>
-                                    {unsavedChanges && <p className="text-xs text-orange-500 mt-1 font-bold">⚠️ {t('admin.settings.unsaved_warning', "Ungespeicherte Änderungen!")}</p>}
+                                    {unsavedChanges && <p className="text-xs text-orange-500 mt-1 font-bold">⚠️ {t('admin.settings.unsaved_warning', "Unsaved Changes!")}</p>}
                                 </div>
                             </div>
                         </div>
@@ -696,10 +711,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             </button>
                         </div>
                     </div>
-                )}
+                )
+            }
 
-                {/* 4. DIAGNOSTICS TAB */}
-                {activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
+            {/* 4. DIAGNOSTICS TAB */}
+            {
+                activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Version Card */}
@@ -806,115 +823,122 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             </a>
                         </div>
                     </div>
-                )}
-            </div>
+                )
+            }
+
 
             {/* Punish Modal */}
-            {punishModal.show && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
-                        <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                            <UserX size={20} className="text-red-600" /> {t('admin.modal.punish_title')}
-                        </h3>
-                        <div className="mb-4">
-                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.reason')}</label>
-                            <select className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" value={punishReason} onChange={e => setPunishReason(e.target.value)}>
-                                <option value="Reported">{t('admin.reason.reported')}</option>
-                                <option value="AdminDeactivation">{t('admin.reason.manual')}</option>
-                                <option value="TempBan">{t('admin.reason.tempban')}</option>
-                                <option value="Unknown">{t('admin.reason.unknown')}</option>
-                            </select>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.custom_reason')}</label>
-                            <textarea className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Details regarding the ban..." value={customReason} onChange={e => setCustomReason(e.target.value)} />
-                        </div>
-                        {punishReason === 'TempBan' && (
-                            <div className="mb-6">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.duration')}</label>
-                                <input type="number" min="1" className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" value={banHours} onChange={e => setBanHours(e.target.value)} />
-                                <p className="text-xs text-gray-400 mt-1">{t('admin.modal.duration_hint')}</p>
+            {
+                punishModal.show && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
+                            <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                                <UserX size={20} className="text-red-600" /> {t('admin.modal.punish_title')}
+                            </h3>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.reason')}</label>
+                                <select className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" value={punishReason} onChange={e => setPunishReason(e.target.value)}>
+                                    <option value="Reported">{t('admin.reason.reported')}</option>
+                                    <option value="AdminDeactivation">{t('admin.reason.manual')}</option>
+                                    <option value="TempBan">{t('admin.reason.tempban')}</option>
+                                    <option value="Unknown">{t('admin.reason.unknown')}</option>
+                                </select>
                             </div>
-                        )}
-                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                            <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
-                            <button onClick={executePunishment} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 shadow-md transition transform active:scale-95">{t('admin.btn.execute_ban')}</button>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.custom_reason')}</label>
+                                <textarea className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Details regarding the ban..." value={customReason} onChange={e => setCustomReason(e.target.value)} />
+                            </div>
+                            {punishReason === 'TempBan' && (
+                                <div className="mb-6">
+                                    <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.modal.duration')}</label>
+                                    <input type="number" min="1" className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500" value={banHours} onChange={e => setBanHours(e.target.value)} />
+                                    <p className="text-xs text-gray-400 mt-1">{t('admin.modal.duration_hint')}</p>
+                                </div>
+                            )}
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                                <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
+                                <button onClick={executePunishment} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 shadow-md transition transform active:scale-95">{t('admin.btn.execute_ban')}</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Edit User Modal */}
-            {editModal.show && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
-                        <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                            <Edit2 size={20} className="text-blue-600" /> {t('admin.modal.edit_title')}
-                        </h3>
-                        <div className="mb-4">
-                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.realname')}</label>
-                            <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} />
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.email')}</label>
-                            <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
-                        </div>
+            {
+                editModal.show && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200">
+                            <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                                <Edit2 size={20} className="text-blue-600" /> {t('admin.modal.edit_title')}
+                            </h3>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.realname')}</label>
+                                <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('label.email')}</label>
+                                <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                            </div>
 
-                        {/* Match Visibility Toggle */}
-                        <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="w-5 h-5 accent-pink-600"
-                                    checked={editForm.is_visible_in_matches}
-                                    onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                                />
-                                <div>
-                                    <span className="font-bold text-sm block">{t('admin.user.visible', 'Sichtbar in Matches')}</span>
-                                    <span className="text-xs text-gray-500">
-                                        {t('admin.user.visible_hint', 'Deaktivieren, wenn dieser Account ein reiner Admin-Account sein soll.')}
-                                    </span>
-                                </div>
-                            </label>
-                        </div>
+                            {/* Match Visibility Toggle */}
+                            <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 accent-pink-600"
+                                        checked={editForm.is_visible_in_matches}
+                                        onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                                    />
+                                    <div>
+                                        <span className="font-bold text-sm block">{t('admin.user.visible', 'Sichtbar in Matches')}</span>
+                                        <span className="text-xs text-gray-500">
+                                            {t('admin.user.visible_hint', 'Deaktivieren, wenn dieser Account ein reiner Admin-Account sein soll.')}
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
 
-                        <div className="mb-6">
-                            <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.user.pw_reset', 'Passwort (Reset)')}</label>
-                            <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder={t('admin.user.pw_new', 'Neues Passwort (leer lassen für keine Änderung)')} value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
-                        </div>
-                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
-                            <button onClick={saveUserEdit} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md transition transform active:scale-95">{t('btn.save')}</button>
+                            <div className="mb-6">
+                                <label className="block text-sm font-bold text-gray-500 mb-2">{t('admin.user.pw_reset', 'Passwort (Reset)')}</label>
+                                <input className="w-full p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder={t('admin.user.pw_new', 'Neues Passwort (leer lassen für keine Änderung)')} value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                                <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition">{t('btn.cancel')}</button>
+                                <button onClick={saveUserEdit} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md transition transform active:scale-95">{t('btn.save')}</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Roles Info Modal */}
-            {rolesModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 border border-gray-200 relative">
-                        <button onClick={() => setRolesModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black">
-                            <XCircle size={24} />
-                        </button>
-                        <h3 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                            <Info size={20} className="text-blue-600" /> {t('admin.roles.title', 'System Rollen')}
-                        </h3>
+            {
+                rolesModalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 border border-gray-200 relative">
+                            <button onClick={() => setRolesModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black">
+                                <XCircle size={24} />
+                            </button>
+                            <h3 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                                <Info size={20} className="text-blue-600" /> {t('admin.roles.title', 'System Rollen')}
+                            </h3>
 
-                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                            {systemRoles.map((role, idx) => (
-                                <div key={idx} className="border-b last:border-0 pb-4 last:pb-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-bold uppercase text-sm bg-gray-100 px-2 py-1 rounded">{role.name}</span>
+                            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                                {systemRoles.map((role, idx) => (
+                                    <div key={idx} className="border-b last:border-0 pb-4 last:pb-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-bold uppercase text-sm bg-gray-100 px-2 py-1 rounded">{role.name}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">{t(role.description_key)}</p>
                                     </div>
-                                    <p className="text-sm text-gray-600">{t(role.description_key)}</p>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

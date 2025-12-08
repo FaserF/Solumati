@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Release Type'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+        - major
+        - minor
+        - patch
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Get Current Backend Version
+      id: version
+      run: |
+        # Ensure we have the script
+        current=$(grep 'BACKEND_VERSION' backend/config.py | cut -d '"' -f 2 || echo "2024.1.0-dev")
+        # Or read from a file if we store it there.
+        # For now, let's calculate based on tags or date.
+        # User wants Year.Month schema.
+
+        # Using our script
+        new_version=$(python3 scripts/generate_version.py --current "0.0.0") # We rely on script to stick to YYYY.MM
+        echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+        echo "version=$new_version" >> $GITHUB_OUTPUT
+
+    - name: Generate Changelog
+      id: changelog
+      uses: orhun/git-cliff-action@v3
+      with:
+        config: cliff.toml
+        args: --verbose
+      env:
+        OUTPUT: CHANGELOG.md
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ env.NEW_VERSION }}
+        name: Release v${{ env.NEW_VERSION }}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: false

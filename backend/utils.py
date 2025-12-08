@@ -108,9 +108,61 @@ def generate_unique_username(db: Session, real_name: str) -> str:
             return candidate
         suffix += 1
 
-def calculate_compatibility(answers_a, answers_b, intent_a, intent_b) -> float:
-    if intent_a != intent_b: return 0.0
-    if not answers_a or not answers_b: return 0.0
-    diff_sum = sum(abs(a - b) for a, b in zip(answers_a, answers_b))
-    max_diff = len(answers_a) * 4
-    return round(max(0, 100 - ((diff_sum / max_diff) * 100)), 2)
+from questions_content import QUESTIONS, get_question_by_id
+
+def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) -> dict:
+    """
+    Calculates detailed compatibility score.
+    Returns {score: float, details: list[str]}
+    """
+    # 1. Intent Check (Hard Filter? Or just Heavy Penalty?)
+    # Let's say if intents don't match at all (e.g. Long term vs Short term), we penalize heavily.
+    # For now, let's keep it simple: strict filter was old way, new way soft filter.
+    intent_score = 100
+    if intent_a and intent_b and intent_a != intent_b:
+        intent_score = 40 # Mismatch penalty
+
+    # 2. Parse Answers
+    try:
+        ans_a = json.loads(answers_a_raw) if isinstance(answers_a_raw, str) else (answers_a_raw or {})
+        ans_b = json.loads(answers_b_raw) if isinstance(answers_b_raw, str) else (answers_b_raw or {})
+    except:
+        return {"score": 0, "details": [], "common": []}
+
+    total_weight = 0
+    earned_weight = 0
+    details = []
+
+    for qid_str, val_a in ans_a.items():
+        qid = int(qid_str)
+        if qid_str in ans_b:
+            val_b = ans_b[qid_str]
+            question = get_question_by_id(qid)
+            if not question: continue
+
+            weight = question.get("weight", 5)
+            total_weight += weight
+
+            # Distance: 0 means same answer (Perfect)
+            # Max distance usually depends on options length, but let's assume options are ordinal?
+            # Actually, for many categorical questions (like Diet), distance doesn't make sense unless we define it.
+            # Simplified Logic: Exact Match = 100%, Mismatch = 0%
+            # For ordinal (1-5 scale), we could use distance.
+            # Let's assume Exact Match logic for simplicity for now, as most questions are categorical.
+
+            if val_a == val_b:
+                earned_weight += weight
+                details.append(f"Matched on: {question['category']}") # Summary
+
+    # Calculate Score
+    if total_weight == 0:
+        final_score = intent_score if intent_score < 100 else 50 # Default if no data
+    else:
+        match_percentage = (earned_weight / total_weight) * 100
+        # Combine with intent score (Intent is 30% of total?)
+        final_score = (match_percentage * 0.7) + (intent_score * 0.3)
+
+    return {
+        "score": round(final_score),
+        "details": list(set(details)) # Unique categories matched
+    }

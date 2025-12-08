@@ -1,111 +1,137 @@
-# Solumati - The Anti-Swipe Revolution
+# Solumati - Find Your Match ❤️
 
-Solumati (derived from "Soulmate") is an open source dating platform focused on meaningful matches, privacy, and data sovereignty. The app emphasizes personality and long-term compatibility instead of surface-level swiping.
+**Solumati** is a modern dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby.
 
-Kurze Zusammenfassung für Endnutzer (Deutsch):
-- Solumati ist eine Open-Source-Datingplattform, die auf Persönlichkeit statt Swipes setzt. Die Plattform ist datenschutzfreundlich und kann selbst gehostet werden.
+## What is Solumati?
 
-## For End Users (Quick, non-technical)
-- Purpose: Matches are calculated using a multi-question compatibility algorithm rather than simple swipes.
-- Core principles: privacy-first, self-hostable, minimal gamification, and respectful intent-based matching.
-- What to expect in the PWA: onboarding questions, profile matching, messaging limited to encourage real connection, and clear privacy controls.
+Solumati isn't just another dating app; it's a community. We believe in transparency and real connections.
+With our intuitive interface, you can manage your profile, define what you are looking for, and start discovering interesting people immediately.
 
-Modern dating apps have commodified human connection. Solumati aims to fix this:
-
-- No Swiping: Matches are based on a 20+ question compatibility algorithm.
-- Intent-Based: Strict separation between "Long-term" and "Casual" searches.
-- Decelerated Dating: Max 3 active chats.
-- The "7000 Rule": After 7000 messages, you MUST exchange contact info or part ways.
-- Privacy First: Self-hostable. Your data belongs to you.
-
-## Quick Demo / Try It Locally (non-technical)
-1. Clone the repo:
-   git clone https://github.com/FaserF/Solumati.git
-   cd Solumati
-2. (Optional) Rename .env.example to .env and review settings.
-3. Build and start with Docker Compose:
-   docker-compose up -d --build
-4. Open the frontend: http://localhost:3000
-   API docs (interactive): http://localhost:7777/docs
-
-Note: If you do not want to run Docker, see the Development section below.
+### Key Features
+*   **Smart Matching:** Our algorithm helps you find people who truly fit you based on your answers and interests.
+*   **Discover Mode:** Swipe through profiles to find your next match.
+*   **Detailed Profiles:** Share more about yourself with a customizable "About Me" and Intent section.
+*   **Guest Access:** Just curious? Try out our limited Guest Mode without an account!
+*   **Security First:** We prioritize your data with optional features like Two-Factor Authentication.
 
 ---
 
-## Technical / Self-Hosting Guide
-This section is intended for operators and contributors who need to deploy or develop Solumati.
+## 🛠️ For Developers
 
-### Prerequisites
-- Docker and Docker Compose (v1.27+/v2+)
-- Git
+Welcome to the technical side of Solumati! This project is a full-stack web application built with modern technologies.
 
-### Important design note
-All persistent application data is stored in PostgreSQL. The webapp itself does not keep user data on the container filesystem. Use the provided Docker volume (postgres_data) or an external database to ensure data durability. The backend will wait for the database to be reachable before completing startup.
+### Technology Stack
+*   **Frontend:** React (Vite), TailwindCSS, Lucide Icons
+*   **Backend:** Python (FastAPI), SQLAlchemy (SQLite/PostgreSQL)
+*   **Containerization:** Docker & Docker Compose
 
-### Environment variables
-The project uses environment variables to configure the services. Key variables include:
-- POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB (for DB container)
-- DATABASE_URL (backend connection string, e.g. postgresql://user:pass@db:5432/solumatidb)
-- TEST_MODE (true/false) — when true, backend enables additional test data and verbose logging
-- LOG_FILE (optional) — file path for backend logs (default: app.log in container)
-- LANG (optional) — forwarded into containers to allow automatic UI language detection
+### Getting Started
 
-Do not store secrets in Git. Use .env or your container orchestrator's secret mechanisms for production.
+#### Prerequisites
+*   [Docker](https://www.docker.com/) & Docker Compose
+*   *Alternatively just Python 3.9+ and Node.js 18+ for local non-docker dev.*
 
-### Run (Docker Compose)
-- Build and start: docker-compose up -d --build
-- Follow logs: docker-compose logs -f backend
-- Stop: docker-compose down
+#### Running with Docker (Recommended)
+The easiest way to run the entire stack is using Docker Compose.
 
-The docker-compose configuration forwards the host LANG environment variable into the containers when available to help automatic language selection.
+```bash
+docker-compose up --build
+```
 
-### Health and readiness
-- API health endpoint: GET /health (http://localhost:7777/health)
-  This checks TCP connectivity to the configured DATABASE_URL and returns 200 when the DB is reachable.
-- The backend includes a small wait-for-db helper used at container start to avoid starting the app before the DB is reachable.
+This will start:
+*   **Backend:** http://localhost:8000
+*   **Frontend:** http://localhost:3000
 
-### API endpoints for the frontend
-- GET /api/i18n — list available UI languages
-- GET /api/i18n/{lang} — fetch the translations JSON for the PWA to use
+#### Local Development (Manual)
 
-The frontend should fetch translations on startup and not hardcode language strings in the application code.
+**Backend:**
+1.  Navigate to `backend/`.
+2.  Install dependencies: `pip install -r requirements.txt`
+3.  Run the server:
+    ```bash
+    uvicorn main:app --reload
+    ```
 
-### Test Mode
-Set TEST_MODE=true in the backend environment to:
-- Populate sample/dummy data for development (e.g. 20 dummy users)
-- Enable additional console logging for debugging
-Only use TEST_MODE in development or test environments.
+**Frontend:**
+1.  Navigate to `frontend/`.
+2.  Install dependencies: `npm install`
+3.  Start the dev server:
+```
+# Solumati - Find Your Match ❤️
 
-### Logging behavior
-- The backend writes logs to console and to a file.
-- Terminal-only progress output (e.g. progress bars from external installers or tools) is kept on the console but filtered out from log files. The logger records concise download start and finish messages in the log file so the logs remain readable and useful.
+**Solumati** is a modern dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby.
 
-### Internationalization (i18n)
-- UI translations are stored in backend/i18n/*.json (for example en.json and de.json).
-- The backend exposes these translations via the /api/i18n endpoints so the PWA can load translations dynamically.
-- To add a language: create a new JSON file (e.g. fr.json) in backend/i18n, commit, and it becomes available to the application.
+## What is Solumati?
 
-### Security & Privacy
-- Solumati is intended to be self-hosted: you control user data when you run your own instance.
-- For production deployments, secure your instance with HTTPS, use strong database credentials, limit public access to administrative endpoints, and follow best practices for container security.
+Solumati isn't just another dating app; it's a community. We believe in transparency and real connections.
+With our intuitive interface, you can manage your profile, define what you are looking for, and start discovering interesting people immediately.
 
-### Development notes
-- The backend runs with uvicorn in development mode and will auto-reload when code changes are mounted.
-- Frontend development uses Vite; mount the frontend into the container for hot-reload during local development.
-
-### Contributing
-- Translations: add or improve JSON files under backend/i18n.
-- Code: open pull requests, add tests where applicable, and follow standard git practices.
+### Key Features
+*   **Smart Matching:** Our algorithm helps you find people who truly fit you based on your answers and interests.
+*   **Discover Mode:** Swipe through profiles to find your next match.
+*   **Detailed Profiles:** Share more about yourself with a customizable "About Me" and Intent section.
+*   **Guest Access:** Just curious? Try out our limited Guest Mode without an account!
+*   **Security First:** We prioritize your data with optional features like Two-Factor Authentication.
 
 ---
 
-## License
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
-You are free to copy and redistribute the material in any medium or format, adapt, remix, transform, and build upon the material.
-Conditions:
+## 🛠️ For Developers
 
-- Attribution: You must give appropriate credit to the original creator (FaserF).
-- NonCommercial: You may not use the material for commercial purposes.
-- ShareAlike: If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+Welcome to the technical side of Solumati! This project is a full-stack web application built with modern technologies.
 
-Built with ❤️ by FaserF to fix dating.
+### Technology Stack
+*   **Frontend:** React (Vite), TailwindCSS, Lucide Icons
+*   **Backend:** Python (FastAPI), SQLAlchemy (SQLite/PostgreSQL)
+*   **Containerization:** Docker & Docker Compose
+
+### Getting Started
+
+#### Prerequisites
+*   [Docker](https://www.docker.com/) & Docker Compose
+*   *Alternatively just Python 3.9+ and Node.js 18+ for local non-docker dev.*
+
+#### Running with Docker (Recommended)
+The easiest way to run the entire stack is using Docker Compose.
+
+```bash
+docker-compose up --build
+```
+
+This will start:
+*   **Backend:** http://localhost:8000
+*   **Frontend:** http://localhost:3000
+
+#### Local Development (Manual)
+
+**Backend:**
+1.  Navigate to `backend/`.
+2.  Install dependencies: `pip install -r requirements.txt`
+3.  Run the server:
+    ```bash
+    uvicorn main:app --reload
+    ```
+
+**Frontend:**
+1.  Navigate to `frontend/`.
+2.  Install dependencies: `npm install`
+3.  Start the dev server:
+    ```bash
+    npm run dev
+    ```
+
+### Testing
+*   **Guest Mode:** You can log in as a Guest to test basic UI features without registering.
+*   **Test Mode:** Set `TEST_MODE=true` in backend environment to enable debug banners.
+
+### OAuth Configuration
+To enable login via GitHub, Google, or Microsoft, set the following environment variables (e.g., in `docker-compose.yml`):
+
+*   `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`
+*   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
+*   `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`
+
+If configured, these options will appear on the login and register pages. Registration via password can be disabled in the Admin Panel.
+
+### License
+Solumati is open-source software.
+```

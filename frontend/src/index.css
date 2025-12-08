@@ -1,5 +1,86 @@
 @import "tailwindcss";
 
-body {
-    background-color: #f3f4f6;
+@theme {
+  --color-primary: #6750a4;
+  /* Material Deep Purple */
+  --color-primary-dark: #d0bcff;
+
+  --color-secondary: #625b71;
+  --color-secondary-dark: #ccc2dc;
+
+  --color-tertiary: #7d5260;
+  --color-tertiary-dark: #efb8c8;
+
+  --color-surface-light: #fffbff;
+  --color-surface-dark: #1c1b1f;
+
+  --radius-ios: 24px;
+  --radius-material: 16px;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    @apply bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-gray-100 transition-colors duration-300;
+  }
+}
+
+/* Utilities for Glassmorphism */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 dark:bg-black/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg;
+  }
+
+  .glass-panel {
+    @apply rounded-3xl p-6 bg-white/70 dark:bg-black/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg;
+  }
+}
+
+/* Animated Gradient Background */
+.animated-gradient {
+  background: linear-gradient(-45deg, #6750a4, #7d5260, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 20s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
 }

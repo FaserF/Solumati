@@ -21,7 +21,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    answers: List[int]
+    answers: Dict[str, int]
 
 class UserLogin(BaseModel):
     login: str
@@ -51,7 +51,9 @@ class UserDisplay(UserBase):
         from_attributes = True
 
 class UserUpdate(BaseModel):
-    about_me: str
+    about_me: Optional[str] = None
+    intent: Optional[str] = None
+    answers: Optional[Dict[str, int]] = None
 
 class UserAdminUpdate(BaseModel):
     username: Optional[str] = None
@@ -72,6 +74,7 @@ class MatchResult(BaseModel):
     image_url: Optional[str] = None
     about_me: Optional[str] = None
     score: float
+    match_details: List[str] = []
 
 class AdminPunishAction(BaseModel):
     action: str
@@ -91,38 +94,6 @@ class ReportDisplay(BaseModel):
     reported_message_id: Optional[int]
     reason: str
     timestamp: datetime
-    reporter_name: Optional[str] = "Unknown"
-    reported_name: Optional[str] = "Unknown"
-
-    class Config:
-        from_attributes = True
-
-class MailConfig(BaseModel):
-    enabled: bool = False
-    smtp_host: str = "smtp.solumati.local"
-    smtp_port: int = 587
-    smtp_user: str = "user@solumati.local"
-    smtp_password: str = "secret"
-    smtp_ssl: bool = False
-    smtp_tls: bool = True
-    from_email: str = "noreply@solumati.local"
-    sender_name: str = "Solumati"
-
-class TestMailRequest(BaseModel):
-    target_email: str
-
-class RegistrationConfig(BaseModel):
-    enabled: bool = True
-    allowed_domains: str = ""
-    blocked_domains: str = ""
-    require_verification: bool = True
-    server_domain: str = "http://localhost:3000"
-    # New Setting: Email 2FA Global Toggle
-    email_2fa_enabled: bool = False
-
-class LegalConfig(BaseModel):
-    imprint: Optional[str] = ""
-    privacy: Optional[str] = ""
     company_name: str = ""
     address_street: str = ""
     address_zip_city: str = ""
@@ -133,19 +104,61 @@ class LegalConfig(BaseModel):
     register_number: str = ""
     vat_id: str = ""
 
+class MailConfig(BaseModel):
+    enabled: bool = False
+    smtp_host: Optional[str] = None
+    smtp_port: int = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_ssl: bool = False
+    smtp_tls: bool = True
+    sender_name: Optional[str] = "Solumati"
+    from_email: Optional[str] = None
+
+class RegistrationConfig(BaseModel):
+    enabled: bool = True
+    require_verification: bool = False
+    maintenance_mode: bool = False
+    email_2fa_enabled: bool = False
+    server_domain: Optional[str] = None
+    allowed_domains: Optional[str] = None
+    blocked_domains: Optional[str] = None
+    allow_password_registration: bool = True
+
+class LegalConfig(BaseModel):
+    company_name: str = ""
+    ceo_name: str = ""
+    address_street: str = ""
+    address_zip_city: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    register_court: str = ""
+    register_number: str = ""
+    vat_id: str = ""
+
+class OAuthProviders(BaseModel):
+    github: bool
+    google: bool
+    microsoft: bool
+
+class PublicConfig(BaseModel):
+    registration_enabled: bool
+    email_2fa_enabled: bool
+    test_mode: bool
+    maintenance_mode: bool
+    backend_version: str
+    legal: LegalConfig
+    oauth_providers: OAuthProviders
+    allow_password_registration: Optional[bool] = True
+
 class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
     legal: LegalConfig
 
-class PublicConfig(BaseModel):
-    registration_enabled: bool
-    email_2fa_enabled: bool = False
-    test_mode: bool = False
-
 class SystemDiagnostics(BaseModel):
     current_version: str
-    latest_version: Optional[str] = "Unknown"
+    latest_version: str
     update_available: bool
     internet_connected: bool
     disk_total_gb: float
