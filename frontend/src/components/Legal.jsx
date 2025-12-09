@@ -103,32 +103,35 @@ const Legal = ({ type, config, onBack, t }) => {
                         </>
                     ) : (
                         <>
-                            <section>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">1. {t('legal.privacy_head1', 'Datenschutz auf einen Blick')}</h2>
-                                <h3 className="text-lg font-semibold mb-2">{t('legal.privacy_sub1', 'Allgemeine Hinweise')}</h3>
-                                <p>{t('legal.privacy_text1', 'Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen.')}</p>
+
+                            <section className="mb-8">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('legal.privacy_title', 'Datenschutzerklärung')}</h2>
+                                <p className="text-gray-600 dark:text-gray-300 mb-4">{t('legal.privacy_full.intro')}</p>
                             </section>
 
-                            <section>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">2. {t('legal.privacy_head2', 'Verantwortliche Stelle')}</h2>
-                                <p>{t('legal.privacy_text2', 'Verantwortlich für die Datenverarbeitung auf dieser Website ist:')}</p>
-                                <div className="mt-4 p-4 bg-gray-50 dark:bg-[#2c2c2c] rounded-xl border border-gray-100 dark:border-white/10">
-                                    <p className="font-bold text-gray-900 dark:text-white">{company_name}</p>
-                                    <p>{address_street}</p>
-                                    <p>{address_zip_city}</p>
-                                    <br />
-                                    <p>E-Mail: {contact_email}</p>
-                                </div>
+                            <section className="mb-6">
+                                <h3 className="text-xl font-semibold mb-2">{t('legal.privacy_full.controller')}</h3>
+                                <p>{t('legal.privacy_full.controller_text')}</p>
                             </section>
 
-                            <section>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">3. {t('legal.privacy_head3', 'Datenerfassung auf unserer Website')}</h2>
-                                <p>{t('legal.privacy_text3', 'Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Impressum dieser Website entnehmen.')}</p>
+                            <section className="mb-6">
+                                <h3 className="text-xl font-semibold mb-2">{t('legal.privacy_full.collection')}</h3>
+                                <p>{t('legal.privacy_full.collection_text')}</p>
                             </section>
 
-                            <section>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">4. {t('legal.privacy_head4', 'Ihre Rechte')}</h2>
-                                <p>{t('legal.privacy_text4', 'Sie haben jederzeit das Recht unentgeltlich Auskunft über Herkunft, Empfänger und Zweck Ihrer gespeicherten personenbezogenen Daten zu erhalten.')}</p>
+                            <section className="mb-6">
+                                <h3 className="text-xl font-semibold mb-2">{t('legal.privacy_full.registration')}</h3>
+                                <p>{t('legal.privacy_full.registration_text')}</p>
+                            </section>
+
+                            <section className="mb-6">
+                                <h3 className="text-xl font-semibold mb-2">{t('legal.privacy_full.cookies')}</h3>
+                                <p>{t('legal.privacy_full.cookies_text')}</p>
+                            </section>
+
+                            <section className="mb-6">
+                                <h3 className="text-xl font-semibold mb-2">{t('legal.privacy_full.rights')}</h3>
+                                <p>{t('legal.privacy_full.rights_text')}</p>
                             </section>
                         </>
                     )}

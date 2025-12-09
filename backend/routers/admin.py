@@ -47,7 +47,9 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
     if update.password: user.hashed_password = hash_password(update.password)
     if update.is_verified is not None: user.is_verified = update.is_verified
     if update.is_visible_in_matches is not None: user.is_visible_in_matches = update.is_visible_in_matches
+    if update.is_visible_in_matches is not None: user.is_visible_in_matches = update.is_visible_in_matches
     if update.two_factor_method is not None: user.two_factor_method = update.two_factor_method
+    if update.role: user.role = update.role
 
     db.commit()
     logger.info(f"Admin {current_admin.username} updated user {user_id}.")
@@ -131,6 +133,7 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     reg_conf = get_setting(db, "registration", schemas.RegistrationConfig().dict())
     legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
     oauth_conf = get_setting(db, "oauth", schemas.OAuthConfig().dict()) # Get Raw
+    support_conf = get_setting(db, "support_chat", schemas.SupportChatConfig().dict())
 
     # Mask Secrets for UI
     # We do not want to send the actual secrets to the frontend
@@ -142,7 +145,8 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
         "mail": mail_conf,
         "registration": reg_conf,
         "legal": legal_conf,
-        "oauth": oauth_conf
+        "oauth": oauth_conf,
+        "support_chat": support_conf
     }
 
 @router.put("/settings")
@@ -150,7 +154,9 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     # Save Mail, Registration, Legal (Direct save)
     save_setting(db, "mail", settings.mail.dict())
     save_setting(db, "registration", settings.registration.dict())
+    save_setting(db, "registration", settings.registration.dict())
     save_setting(db, "legal", settings.legal.dict())
+    save_setting(db, "support_chat", settings.support_chat.dict())
 
     # Save OAuth (Handle Secrets)
     # 1. Fetch existing secrets to keep them if not changed
@@ -304,11 +310,25 @@ def get_changelog(db: Session = Depends(get_db), current_admin: models.User = De
         logger.warning(f"Could not fetch changelog: {e}")
     return []
 
-# Placeholder for Reports
 @router.get("/reports", response_model=List[schemas.ReportDisplay])
 def get_reports(db: Session = Depends(get_db), current_mod: models.User = Depends(require_moderator_or_admin)):
-    return []
+    reports = db.query(models.Report).all()
+    res = []
+    for r in reports:
+        res.append(schemas.ReportDisplay(
+            id=r.id,
+            reporter_username=r.reporter.username if r.reporter else "Unknown",
+            reported_username=r.reported.username if r.reported else "Unknown",
+            reason=r.reason,
+            status=r.status,
+            created_at=r.created_at
+        ))
+    return res
 
 @router.delete("/reports/{report_id}")
 def delete_report(report_id: int, db: Session = Depends(get_db), current_mod: models.User = Depends(require_moderator_or_admin)):
+    r = db.query(models.Report).filter(models.Report.id == report_id).first()
+    if not r: raise HTTPException(404, "Report not found")
+    db.delete(r)
+    db.commit()
     return {"status": "deleted"}

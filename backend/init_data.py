@@ -46,23 +46,78 @@ def check_schema(db: Session):
 def ensure_guest_user(db: Session):
     try:
         guest = db.query(models.User).filter(models.User.id == 0).first()
+
+        # Define promotional data
+        promo_about = (
+            "👋 Hey, welcome to the Solumati Universe!\n\n"
+            "I'm your virtual guide, giving you a sneak peek of what's possible.\n"
+            "Here, real values and personality count, not just fast swipes. 🧠❤️\n\n"
+            "🚀 Ready for the Real Thing?\n"
+            "Sign up now to unleash full potential:\n"
+            "► Chat with real humans\n"
+            "► Find someone who truly gets you\n"
+            "► Join our community\n\n"
+            "Your perfect match is waiting! What are you waiting for? ✨"
+        )
+        promo_intent = "Solumati Explorer 🌟"
+
         if not guest:
             logger.info("Creating Guest User (ID 0)...")
             guest = models.User(
                 id=0, email="guest@solumati.local",
                 hashed_password=hash_password("NOPASSWORD"),
-                real_name="Gast", username="Gast", about_me="System Guest",
-                is_active=True, is_verified=True, is_guest=True, intent="casual",
-                answers=json.dumps({str(i): 1 for i in range(1, 51)}), # Default answers
+                real_name="Guest Explorer", username="Guest",
+                about_me=promo_about,
+                is_active=True, is_verified=True, is_guest=True,
+                intent=promo_intent,
+                answers=json.dumps({str(i): 1 for i in range(1, 51)}),
                 created_at=datetime.utcnow(), role='guest',
                 is_visible_in_matches=False
             )
             db.add(guest)
-            db.commit()
-            logger.info("Guest user created.")
+        else:
+            # Force update promotional fields
+            if guest.about_me != promo_about or guest.intent != promo_intent or guest.real_name != "Guest Explorer":
+                guest.about_me = promo_about
+                guest.intent = promo_intent
+                guest.real_name = "Guest Explorer"
+                # guest.username = "Guest" # Keep username stable if possible, or update? User said "Guest" header.
+                logger.info("Updated Guest User profile with promotional content.")
+
+        db.commit()
+        logger.info("Guest user ensured.")
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to create or update guest user: {e}")
+
+def ensure_support_user(db: Session):
+    try:
+        support = db.query(models.User).filter(models.User.id == 3).first()
+        target_about = "Your direct line to the Solumati Team. 🛠️ We've got your back!"
+
+        if not support:
+            logger.info("Creating Support User (ID 3)...")
+            support = models.User(
+                id=3, email="support@solumati.local",
+                hashed_password=hash_password(secrets.token_urlsafe(16)),
+                real_name="Support", username="Support",
+                about_me=target_about,
+                is_active=True, is_verified=True, is_guest=False, intent="system",
+                answers=json.dumps({}),
+                created_at=datetime.utcnow(), role='moderator',
+                is_visible_in_matches=False
+            )
+            db.add(support)
+            db.commit()
+            logger.info("Support user created.")
+        else:
+            if support.about_me != target_about:
+                support.about_me = target_about
+                db.commit()
+                logger.info("Updated Support User description.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to create Support user: {e}")
 
 def ensure_admin_user(db: Session):
     try:
@@ -86,7 +141,7 @@ def ensure_admin_user(db: Session):
                     email="admin@solumati.local",
                     hashed_password=hash_password(initial_password),
                     real_name="Administrator", username="admin",
-                    about_me="System Administrator",
+                    about_me="System-Status: Online. 🟢 Der Wächter über Bits und Bytes.",
                     is_active=True, is_verified=True, is_guest=False, role="admin",
                     intent="admin", answers=json.dumps({}), created_at=datetime.utcnow(),
                     is_visible_in_matches=False
@@ -97,6 +152,14 @@ def ensure_admin_user(db: Session):
                 msg = f"\n{sep}\nINITIAL ADMIN USER CREATED (ID: 1)\nUsername: admin\nEmail: admin@solumati.local\nPassword: {initial_password}\nPLEASE CHANGE THIS PASSWORD LATER\n{sep}\n"
                 logger.warning(msg)
                 print(msg)  # Ensure visibility in Docker logs
+
+        else:
+            # Admin exists, ensure description is up to date
+            target_about = "System Status: Online. 🟢 The Guardian of Bits and Bytes."
+            if admin.about_me != target_about:
+                admin.about_me = target_about
+                db.commit()
+                logger.info("Updated Admin User description.")
 
         try:
             db.execute(text("SELECT setval('users_id_seq', 10000, false);"))
@@ -153,72 +216,105 @@ def check_emergency_reset(db: Session):
         logger.error(f"Error during emergency reset check: {e}")
         db.rollback()
 
+
 def generate_dummy_data(db: Session):
-    """Generates dummy users if TEST_MODE is active and database is nearly empty."""
+    """Generates 20 random dummy users if TEST_MODE is active and database is nearly empty."""
     if not TEST_MODE:
         return
 
-    user_count = db.query(models.User).count()
-    if user_count > 5:
-        logger.info(f"TEST_MODE active but data exists (Users: {user_count}), skipping dummy generation.")
+    # Check if we already have enough users (e.g. > 5) to skip
+    if db.query(models.User).count() > 5:
+        logger.info(f"TEST_MODE active but data exists, skipping dummy generation.")
         return
 
-    logger.info("Generating dummy users for TEST_MODE...")
-    intents = ["casual", "longterm", "friendship"]
-
-    # List of names for realistic dummies
-    first_names = [
-        "Anna", "Max", "Julia", "Lukas", "Sarah", "Felix", "Laura", "Tim", "Lisa", "Jan", "Lorenz", "Niklas", "Michelle",
-        "Maria", "Paul", "Sophie", "Jonas", "Lena", "Leon", "Emily", "David", "Hannah", "Thomas", "Fabian", "Kai", "Adrian"
-    ]
+    logger.info("Generating 20 random dummy users for TEST_MODE with Archetypes...")
 
     try:
+        from questions_content import QUESTIONS_SKELETON
+        import random
+        import secrets
+
+        # 1. Define Archetypes for variation
+        archetypes = [
+            {"name": "Soulmate", "base_diff": 0.05, "intent": "casual"},
+            {"name": "Bestie", "base_diff": 0.2, "intent": "friendship"},
+            {"name": "Opposite", "base_diff": 0.9, "intent": "longterm"},
+            {"name": "Wildcard", "base_diff": -1, "intent": "speeddate"},
+        ]
+
+        # 2. Reference Answers (Guest typically has all 1s)
+        guest_answers = {str(i): 1 for i in range(1, 51)}
+
+        first_names = [
+            "Fabian", "Marina", "Samuel", "Kai", "Adrian", "Maximilian", "Michelle", "Hannah",
+            "Janina", "Lena", "David", "Barbara", "Richard", "Florian", "Andreas", "Jessica",
+            "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa",
+            "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra"
+        ]
+
         created_dummies = []
-        for i, name in enumerate(first_names):
-            email = f"{name.lower()}_dummy@solumati.local"
-            username = f"{name}Dummy"
 
-            # Skip if already exists
-            if db.query(models.User).filter(models.User.email == email).first():
-                continue
+        for i in range(20):
+            # Select Random Archetype for this user
+            arch = random.choice(archetypes)
 
-            pw = secrets.token_urlsafe(10)
+            # Name & Auth
+            fname = random.choice(first_names)
+            # Ensure unique username
+            username = f"{fname}_{secrets.token_hex(2)}"
+            email = f"{username.lower()}@solumati.local"
 
-            # Generate answers for all 50 questions
-            from questions_content import QUESTIONS_SKELETON
-            import random
+            raw_pw = secrets.token_urlsafe(8)
+            hashed = hash_password(raw_pw)
 
-            dummy_answers = {}
+            # Generate Answers based on Archetype
+            user_answers = {}
             for q in QUESTIONS_SKELETON:
-                # option_count is now in the skeleton
-                cnt = q.get("option_count", 3)
-                # Store random index 0 to cnt-1
-                dummy_answers[str(q["id"])] = random.randint(0, cnt - 1)
+                qid = str(q["id"])
+                opt_count = q.get("option_count", 4)
+                guest_ans = guest_answers.get(qid, 1)
 
-            dummy = models.User(
+                if arch["base_diff"] == -1:
+                    # Random
+                    ans = random.randint(0, opt_count - 1)
+                else:
+                    # Calculate based on difficulty/diff
+                    if random.random() > arch["base_diff"]:
+                        ans = guest_ans # Match Guest
+                    else:
+                        # Pick different option
+                        options = [x for x in range(opt_count) if x != guest_ans]
+                        ans = random.choice(options) if options else guest_ans
+
+                user_answers[qid] = ans
+
+            # Create User
+            user = models.User(
                 email=email,
-                hashed_password=hash_password(pw),
-                real_name=f"{name} Dummy",
+                hashed_password=hashed,
+                real_name=f"{fname} Dummy",
                 username=username,
-                about_me=f"Hallo! Ich bin {name}, ein generierter Test-User. Ich mag Pizza und Code.",
+                about_me=f"I am a generated '{arch['name']}' type ({i+1}). I like {random.choice(['Pizza', 'Travel', 'Music', 'Coding'])}. What do you think about {random.choice(['Traveling', 'Arts', 'Modern Music', 'AI'])}.",
                 is_active=True,
                 is_verified=True,
                 is_guest=False,
                 role="test",
-                intent=random.choice(intents),
-                answers=json.dumps(dummy_answers),
+                intent=arch["intent"],
+                answers=json.dumps(user_answers),
                 created_at=datetime.utcnow(),
                 is_visible_in_matches=True
             )
-            db.add(dummy)
-            created_dummies.append(f"{username} -> {pw}")
+            db.add(user)
+            created_dummies.append(f"{username} ({arch['name']}) -> {raw_pw}")
 
         db.commit()
-        if created_dummies:
-            logger.info("Dummy users created successfully. Credentials:")
-            for d in created_dummies:
-                logger.info(d)
-                print(f"Dummy User: {d}") # Print for visibility
+
+        sep = "=" * 60
+        logger.info(f"\n{sep}\nGENERATED {len(created_dummies)} DUMMY USERS (Role: 'test')\n{sep}")
+        for creds in created_dummies:
+            print(f"Dummy: {creds}")
+        print(sep)
+
     except Exception as e:
         logger.error(f"Failed to create dummy users: {e}")
         db.rollback()

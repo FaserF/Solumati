@@ -1,6 +1,9 @@
 # Solumati Question Bank (Skeleton)
 # Text and Options are now loaded from i18n/*.json
 
+
+from i18n import get_translations
+
 QUESTIONS_SKELETON = [
     # --- Value & Meaning (High Weight) ---
     {"id": 1, "category": "Values", "weight": 10, "option_count": 4},
@@ -62,3 +65,36 @@ QUESTIONS_SKELETON = [
     {"id": 49, "category": "Relationships", "weight": 10, "option_count": 2},
     {"id": 50, "category": "Relationships", "weight": 8, "option_count": 2}
 ]
+
+def get_questions(lang=None):
+    """
+    Returns the list of questions with text and options translated.
+    """
+    translations = get_translations(lang)
+    q_data = translations.get("questions", {})
+
+    final_questions = []
+    for q_meta in QUESTIONS_SKELETON:
+        qid = str(q_meta["id"])
+        if qid in q_data:
+            q_trans = q_data[qid]
+            # Merge skeleton metadata with translation data (text, options)
+            merged = q_meta.copy()
+            merged.update(q_trans)
+            final_questions.append(merged)
+        else:
+            # Fallback if translation missing? Just keep skeleton or skip?
+            # Ideally we want to prevent crashes, so maybe skip or provide placeholder
+            pass
+
+    return final_questions
+
+def get_question_by_id(qid: int, lang=None):
+    questions = get_questions(lang)
+    for q in questions:
+        if q["id"] == qid:
+            return q
+    return None
+
+# Export a default version (English) for import compatibility (e.g. tests, utils imports)
+QUESTIONS = get_questions('en')

@@ -138,7 +138,14 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
                             </div>
 
                             <h1 className="text-3xl font-bold mt-4 dark:text-white">{user.username}</h1>
-                            <p className="text-gray-500">{mode === 'view' ? (intent === 'longterm' ? "Looking for Relationship" : (intent === 'friends' ? "Looking for Friends" : "Looking for Fun")) : "Editing Profile"}</p>
+                            <p className="text-gray-500">
+                                {mode === 'view' ? (
+                                    intent === 'longterm' ? "Looking for Relationship" :
+                                        intent === 'friends' ? "Looking for Friends" :
+                                            intent === 'shortterm' ? "Looking for Fun" :
+                                                intent // Custom intent fallback
+                                ) : "Editing Profile"}
+                            </p>
                         </div>
 
                         {/* --- VIEW MODE --- */}
@@ -178,57 +185,18 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
                         {/* --- EDIT MODE --- */}
                         {mode === 'edit' && (
                             <div className="space-y-6 animate-in fade-in duration-300">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('profile.about_me')}</label>
-                                    <textarea
-                                        className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white min-h-[150px] focus:ring-2 focus:ring-pink-500 focus:outline-none placeholder-gray-400 dark:placeholder-gray-500"
-                                        value={aboutMe}
-                                        onChange={e => setAboutMe(e.target.value)}
-                                        placeholder="Write something about yourself..."
-                                    />
-                                </div>
+                                <EditProfileTabs
+                                    questions={questions}
+                                    userAnswers={userAnswers}
+                                    setUserAnswers={setUserAnswers}
+                                    aboutMe={aboutMe}
+                                    setAboutMe={setAboutMe}
+                                    intent={intent}
+                                    setIntent={setIntent}
+                                    t={t}
+                                />
 
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">I am looking for...</label>
-                                    <select
-                                        className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                        value={intent}
-                                        onChange={e => setIntent(e.target.value)}
-                                    >
-                                        <option value="longterm">Relationship</option>
-                                        <option value="shortterm">Something Casual</option>
-                                        <option value="friends">Friendship</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-4">More Details</label>
-                                    <div className="space-y-4">
-                                        {questions.map(q => (
-                                            <div key={q.id}>
-                                                <p className="font-medium text-gray-800 dark:text-gray-200 mb-2">{q.text}</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {q.options.map((opt, idx) => {
-                                                        const isSelected = userAnswers[q.id] === idx;
-                                                        return (
-                                                            <button
-                                                                key={idx}
-                                                                onClick={() => setUserAnswers(prev => ({ ...prev, [q.id]: idx }))}
-                                                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${isSelected
-                                                                    ? "bg-black dark:bg-white text-white dark:text-black shadow-lg"
-                                                                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}
-                                                            >
-                                                                {opt}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="pt-6 flex gap-4">
+                                <div className="pt-6 flex gap-4 border-t dark:border-gray-700">
                                     <button
                                         onClick={() => setMode('view')}
                                         className="flex-1 border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 py-3 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
@@ -252,5 +220,91 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
         </div>
     );
 };
+
+// Sub-component for Edit Tabs
+const EditProfileTabs = ({ questions, userAnswers, setUserAnswers, aboutMe, setAboutMe, intent, setIntent, t }) => {
+    const [activeTab, setActiveTab] = useState('general');
+
+    // Extract Categories
+    const categories = ['general', ...new Set(questions.map(q => q.category))];
+
+    return (
+        <div>
+            {/* Tabs Header */}
+            <div className="flex overflow-x-auto pb-2 gap-2 mb-6 no-scrollbar">
+                {categories.map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => setActiveTab(cat)}
+                        className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeTab === cat
+                            ? 'bg-black dark:bg-white text-white dark:text-black shadow-md'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                    >
+                        {cat === 'general' ? 'General & Bio' : cat}
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="min-h-[300px]">
+                {activeTab === 'general' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">I am looking for...</label>
+                            <select
+                                className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                value={intent}
+                                onChange={e => setIntent(e.target.value)}
+                            >
+                                <option value="longterm">Relationship</option>
+                                <option value="shortterm">Something Casual</option>
+                                <option value="friends">Friendship</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('profile.about_me')}</label>
+                            <textarea
+                                className="w-full p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white min-h-[150px] focus:ring-2 focus:ring-pink-500 focus:outline-none placeholder-gray-400 dark:placeholder-gray-500"
+                                value={aboutMe}
+                                onChange={e => setAboutMe(e.target.value)}
+                                placeholder="Write something about yourself..."
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Categories Questions */}
+                {activeTab !== 'general' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {questions.filter(q => q.category === activeTab).map(q => (
+                            <div key={q.id}>
+                                <p className="font-medium text-gray-800 dark:text-gray-200 mb-2">{q.text}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {q.options.map((opt, idx) => {
+                                        const isSelected = userAnswers[q.id] === idx;
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setUserAnswers(prev => ({ ...prev, [q.id]: idx }))}
+                                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${isSelected
+                                                    ? "bg-black dark:bg-white text-white dark:text-black shadow-lg"
+                                                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}
+                                            >
+                                                {opt}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
 
 export default UserProfile;

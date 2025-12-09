@@ -9,9 +9,29 @@ vi.mock('./config', () => ({
     APP_VERSION: '0.0.0-test'
 }));
 
+
 describe('App Component', () => {
-    it('renders landing page by default', () => {
+    beforeEach(() => {
+        global.fetch = vi.fn(() =>
+            Promise.resolve({
+                ok: true,
+                json: () => Promise.resolve({
+                    "app.title": "Solumati",
+                    "landing.tagline": "Stop Swiping. Start Connecting.",
+                    "landing.btn_login": "Log in",
+                    "landing.btn_register": "Register",
+                    "landing.btn_guest": "Browse as guest"
+                }),
+            })
+        );
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('renders landing page by default', async () => {
         render(<App />);
-        expect(screen.getByText(/Solumati/i)).toBeDefined();
+        expect(await screen.findByText(/Solumati/i)).toBeDefined();
     });
 });

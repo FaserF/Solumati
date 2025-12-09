@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
 from config import PROJECT_NAME
@@ -19,6 +19,7 @@ class UserBase(BaseModel):
             return valid.normalized
         except EmailNotValidError as e:
             raise ValueError(str(e))
+
 
 class UserCreate(UserBase):
     password: str
@@ -45,8 +46,13 @@ class UserDisplay(UserBase):
     banned_until: Optional[datetime] = None
     two_factor_method: Optional[str] = 'none'
 
+    # 2FA Status
+    has_totp: bool = False
+    has_passkeys: bool = False
+
     # New fields
     app_settings: Optional[str] = None
+
 
     class Config:
         from_attributes = True
@@ -63,6 +69,7 @@ class UserAdminUpdate(BaseModel):
     is_verified: Optional[bool] = None
     is_visible_in_matches: Optional[bool] = None
     two_factor_method: Optional[str] = None
+    role: Optional[str] = None
 
 class UserCreateAdmin(BaseModel):
     username: str
@@ -155,9 +162,13 @@ class OAuthConfig(BaseModel):
     microsoft: OAuthProviderConfig = OAuthProviderConfig()
 
 class OAuthProviders(BaseModel):
-    github: bool
-    google: bool
-    microsoft: bool
+    github: bool = False
+    google: bool = False
+    microsoft: bool = False
+
+class SupportChatConfig(BaseModel):
+    enabled: bool = False
+    email_target: Optional[str] = ""
 
 class PublicConfig(BaseModel):
     registration_enabled: bool
@@ -168,12 +179,14 @@ class PublicConfig(BaseModel):
     legal: LegalConfig
     oauth_providers: OAuthProviders
     allow_password_registration: Optional[bool] = True
+    support_chat_enabled: bool = False
 
 class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
     legal: LegalConfig
     oauth: OAuthConfig = OAuthConfig()
+    support_chat: SupportChatConfig = SupportChatConfig()
 
 class SystemDiagnostics(BaseModel):
     current_version: str
@@ -233,3 +246,28 @@ class WebAuthnAuthOptions(BaseModel):
 class WebAuthnAuthResponse(BaseModel):
     credential: Dict[str, Any]
     user_id: int
+
+class ReportCreate(BaseModel):
+    reason: str
+
+class ReportDisplay(BaseModel):
+    id: int
+    reporter_username: str
+    reported_username: str
+    reason: str
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class UserPublicDisplay(BaseModel):
+    id: int
+    username: str
+    about_me: Optional[str] = None
+    image_url: Optional[str] = None
+    intent: Optional[str] = None
+    answers: Optional[Union[Dict[str, Any], List[int], str]] = None
+
+    class Config:
+        from_attributes = True

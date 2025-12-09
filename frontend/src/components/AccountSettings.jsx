@@ -19,6 +19,13 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
     // --- App Settings State ---
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
+    // --- 2FA State ---
+    const [securityState, setSecurityState] = useState({
+        current_method: 'none',
+        has_totp: false,
+        has_passkeys: false
+    });
+
     // Use Global Theme Context
     const { theme, setTheme } = useTheme();
 
@@ -50,6 +57,13 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                             if (s.theme) setTheme(s.theme);
                         } catch (e) { console.error("Error parsing settings", e); }
                     }
+
+                    // Update Security State
+                    setSecurityState({
+                        current_method: userData.two_factor_method || 'none',
+                        has_totp: userData.has_totp || false,
+                        has_passkeys: userData.has_passkeys || false
+                    });
                 }
             } catch (e) { console.error("Failed to load user profile", e); }
         };
@@ -207,14 +221,38 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
         if (!window.confirm(t('settings.delete_confirm'))) return;
         await fetch(`${API_URL}/users/2fa/disable`, { method: 'POST', headers });
         alert(t('alert.2fa_disabled', "2FA Disabled."));
+        setSecurityState({ current_method: 'none', has_totp: false, has_passkeys: false });
+    };
+
+    const removeMethod = async (method) => {
+        if (!window.confirm(t('settings.delete_confirm'))) return;
+        try {
+            const res = await fetch(`${API_URL}/users/2fa/methods/${method}`, {
+                method: 'DELETE',
+                headers
+            });
+            if (res.ok) {
+                const data = await res.json();
+
+                // Construct new local state
+                setSecurityState(prev => {
+                    const newState = { ...prev, current_method: data.active_method };
+                    if (method === 'totp') newState.has_totp = false;
+                    if (method === 'passkey') newState.has_passkeys = false;
+                    return newState;
+                });
+            } else {
+                alert("Error removing method.");
+            }
+        } catch (e) { console.error(e); alert("Network Error"); }
     };
 
     // --- Permissions Checks ---
     const canDeleteAccount = user.role !== 'guest' && user.role !== 'admin';
     const canEditAccount = user.role !== 'guest' && !user.is_guest;
 
-    // Check if 2FA is already active
-    const has2FA = user.two_factor_method && user.two_factor_method !== 'none';
+    // Check if 2FA is already active (Legacy/Global check, mostly unused now in favor of securityState)
+    // const has2FA = user.two_factor_method && user.two_factor_method !== 'none';
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col dark:bg-gray-900 transition-colors duration-200">
@@ -377,42 +415,15 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                             </div>
                         )}
 
-                        {/* 2FA Section */}
+                        {/* 2FA Section - Granular Managment */}
                         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border-l-4 border-purple-500 dark:border-purple-400">
                             <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
                                 <Shield className="text-purple-600 dark:text-purple-400" /> {t('settings.2fa_title', 'Two-Factor Authentication (2FA)')}
                             </h2>
 
-                            {!totpSetup ? (
-                                <div className="space-y-3">
-                                    {/* SHOW SETUP BUTTONS ONLY IF NO 2FA IS ACTIVE */}
-                                    {!has2FA && (
-                                        <>
-                                            <button disabled={!canEditAccount} onClick={startTotp} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                <span className="font-bold flex items-center gap-2"><Smartphone size={18} /> {t('settings.btn_setup_totp', 'Setup TOTP (App)')}</span>
-                                            </button>
-
-                                            {globalConfig.email_2fa_enabled && (
-                                                <button disabled={!canEditAccount} onClick={enableEmail2FA} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                    <span className="font-bold flex items-center gap-2"><Mail size={18} /> {t('settings.btn_setup_email', 'Setup Email 2FA')}</span>
-                                                </button>
-                                            )}
-
-                                            <button disabled={!canEditAccount} onClick={enablePasskey} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                <span className="font-bold flex items-center gap-2"><Fingerprint size={18} /> {t('settings.btn_setup_passkey', 'Register Passkey')}</span>
-                                            </button>
-                                        </>
-                                    )}
-
-                                    {/* SHOW DISABLE BUTTON IF 2FA IS ACTIVE */}
-                                    {has2FA && (
-                                        <button disabled={!canEditAccount} onClick={disable2FA} className="w-full text-center text-red-500 text-sm font-bold mt-2 hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                                            {t('settings.btn_disable_2fa', 'Disable 2FA')}
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            {/* Setup/Verify UI (Overlay/Inline) */}
+                            {totpSetup ? (
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
                                     <h3 className="font-bold mb-2 dark:text-white">{t('settings.scan_qr', 'Scan QR Code')}</h3>
                                     <div className="bg-white p-2 inline-block mb-4 border rounded">
                                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(totpSetup.uri)}`} alt="QR" />
@@ -428,6 +439,97 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                         <button onClick={verifyTotp} className="bg-purple-600 text-white px-4 py-2 rounded font-bold hover:bg-purple-700">{t('btn.verify', 'Verify')}</button>
                                         <button onClick={() => setTotpSetup(null)} className="text-gray-500 dark:text-gray-400 px-4 py-2 hover:text-gray-700 dark:hover:text-white">{t('btn.cancel', 'Cancel')}</button>
                                     </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* App Authenticator (TOTP) */}
+                                    <div className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-750">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-lg"><Smartphone size={20} /></div>
+                                            <div>
+                                                <div className="font-bold text-gray-800 dark:text-gray-200">Authenticator App</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {securityState.has_totp ? (
+                                                        <span className="text-green-600 font-bold flex items-center gap-1">Enabled {securityState.current_method === 'totp' && "(Active)"}</span>
+                                                    ) : "Not configured"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {securityState.has_totp ? (
+                                            <button
+                                                onClick={() => removeMethod('totp')}
+                                                disabled={!canEditAccount}
+                                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition"
+                                                title="Remove TOTP"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        ) : (
+                                            <button onClick={startTotp} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                                Setup
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Passkeys */}
+                                    <div className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-750">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg"><Fingerprint size={20} /></div>
+                                            <div>
+                                                <div className="font-bold text-gray-800 dark:text-gray-200">Passkeys</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {securityState.has_passkeys ? (
+                                                        <span className="text-green-600 font-bold flex items-center gap-1">Enabled {securityState.current_method === 'passkey' && "(Active)"}</span>
+                                                    ) : "Not configured"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {securityState.has_passkeys ? (
+                                            <button
+                                                onClick={() => removeMethod('passkey')}
+                                                disabled={!canEditAccount}
+                                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition"
+                                                title="Remove Passkeys"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        ) : (
+                                            <button onClick={enablePasskey} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                                Add
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Email 2FA */}
+                                    {globalConfig.email_2fa_enabled && (
+                                        <div className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-750">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-lg"><Mail size={20} /></div>
+                                                <div>
+                                                    <div className="font-bold text-gray-800 dark:text-gray-200">Email Verification</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {securityState.current_method === 'email' ? (
+                                                            <span className="text-green-600 font-bold">Active Method</span>
+                                                        ) : "Available"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {securityState.current_method === 'email' ? (
+                                                <button
+                                                    onClick={() => removeMethod('email')}
+                                                    disabled={!canEditAccount}
+                                                    className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition"
+                                                    title="Turn Off Email 2FA"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            ) : (
+                                                <button onClick={enableEmail2FA} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                                    Use This
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

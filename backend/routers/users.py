@@ -133,6 +133,55 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
     res.sort(key=lambda x: x.score, reverse=True)
     return res
 
+@router.get("/users/{user_id}/public", response_model=schemas.UserPublicDisplay)
+def get_user_public_profile(user_id: int, current_user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """Fetch public profile of another user."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+    if not user.is_active or not user.is_visible_in_matches:
+        # We might want to allow viewing reported users even if hidden? For now, standard visibility rules.
+        # Check if caller is admin/mod?
+        if current_user.role not in ['admin', 'moderator']:
+             # Special Exception: Guest User viewing Test User
+             if current_user.id == 0 and user.role == 'test':
+                 pass # Allow
+             else:
+                 raise HTTPException(404, "User not available")
+
+    # Parse answers if they are stored as JSON string but schema expects list/obj
+    if isinstance(user.answers, str):
+        try:
+            user.answers = json.loads(user.answers)
+        except:
+            pass
+
+    return user
+
+@router.post("/users/{user_id}/report", response_model=dict)
+def report_user(user_id: int, report: schemas.ReportCreate, reporter: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """Report another user."""
+    # Check if user exists
+    reported_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not reported_user:
+        raise HTTPException(404, "User not found")
+
+    if reporter.id == user_id:
+        raise HTTPException(400, "You cannot report yourself")
+
+    new_report = models.Report(
+        reporter_id=reporter.id,
+        reported_id=user_id,
+        reason=report.reason,
+        status="open",
+        created_at=datetime.utcnow()
+    )
+    db.add(new_report)
+    db.commit()
+
+    logger.info(f"User {reporter.id} reported User {user_id}. Reason: {report.reason}")
+    return {"status": "submitted"}
+
 from questions_content import QUESTIONS_SKELETON
 from i18n import get_translations
 
@@ -278,6 +327,7 @@ def delete_own_account(user_id: int, user: models.User = Depends(get_current_use
     return {"status": "deleted"}
 
 # --- Password Reset Flow ---
+from datetime import timedelta
 @router.post("/auth/password-reset/request")
 def request_password_reset(body: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email = body.get("email")

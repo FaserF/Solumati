@@ -1,8 +1,21 @@
-from sqlalchemy import Column, Integer, String, Boolean, ARRAY, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, ARRAY, DateTime, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
 import json
+
+class Report(Base):
+    __tablename__ = "reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reporter_id = Column(Integer, ForeignKey("users.id"))
+    reported_id = Column(Integer, ForeignKey("users.id"))
+    reason = Column(Text, nullable=False)
+    status = Column(String, default="open")  # open, resolved, dismissed
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    reporter = relationship("User", foreign_keys=[reporter_id])
+    reported = relationship("User", foreign_keys=[reported_id])
 
 class User(Base):
     __tablename__ = "users"
@@ -79,6 +92,18 @@ class User(Base):
         except:
             return {}
 
+    @property
+    def has_totp(self):
+        return bool(self.totp_secret)
+
+    @property
+    def has_passkeys(self):
+        try:
+            creds = json.loads(self.webauthn_credentials or "[]")
+            return len(creds) > 0
+        except:
+            return False
+
 class Message(Base):
     __tablename__ = "messages"
 
@@ -88,22 +113,8 @@ class Message(Base):
     content = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
     is_final_contact = Column(Boolean, default=False)
+    is_read = Column(Boolean, default=False)
 
-class Report(Base):
-    __tablename__ = "reports"
-
-    id = Column(Integer, primary_key=True, index=True)
-    reporter_id = Column(Integer, ForeignKey("users.id"))
-    reported_user_id = Column(Integer, ForeignKey("users.id"))
-
-    reported_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
-
-    reason = Column(Text)
-    resolved = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-
-    reporter = relationship("User", foreign_keys=[reporter_id])
-    reported_user = relationship("User", foreign_keys=[reported_user_id])
 
 class SystemSetting(Base):
     __tablename__ = "system_settings"

@@ -1,9 +1,9 @@
 import React from 'react';
 import { User, CheckCircle, EyeOff } from 'lucide-react';
 
-const MatchCard = ({ match, isGuest }) => {
+const MatchCard = ({ match, isGuest, onClick }) => {
     return (
-        <div className="group bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between hover:shadow-xl hover:border-pink-100 dark:hover:border-pink-900/30 transition-all duration-300 relative overflow-hidden">
+        <div onClick={onClick} className="group bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between hover:shadow-xl hover:border-pink-100 dark:hover:border-pink-900/30 transition-all duration-300 relative overflow-hidden cursor-pointer">
             <div className="absolute inset-0 bg-gradient-to-r from-pink-50/0 to-pink-50/50 dark:from-pink-900/0 dark:to-pink-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
             <div className="flex items-center gap-5 relative z-10">

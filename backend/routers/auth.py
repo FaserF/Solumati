@@ -175,10 +175,17 @@ def verify_2fa_login(req: schemas.TwoFactorAuthRequest, db: Session = Depends(ge
     valid = False
 
     if user.two_factor_method == 'totp':
-        if not user.totp_secret: raise HTTPException(400, "TOTP not set up")
+        if not user.totp_secret:
+            logger.error(f"2FA Verify Failed: User {user.username} has no TOTP secret set.")
+            raise HTTPException(400, "TOTP not set up")
+
         totp = pyotp.TOTP(user.totp_secret)
-        if totp.verify(req.code):
+        # valid_window=1 allows current time +/- 30 seconds (1 step)
+        if totp.verify(req.code, valid_window=1):
             valid = True
+        else:
+            logger.warning(f"2FA Verify Failed: Invalid TOTP code for user {user.username}. Server Time: {datetime.utcnow()}")
+
 
     elif user.two_factor_method == 'email':
         if not user.email_2fa_code: raise HTTPException(400, "No code generated")
@@ -254,6 +261,36 @@ def disable_2fa(user: models.User = Depends(get_current_user_from_header), db: S
     user.webauthn_credentials = "[]"
     db.commit()
     return {"status": "disabled"}
+
+@router.delete("/users/2fa/methods/{method}")
+def remove_2fa_method(method: str, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """Removes a specific 2FA method."""
+    method = method.lower()
+    if method == "totp":
+        user.totp_secret = None
+    elif method == "passkey":
+        user.webauthn_credentials = "[]"
+    elif method == "email":
+        # Nothing specific to clear for email, just ensures it's not active
+        pass
+    else:
+        raise HTTPException(400, "Unknown method")
+
+    # Update Active Method if the removed one was active
+    if user.two_factor_method == method:
+        # Try to find a fallback
+        if user.has_totp:
+            user.two_factor_method = 'totp'
+        elif user.has_passkeys:
+             user.two_factor_method = 'passkey'
+        else:
+            user.two_factor_method = 'none'
+
+    db.commit()
+    return {
+        "status": "removed",
+        "active_method": user.two_factor_method
+    }
 
 # --- WebAuthn Setup ---
 

@@ -4,17 +4,27 @@ import i18n
 from database import get_db
 from utils import get_setting
 import schemas
-from config import TEST_MODE
+from config import TEST_MODE, CURRENT_VERSION
 
 router = APIRouter()
 
 @router.get("/public-config", response_model=schemas.PublicConfig)
 def get_public_config(db: Session = Depends(get_db)):
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+    legal_config = schemas.LegalConfig(**get_setting(db, "legal", {}))
+    oauth_config = schemas.OAuthProviders(**get_setting(db, "oauth", {}))
+    maint_mode = get_setting(db, "maintenance_mode", False)
+    support_conf = get_setting(db, "support_chat", {"enabled": False})
+
     return {
         "registration_enabled": reg_config.enabled,
         "email_2fa_enabled": reg_config.email_2fa_enabled,
-        "test_mode": TEST_MODE
+        "test_mode": TEST_MODE,
+        "maintenance_mode": bool(maint_mode),
+        "backend_version": CURRENT_VERSION,
+        "legal": legal_config,
+        "oauth_providers": oauth_config,
+        "support_chat_enabled": support_conf.get("enabled", False)
     }
 
 @router.get("/public/legal", response_model=schemas.LegalConfig)

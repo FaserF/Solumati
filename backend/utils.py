@@ -128,8 +128,14 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
     try:
         ans_a = json.loads(answers_a_raw) if isinstance(answers_a_raw, str) else (answers_a_raw or {})
         ans_b = json.loads(answers_b_raw) if isinstance(answers_b_raw, str) else (answers_b_raw or {})
+
     except:
         return {"score": 0, "details": [], "common": []}
+
+    if not isinstance(ans_a, dict):
+        ans_a = {}
+    if not isinstance(ans_b, dict):
+        ans_b = {}
 
     total_weight = 0
     earned_weight = 0

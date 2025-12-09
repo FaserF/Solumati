@@ -20,6 +20,7 @@ import Questionnaire from './components/Questionnaire';
 // Import Extracted Components
 import MaintenancePage from './components/MaintenancePage';
 import VerificationBanner from './components/common/VerificationBanner';
+import ConsentBanner from './components/ConsentBanner';
 import AuthLayout from './components/layout/AuthLayout';
 
 function App() {
@@ -59,7 +60,29 @@ function App() {
     const [i18n, setI18n] = useState({});
 
     const t = (key, defaultText = "") => {
-        return i18n[key] || FALLBACK[key] || defaultText || key;
+        // 1. Try Exact Match (Legacy flat keys like "app.title")
+        if (i18n[key]) return i18n[key];
+
+        // 2. Try Nested Match (New keys like "cookie.text")
+        const keys = key.split('.');
+        let value = i18n;
+        for (const k of keys) {
+            value = value?.[k];
+            if (value === undefined) break;
+        }
+        if (value && typeof value === 'string') return value;
+
+        // 3. Fallback Exact Match
+        if (FALLBACK[key]) return FALLBACK[key];
+
+        // 4. Fallback Nested Match
+        let fallback = FALLBACK;
+        for (const k of keys) {
+            fallback = fallback?.[k];
+            if (fallback === undefined) break;
+        }
+
+        return (fallback && typeof fallback === 'string') ? fallback : (defaultText || key);
     };
 
     // --- Startup: Verification, I18n, Config ---
@@ -177,6 +200,7 @@ function App() {
     const finishLogin = (data) => {
         console.log("[App] Login success:", data);
         setUser(data);
+        localStorage.setItem('token', data.user_id);
         setIsGuest(data.role === 'guest' || data.is_guest);
         setVerificationStatus(null);
         setTempAuth(null);
@@ -263,6 +287,7 @@ function App() {
                 if (data.is_verified) {
                     alert(t('alert.welcome', `Welcome`) + `, ${data.username}!`);
                     setUser({ user_id: data.id, username: data.username, role: data.role });
+                    localStorage.setItem('token', data.id);
                     setIsGuest(false);
                     fetchMatches(data.id);
                     setView('dashboard');
@@ -289,6 +314,7 @@ function App() {
                 setMatches(data);
                 setIsGuest(true);
                 setUser({ user_id: 0, username: t('user.guest', "Guest"), role: 'guest' });
+                localStorage.setItem('token', '0');
                 setView('dashboard');
             } else {
                 const err = await res.json();
@@ -340,6 +366,8 @@ function App() {
                         onClose={() => setVerificationStatus(null)}
                     />
 
+                    <ConsentBanner t={t} onNavigate={(v) => setView(v)} />
+
                     <div className="w-full h-full min-h-screen">
 
                         {/* 1. Landing View (Full Screen) */}
@@ -382,8 +410,8 @@ function App() {
                         {/* 4. Dashboard / Main App Layout */}
                         {!isLanding && !isLegal && !isAuthCardView && (
                             <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
-                                {view === 'dashboard' && <Dashboard user={user} matches={matches} isGuest={isGuest} testMode={globalConfig.test_mode} maintenanceMode={maintenanceMode} onLogout={() => { setUser(null); setView('landing'); }} onRegisterClick={() => setView('register')} onAdminClick={() => setView('adminPanel')} onProfileClick={() => setView('profile')} onSwipeClick={() => setView('swipe')} onQuestionnaireClick={() => setView('questionnaire')} onImprintClick={() => setView('imprint')} onPrivacyClick={() => setView('privacy')} t={t} />}
-                                {view === 'profile' && user && <UserProfile user={user} initialMode={user.is_profile_complete === false ? 'edit' : 'view'} onBack={() => {
+                                {view === 'dashboard' && <Dashboard user={user} matches={matches} isGuest={isGuest} testMode={globalConfig.test_mode} supportChatEnabled={globalConfig.support_chat_enabled} maintenanceMode={maintenanceMode} onLogout={() => { setUser(null); localStorage.removeItem('token'); setView('landing'); }} onRegisterClick={() => setView('register')} onAdminClick={() => setView('adminPanel')} onProfileClick={() => setView('profile')} onSwipeClick={() => setView('swipe')} onQuestionnaireClick={() => setView('questionnaire')} onImprintClick={() => setView('imprint')} onPrivacyClick={() => setView('privacy')} t={t} />}
+                                {view === 'profile' && user && <UserProfile user={user} initialMode={'view'} onBack={() => {
                                     // If profile was incomplete, forcing back might be weird if they didn't save.
                                     // But typically onBack goes to dashboard.
                                     // If we want to be strict, we check again?
@@ -398,8 +426,8 @@ function App() {
                                 }} onOpenSettings={() => setView('settings')} t={t} />}
                                 {view === 'swipe' && user && <Discover user={user} onBack={() => setView('dashboard')} t={t} />}
                                 {view === 'questionnaire' && user && <Questionnaire user={user} onComplete={() => { setView('dashboard'); alert("Profile updated!"); }} onClose={() => setView('dashboard')} t={t} />}
-                                {view === 'settings' && user && <AccountSettings user={user} globalConfig={globalConfig} onBack={() => setView('profile')} onLogout={() => { setUser(null); setView('landing'); }} onResetPassword={() => { setUser(null); setView('forgot_pw'); }} t={t} />}
-                                {view === 'adminPanel' && <AdminPanel user={user} testMode={globalConfig.test_mode} maintenanceMode={maintenanceMode} onLogout={() => { setUser(null); setView('landing'); }} onBack={() => setView('dashboard')} t={t} />}
+                                {view === 'settings' && user && <AccountSettings user={user} globalConfig={globalConfig} onBack={() => setView('profile')} onLogout={() => { setUser(null); localStorage.removeItem('token'); setView('landing'); }} onResetPassword={() => { setUser(null); setView('forgot_pw'); }} t={t} />}
+                                {view === 'adminPanel' && <AdminPanel user={user} testMode={globalConfig.test_mode} maintenanceMode={maintenanceMode} onLogout={() => { setUser(null); localStorage.removeItem('token'); setView('landing'); }} onBack={() => setView('dashboard')} t={t} />}
                             </div>
                         )}
 
