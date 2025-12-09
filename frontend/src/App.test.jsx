@@ -6,7 +6,8 @@ import App from './App';
 vi.mock('./config', () => ({
     API_URL: 'http://localhost:8000',
     FALLBACK: {},
-    APP_VERSION: '0.0.0-test'
+    APP_VERSION: '0.0.0-test',
+    APP_RELEASE_TYPE: 'test'
 }));
 
 
