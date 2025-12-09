@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 import random
 import smtplib
 import logging
@@ -166,3 +167,28 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
         "score": round(final_score),
         "details": list(set(details)) # Unique categories matched
     }
+
+def send_login_notification(email: str, ip: str, user_agent: str):
+    """
+    Sends a notification email upon login.
+    This function is intended to be run as a background task.
+    """
+    # Create a new database session for this task since it runs in the background
+    # and the original dependency session might be closed.
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        title = "New Login Detected"
+        content = f\"\"\"
+        We detected a new login to your Solumati account.<br><br>
+        <b>IP Address:</b> {ip}<br>
+        <b>Device:</b> {user_agent}<br>
+        <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
+        If this was you, you can ignore this email. If you did not authorize this login, please contact support immediately.
+        \"\"\"
+        html = create_html_email(title, content, server_domain="") # Domain not critical here
+        send_mail_sync(email, title, html, db)
+    except Exception as e:
+        logger.error(f"Error in send_login_notification: {e}")
+    finally:
+        db.close()
