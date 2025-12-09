@@ -2,6 +2,10 @@ name: Build and Push Docker Image
 
 on:
   workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
   release:
     types: [published]
 
@@ -39,7 +43,12 @@ jobs:
 
       - name: Get Version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+            if [ -n "${{ inputs.version }}" ]; then
+              echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            fi
 
       - name: Build and push Backend
         uses: docker/build-push-action@v6

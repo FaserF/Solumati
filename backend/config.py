@@ -12,6 +12,10 @@ APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
 # OAuth settings are now loaded dynamically from the database (SystemSettings).
 # See backend/routers/oauth.py regarding get_provider_sso()
 # Legacy environment variables removed to prevent confusion.
+# However, importing them might still be required by some tests/routers temporarily.
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", None)
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", None)
+MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID", None)
 
 def get_app_version():
     """Reads the version from the frontend package.json to keep backend/frontend in sync."""

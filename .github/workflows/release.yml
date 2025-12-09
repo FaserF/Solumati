@@ -20,6 +20,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.version.outputs.version }}
     steps:
     - uses: actions/checkout@v6
       with:
@@ -65,6 +67,8 @@ jobs:
   build-push-docker:
     needs: release
     uses: ./.github/workflows/docker-publish.yml
+    with:
+      version: ${{ needs.release.outputs.new_version }}
     permissions:
       contents: read
       packages: write
