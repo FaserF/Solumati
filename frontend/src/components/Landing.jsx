@@ -1,5 +1,5 @@
-import React from 'react';
-import { Lock, Github, Heart, Scale } from 'lucide-react';
+import { Lock, Github, Heart, Scale, AlertTriangle, Beaker, Info } from 'lucide-react';
+import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 
 const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -45,6 +45,24 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => (
                     <Scale size={16} /> {t('landing.legal')}
                 </button>
             </div>
+
+            {/* Release Status Badge (Beta / Nightly) */}
+            {APP_RELEASE_TYPE && APP_RELEASE_TYPE !== 'stable' && (
+                <div className="flex flex-col items-end animate-fade-in-up">
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md border shadow-lg ${APP_RELEASE_TYPE === 'beta'
+                            ? 'bg-blue-500/10 border-blue-500/30 text-blue-200'
+                            : 'bg-orange-500/10 border-orange-500/30 text-orange-200'
+                        }`}>
+                        {APP_RELEASE_TYPE === 'beta' ? <Info size={14} /> : <AlertTriangle size={14} />}
+                        <span className="text-xs font-bold uppercase tracking-wider">
+                            {APP_RELEASE_TYPE === 'beta' ? 'Beta Access' : 'Nightly Build'}
+                        </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-gray-600 mt-1 mr-2 opacity-60">
+                        v{APP_VERSION}
+                    </div>
+                </div>
+            )}
         </div>
     </div>
 );

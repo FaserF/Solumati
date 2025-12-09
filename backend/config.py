@@ -41,3 +41,8 @@ FRONTEND_VERSION = get_app_version()
 BACKEND_VERSION = get_backend_version()
 # Compatibility alias if needed, or just let main.py use BACKEND_VERSION
 CURRENT_VERSION = BACKEND_VERSION
+
+def get_release_type():
+    return os.getenv("RELEASE_TYPE", "development")
+
+RELEASE_TYPE = get_release_type()

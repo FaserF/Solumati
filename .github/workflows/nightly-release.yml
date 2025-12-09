@@ -58,11 +58,42 @@ jobs:
           echo "Current Tag Version: $current_version"
 
           # Calculate new version (Force prerelease)
-          new_version=$(python3 scripts/generate_version.py --current "$current_version" --prerelease)
+          new_version=$(python3 scripts/generate_version.py --current "$current_version" --type nightly)
           echo "Calculated Nightly Version: $new_version"
 
           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
           echo "version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Update Version Files & Commit
+        if: steps.check_changes.outputs.has_changes == 'true'
+        id: commit
+        run: |
+          # Configure Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Update frontend/package.json
+          # Using npm version to update file without creating a git tag yet
+          cd frontend
+          npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+          cd ..
+
+          # Update backend/config.py
+          # Replace version
+          sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/config.py
+          # Replace release type
+          sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "nightly")/' backend/config.py
+
+          # Update frontend/src/config.js
+          sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "nightly";/' frontend/src/config.js
+
+          # Commit and Push
+          git add frontend/package.json backend/config.py frontend/src/config.js
+          git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]"
+          git push
+
+          # Get the new commit SHA
+          echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Create Nightly Release
         if: steps.check_changes.outputs.has_changes == 'true'
@@ -70,6 +101,7 @@ jobs:
         with:
           tag_name: v${{ env.NEW_VERSION }}
           name: Nightly v${{ env.NEW_VERSION }}
+          target_commitish: ${{ steps.commit.outputs.commit_sha }}
           draft: false
           prerelease: true
           generate_release_notes: true

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import ChatWindow from './ChatWindow';
 import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy } from 'lucide-react';
-import { API_URL, APP_VERSION, APP_NAME } from '../config';
+import { API_URL, APP_VERSION, APP_NAME, APP_RELEASE_TYPE } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) => {
     // Role Checks
@@ -319,6 +319,26 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
         return settings.mail.smtp_host && settings.mail.smtp_host.length > 0;
     };
 
+    // Helper to get Release Type Icon/Color
+    const renderReleaseBadge = () => {
+        if (!APP_RELEASE_TYPE || APP_RELEASE_TYPE === 'stable') return null;
+
+        if (APP_RELEASE_TYPE === 'beta') {
+            return (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wider">
+                    <Info size={14} /> Beta
+                </div>
+            );
+        }
+
+        // Nightly / Development
+        return (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold uppercase tracking-wider">
+                <Beaker size={14} /> Nightly
+            </div>
+        );
+    };
+
     return (
         <div className="w-full text-gray-900 dark:text-gray-100 font-sans">
             {/* Admin Header / Navbar - Glass Effect */}
@@ -328,8 +348,13 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         <Shield className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="font-bold text-2xl tracking-tight">{isModerator ? 'Moderator Panel' : 'Admin Console'}</h1>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 font-mono tracking-wider uppercase">System v{APP_VERSION}</p>
+                        <h1 className="font-bold text-2xl tracking-tight flex items-center gap-2">
+                            {isModerator ? 'Moderator Panel' : 'Admin Console'}
+                            {renderReleaseBadge()}
+                        </h1>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-mono tracking-wider uppercase">
+                            System v{APP_VERSION} <span className="opacity-50">({APP_RELEASE_TYPE})</span>
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
