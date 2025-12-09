@@ -339,7 +339,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                     </div>
                                     <p className="text-xs font-mono mb-4 break-all text-gray-500 dark:text-gray-300">Secret: {totpSetup.secret}</p>
                                     <input
-                                        className="w-full p-2 border rounded mb-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                        className="w-full p-2 border rounded mb-2 bg-white dark:bg-gray-800 dark:border-gray-600 text-gray-900 dark:text-white"
                                         placeholder="123456"
                                         value={totpCode}
                                         onChange={e => setTotpCode(e.target.value)}
@@ -360,7 +360,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                 <div className="flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3">
                                     <Mail size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
-                                        className="w-full p-3 bg-transparent focus:outline-none dark:text-white"
+                                        className="w-full p-3 bg-transparent focus:outline-none text-gray-900 dark:text-white"
                                         placeholder="new@email.com"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
@@ -375,7 +375,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                     <Lock size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
                                         type={showNewPassword ? "text" : "password"}
-                                        className="w-full p-3 bg-transparent focus:outline-none dark:text-white"
+                                        className="w-full p-3 bg-transparent focus:outline-none text-gray-900 dark:text-white"
                                         placeholder={t('settings.new_pw')}
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
@@ -392,7 +392,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                     <Lock size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
                                         type={showNewPassword ? "text" : "password"}
-                                        className="w-full p-3 bg-transparent focus:outline-none dark:text-white"
+                                        className="w-full p-3 bg-transparent focus:outline-none text-gray-900 dark:text-white"
                                         placeholder="Confirm New Password"
                                         value={confirmPassword}
                                         onChange={e => setConfirmPassword(e.target.value)}
@@ -408,7 +408,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-200 uppercase mb-2">{t('settings.curr_pw')}</label>
                                 <input
                                     type="password"
-                                    className="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-gray-500 focus:outline-none mb-4"
+                                    className="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-gray-500 focus:outline-none mb-4"
                                     value={currentPassword}
                                     onChange={e => setCurrentPassword(e.target.value)}
                                 />

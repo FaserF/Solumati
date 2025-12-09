@@ -42,7 +42,7 @@ export default defineConfig({
     plugins: [react()],
     define: {
         // Inject version from package.json as a global variable
-        '__APP_VERSION__': JSON.stringify(packageJson.version)
+        '__APP_VERSION__': JSON.stringify(process.env.npm_package_version || packageJson.version || '0.0.0')
     },
     resolve: {
         alias: {
