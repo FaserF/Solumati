@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       pwa_url:
-        description: 'PWA URL (e.g. https://solumati.de)'
-        required: true
+        description: 'PWA URL (e.g. https://solumati.com)'
+        required: false
         default: 'https://solumati.fabiseitz.de'
 
 jobs:

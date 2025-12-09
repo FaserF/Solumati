@@ -106,6 +106,32 @@ if (!fs.existsSync(KEYSTORE_PATH)) {
     }
 }
 
+// Configure Bubblewrap
+console.log('Configuring Bubblewrap...');
+const os = require('os');
+const configDir = path.join(os.homedir(), '.bubblewrap');
+if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+}
+// In GitHub Actions:
+// JAVA_HOME is set by actions/setup-java
+// ANDROID_SDK_ROOT is set by android-actions/setup-android (or ANDROID_HOME)
+const jdkPath = process.env.JAVA_HOME;
+const androidSdkPath = process.env.ANDROID_SDK_ROOT || process.env.ANDROID_HOME;
+
+if (!jdkPath || !androidSdkPath) {
+    console.error('Error: JAVA_HOME or ANDROID_SDK_ROOT/ANDROID_HOME not set.');
+    console.error('JAVA_HOME:', jdkPath);
+    console.error('ANDROID_SDK:', androidSdkPath);
+    process.exit(1);
+}
+
+const bubblewrapConfig = {
+    jdkPath: jdkPath,
+    androidSdkPath: androidSdkPath
+};
+fs.writeFileSync(path.join(configDir, 'config.json'), JSON.stringify(bubblewrapConfig, null, 2));
+
 // Run Bubblewrap Build
 console.log('Running Bubblewrap Build...');
 try {
