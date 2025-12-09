@@ -16,11 +16,14 @@ describe('App Component', () => {
             Promise.resolve({
                 ok: true,
                 json: () => Promise.resolve({
-                    "app.title": "Solumati",
-                    "landing.tagline": "Stop Swiping. Start Connecting.",
-                    "landing.btn_login": "Log in",
-                    "landing.btn_register": "Register",
-                    "landing.btn_guest": "Browse as guest"
+                    maintenance_mode: false,
+                    translations: {
+                        "app.title": "Solumati",
+                        "landing.tagline": "Stop Swiping. Start Connecting.",
+                        "landing.btn_login": "Log in",
+                        "landing.btn_register": "Register",
+                        "landing.btn_guest": "Browse as guest"
+                    }
                 }),
             })
         );
