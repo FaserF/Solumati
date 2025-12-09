@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '~/config.js';
+import { API_URL } from '../config';
 import { Shield, Smartphone, Mail, Fingerprint } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
 
@@ -46,7 +46,8 @@ const TwoFactorAuth = ({ tempAuth, onVerified, onCancel, t }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: tempAuth.user_id })
             });
-            const options = await resp.json();
+            const data = await resp.json();
+            const options = data.options;
 
             // 2. Interact with Browser
             const asseResp = await startAuthentication(options);

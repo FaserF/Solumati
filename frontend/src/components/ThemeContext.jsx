@@ -19,7 +19,9 @@ export const ThemeProvider = ({ children }) => {
             if (t === 'dark') {
                 root.classList.add('dark');
             } else if (t === 'light') {
-                root.classList.remove('dark'); // Default tailwind is light
+                root.classList.remove('dark');
+                // Ensure local storage is updated correctly if other scripts read it
+                localStorage.setItem('theme', 'light');
             } else {
                 // System
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {

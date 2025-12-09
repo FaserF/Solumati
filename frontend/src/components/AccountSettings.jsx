@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw } from 'lucide-react';
+import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useTheme } from './ThemeContext';
@@ -100,7 +100,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
         if (!currentPassword) return alert(t('settings.curr_pw') + " required");
 
         if (password && password !== confirmPassword) {
-            return alert("New passwords do not match!");
+            return alert(t('alert.pw_mismatch', "New passwords do not match!"));
         }
 
         setLoading(true);
@@ -162,20 +162,20 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
             method: 'POST', headers, body: JSON.stringify({ token: totpCode })
         });
         if (res.ok) {
-            alert("TOTP successfully enabled!");
+            alert(t('alert.totp_enabled', "TOTP successfully enabled!"));
             setTotpSetup(null);
-        } else { alert("Invalid Code"); }
+        } else { alert(t('alert.invalid_code', "Invalid Code")); }
     };
 
     const enableEmail2FA = async () => {
         try {
             const res = await fetch(`${API_URL}/users/2fa/setup/email`, { method: 'POST', headers });
-            if (res.ok) alert("Email 2FA successfully enabled!");
+            if (res.ok) alert(t('alert.email_2fa_enabled', "Email 2FA successfully enabled!"));
             else {
                 const err = await res.json();
-                alert("Error: " + err.detail);
+                alert(t('alert.error', "Error: ") + err.detail);
             }
-        } catch (e) { alert("Network Error"); }
+        } catch (e) { alert(t('alert.network_error', "Network Error")); }
     };
 
     const enablePasskey = async () => {
@@ -187,19 +187,16 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
 
             const options = await resp.json();
 
-            const startRegistration = getStartRegistration();
-            if (!startRegistration) throw new Error("Passkey library not loaded.");
-
             const attResp = await startRegistration(options);
 
             const verifyResp = await fetch(`${API_URL}/users/2fa/setup/webauthn/register/verify`, {
                 method: 'POST', headers, body: JSON.stringify({ credential: attResp })
             });
-            if (verifyResp.ok) alert("Passkey registered successfully!");
-            else alert("Registration failed.");
+            if (verifyResp.ok) alert(t('alert.passkey_success', "Passkey registered successfully!"));
+            else alert(t('alert.registration_failed', "Registration failed."));
         } catch (e) {
             console.error("Passkey Error:", e);
-            alert("Passkey Error: " + e.message);
+            alert(t('alert.passkey_error', "Passkey Error: ") + e.message);
         }
         setLoading(false);
     };
@@ -207,11 +204,12 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
     const disable2FA = async () => {
         if (!window.confirm(t('settings.delete_confirm'))) return;
         await fetch(`${API_URL}/users/2fa/disable`, { method: 'POST', headers });
-        alert("2FA Disabled.");
+        alert(t('alert.2fa_disabled', "2FA Disabled."));
     };
 
     // --- Permissions Checks ---
     const canDeleteAccount = user.role !== 'guest' && user.role !== 'admin';
+    const canEditAccount = user.role !== 'guest' && !user.is_guest;
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col dark:bg-gray-900 transition-colors duration-200">
@@ -231,19 +229,12 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                         {t('settings.tab_app', 'App Settings')}
                     </button>
 
-                    {/* Guest Check: Disable Account Tab if Guest */}
-                    {user.role !== 'guest' && !user.is_guest ? (
-                        <button
-                            onClick={() => setActiveTab('account')}
-                            className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'account' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
-                        >
-                            {t('settings.tab_account', 'Account & Security')}
-                        </button>
-                    ) : (
-                        <div className="flex-1 py-2 text-sm font-medium text-gray-300 dark:text-gray-600 text-center cursor-not-allowed" title="Not available for guests">
-                            {t('settings.tab_account', 'Account & Security')}
-                        </div>
-                    )}
+                    <button
+                        onClick={() => setActiveTab('account')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'account' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
+                    >
+                        {t('settings.tab_account', 'Account & Security')}
+                    </button>
                 </div>
 
                 {/* === APP SETTINGS TAB === */}
@@ -306,6 +297,13 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                 {/* === ACCOUNT TAB === */}
                 {activeTab === 'account' && (
                     <div className="space-y-6">
+                        {!canEditAccount && (
+                            <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-4 rounded-xl text-sm font-bold flex items-center gap-2">
+                                <AlertTriangle size={18} />
+                                {t('settings.guest_readonly', 'Guest accounts are read-only.')}
+                            </div>
+                        )}
+
                         {/* 2FA Section */}
                         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border-l-4 border-purple-500 dark:border-purple-400">
                             <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
@@ -314,30 +312,30 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
 
                             {!totpSetup ? (
                                 <div className="space-y-3">
-                                    <button onClick={startTotp} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200">
+                                    <button disabled={!canEditAccount} onClick={startTotp} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
                                         <span className="font-bold flex items-center gap-2"><Smartphone size={18} /> {t('settings.btn_setup_totp')}</span>
                                     </button>
 
                                     {globalConfig.email_2fa_enabled && (
-                                        <button onClick={enableEmail2FA} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200">
+                                        <button disabled={!canEditAccount} onClick={enableEmail2FA} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
                                             <span className="font-bold flex items-center gap-2"><Mail size={18} /> {t('settings.btn_setup_email')}</span>
                                         </button>
                                     )}
 
-                                    <button onClick={enablePasskey} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200">
+                                    <button disabled={!canEditAccount} onClick={enablePasskey} className="w-full flex items-center justify-between p-4 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
                                         <span className="font-bold flex items-center gap-2"><Fingerprint size={18} /> {t('settings.btn_setup_passkey')}</span>
                                     </button>
-                                    <button onClick={disable2FA} className="w-full text-center text-red-500 text-sm font-bold mt-2 hover:text-red-400">
+                                    <button disabled={!canEditAccount} onClick={disable2FA} className="w-full text-center text-red-500 text-sm font-bold mt-2 hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed">
                                         {t('settings.btn_disable_2fa')}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h3 className="font-bold mb-2 dark:text-white">Scan QR Code</h3>
+                                    <h3 className="font-bold mb-2 dark:text-white">{t('settings.scan_qr', 'Scan QR Code')}</h3>
                                     <div className="bg-white p-2 inline-block mb-4 border rounded">
                                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(totpSetup.uri)}`} alt="QR" />
                                     </div>
-                                    <p className="text-xs font-mono mb-4 break-all text-gray-500 dark:text-gray-300">Secret: {totpSetup.secret}</p>
+                                    <p className="text-xs font-mono mb-4 break-all text-gray-500 dark:text-gray-300">{t('settings.secret', 'Secret:')} {totpSetup.secret}</p>
                                     <input
                                         className="w-full p-2 border rounded mb-2 bg-white dark:bg-gray-800 dark:border-gray-600 text-gray-900 dark:text-white"
                                         placeholder="123456"
@@ -345,8 +343,8 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                         onChange={e => setTotpCode(e.target.value)}
                                     />
                                     <div className="flex gap-2">
-                                        <button onClick={verifyTotp} className="bg-purple-600 text-white px-4 py-2 rounded font-bold hover:bg-purple-700">Verify</button>
-                                        <button onClick={() => setTotpSetup(null)} className="text-gray-500 dark:text-gray-400 px-4 py-2 hover:text-gray-700 dark:hover:text-white">Cancel</button>
+                                        <button onClick={verifyTotp} className="bg-purple-600 text-white px-4 py-2 rounded font-bold hover:bg-purple-700">{t('btn.verify', 'Verify')}</button>
+                                        <button onClick={() => setTotpSetup(null)} className="text-gray-500 dark:text-gray-400 px-4 py-2 hover:text-gray-700 dark:hover:text-white">{t('btn.cancel', 'Cancel')}</button>
                                     </div>
                                 </div>
                             )}
@@ -357,13 +355,14 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                             {/* Email */}
                             <div className="mb-6">
                                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('settings.change_mail')}</label>
-                                <div className="flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3">
+                                <div className={`flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3 ${!canEditAccount ? 'opacity-50' : ''}`}>
                                     <Mail size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
                                         className="w-full p-3 bg-transparent focus:outline-none text-gray-900 dark:text-white"
                                         placeholder="new@email.com"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
+                                        disabled={!canEditAccount}
                                     />
                                 </div>
                             </div>
@@ -371,7 +370,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                             {/* New Password */}
                             <div className="mb-4">
                                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase mb-2">{t('settings.change_pw')}</label>
-                                <div className="flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3 mb-2">
+                                <div className={`flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3 mb-2 ${!canEditAccount ? 'opacity-50' : ''}`}>
                                     <Lock size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
                                         type={showNewPassword ? "text" : "password"}
@@ -379,23 +378,26 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                         placeholder={t('settings.new_pw')}
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
+                                        disabled={!canEditAccount}
                                     />
                                     <button
                                         onClick={() => setShowNewPassword(!showNewPassword)}
                                         className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white focus:outline-none p-1"
                                         type="button"
+                                        disabled={!canEditAccount}
                                     >
                                         {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
                                 </div>
-                                <div className="flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3">
+                                <div className={`flex items-center border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 px-3 ${!canEditAccount ? 'opacity-50' : ''}`}>
                                     <Lock size={18} className="text-gray-400 dark:text-gray-300" />
                                     <input
                                         type={showNewPassword ? "text" : "password"}
                                         className="w-full p-3 bg-transparent focus:outline-none text-gray-900 dark:text-white"
-                                        placeholder="Confirm New Password"
+                                        placeholder={t('settings.confirm_pw', "Confirm New Password")}
                                         value={confirmPassword}
                                         onChange={e => setConfirmPassword(e.target.value)}
+                                        disabled={!canEditAccount}
                                     />
                                 </div>
                                 <button onClick={onResetPassword} className="text-xs text-blue-600 hover:underline mt-2 flex items-center gap-1 font-medium">
@@ -408,11 +410,12 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-200 uppercase mb-2">{t('settings.curr_pw')}</label>
                                 <input
                                     type="password"
-                                    className="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-gray-500 focus:outline-none mb-4"
+                                    className="w-full p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-gray-500 focus:outline-none mb-4 disabled:opacity-50"
                                     value={currentPassword}
                                     onChange={e => setCurrentPassword(e.target.value)}
+                                    disabled={!canEditAccount}
                                 />
-                                <button onClick={handleUpdate} disabled={loading} className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 transition">
+                                <button onClick={handleUpdate} disabled={loading || !canEditAccount} className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                     {loading ? "..." : t('btn.save')}
                                 </button>
                             </div>
@@ -427,7 +430,15 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                     </div>
                 )}
                 <div className="mt-8 pt-6 border-t text-center text-xs text-gray-400">
-                    <p>Solumati v{globalConfig?.backend_version || "..."} (FE: {APP_VERSION})</p>
+                    <p>
+                        <a href={`https://github.com/FaserF/Solumati/releases/tag/${globalConfig?.backend_version}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-gray-500">
+                            Solumati v{globalConfig?.backend_version || "..."}
+                        </a>
+                        <span> (FE: </span>
+                        <a href={`https://github.com/FaserF/Solumati/releases/tag/v${APP_VERSION}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-gray-500">
+                            {APP_VERSION}
+                        </a>)
+                    </p>
                     <p>All rights reserved.</p>
                 </div>
             </div>

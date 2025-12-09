@@ -25,7 +25,7 @@ services:
     container_name: solumati_backend
     restart: always
     # Wait-for-db script will block until DB is reachable, then start uvicorn
-    command: sh -c "python wait_for_db.py && uvicorn main:app --host 0.0.0.0 --port 7777 --reload"
+    command: uvicorn main:app --host 0.0.0.0 --port 7777 --reload
     volumes:
       # Mount code for hot-reloading during dev
       - ./backend:/app
@@ -54,7 +54,7 @@ services:
       # Mount code for hot-reloading
       - ./frontend:/app
       # Prevent node_modules from being overwritten by the mount
-      - /app/node_modules
+      - solumati_frontend_node_modules:/app/node_modules
     environment:
       - VITE_API_URL=http://localhost:7777
       - LANG            # forward host language env
@@ -69,3 +69,6 @@ networks:
 
 volumes:
   postgres_data:
+    name: solumati_pg_data
+  solumati_frontend_node_modules:
+    name: solumati_node_modules

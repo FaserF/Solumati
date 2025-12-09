@@ -32,18 +32,16 @@ const DashboardNavbar = ({
                     </button>
                 )}
 
-                {!isGuest && (
-                    <button onClick={onProfileClick} className="flex items-center gap-3 pl-2 pr-1 py-1 bg-white/50 hover:bg-white border border-transparent hover:border-pink-200 rounded-full transition-all dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/5 group">
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 pl-2 group-hover:text-pink-600 transition-colors">{user?.username}</span>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-200 to-white flex items-center justify-center shadow-sm group-hover:shadow text-gray-400">
-                            {user?.image_url ? (
-                                <img src={user.image_url} className="w-full h-full rounded-full object-cover" alt="Avatar" />
-                            ) : (
-                                <User size={16} />
-                            )}
-                        </div>
-                    </button>
-                )}
+                <button onClick={onProfileClick} className="flex items-center gap-3 pl-2 pr-1 py-1 bg-white/50 hover:bg-white border border-transparent hover:border-pink-200 rounded-full transition-all dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/5 group">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 pl-2 group-hover:text-pink-600 transition-colors">{user?.username}</span>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-200 to-white flex items-center justify-center shadow-sm group-hover:shadow text-gray-400">
+                        {user?.image_url ? (
+                            <img src={user.image_url} className="w-full h-full rounded-full object-cover" alt="Avatar" />
+                        ) : (
+                            <User size={16} />
+                        )}
+                    </div>
+                </button>
 
                 <button onClick={onLogout} className="ml-2 px-4 py-2 text-sm font-bold text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors dark:bg-red-900/20 dark:hover:bg-red-900/30">
                     {t('btn.logout')}

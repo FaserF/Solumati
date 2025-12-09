@@ -21,7 +21,7 @@ def get_setting(db: Session, key: str, default):
             return default.dict()
         return default
     except Exception as e:
-        logger.error(f"DB Error in get_setting: {e}")
+        logger.error(f"DB Error in get_setting: {e}. DB Type: {type(db)}")
         return default
 
 def save_setting(db: Session, key: str, value: dict):

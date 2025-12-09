@@ -48,124 +48,124 @@ const Register = ({
 
     if (loadingConfig) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+            <div className="flex items-center justify-center p-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
             </div>
         );
     }
 
-    // Completely disabled (Maintenance mode or global registration off)
+    // Completely disabled
     if (!registrationEnabled) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-                    <img src="/logo/android-chrome-192x192.png" alt="Solumati" className="w-16 h-16 mx-auto mb-4 rounded-xl shadow-md grayscale" />
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('register.disabled_title')}</h2>
-                    <p className="text-gray-600 mb-6">
-                        {t('register.disabled_msg')}
-                    </p>
-                    <button onClick={onBack} className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition">
-                        {t('register.btn_back_home')}
-                    </button>
-                </div>
+            <div className="text-center p-8">
+                <img src="/logo/android-chrome-192x192.png" alt="Solumati" className="w-16 h-16 mx-auto mb-4 rounded-xl shadow-md grayscale" />
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">{t('register.disabled_title')}</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    {t('register.disabled_msg')}
+                </p>
+                <button onClick={onBack} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:opacity-80 transition">
+                    {t('register.btn_back_home')}
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg h-auto max-h-screen overflow-y-auto">
-                <div className="text-center mb-6">
-                    <img src="/logo/android-chrome-192x192.png" alt="Solumati" className="w-14 h-14 mx-auto mb-2 rounded-xl shadow-sm" />
-                    <h2 className="text-2xl font-bold text-gray-800">{t('register.title')}</h2>
-                </div>
+        <div className="w-full max-w-sm mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pb-8">
+            <div className="text-center mb-8">
+                <img src="/logo/android-chrome-192x192.png" alt="Solumati" className="w-16 h-16 mx-auto mb-4 rounded-2xl shadow-lg" />
+                <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">{t('register.title')}</h2>
+                <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">Create your account to start matching.</p>
+            </div>
 
-                {/* OAuth Section */}
-                {(oauthConfig.github || oauthConfig.google || oauthConfig.microsoft) && (
-                    <div className="mb-8">
-                        <div className="flex flex-col gap-3">
-                            {oauthConfig.github && (
-                                <button onClick={() => handleOAuth('github')} className="bg-[#24292e] text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition">
-                                    <Github size={20} /> Register with GitHub
-                                </button>
-                            )}
-                            {oauthConfig.google && (
-                                <button onClick={() => handleOAuth('google')} className="bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition">
-                                    <span className="font-bold text-red-500">G</span> Register with Google
-                                </button>
-                            )}
-                            {oauthConfig.microsoft && (
-                                <button onClick={() => handleOAuth('microsoft')} className="bg-[#00a4ef] text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition">
-                                    <span className="font-bold">MS</span> Register with Microsoft
-                                </button>
-                            )}
-                        </div>
-
-                        {allowPassword && (
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-gray-500">Or register with email</span>
-                                </div>
-                            </div>
+            {/* OAuth Section */}
+            {(oauthConfig.github || oauthConfig.google || oauthConfig.microsoft) && (
+                <div className="mb-8">
+                    <div className="flex flex-col gap-3">
+                        {oauthConfig.github && (
+                            <button onClick={() => handleOAuth('github')} className="bg-[#24292e] text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-200 dark:shadow-none">
+                                <Github size={20} /> Register with GitHub
+                            </button>
+                        )}
+                        {oauthConfig.google && (
+                            <button onClick={() => handleOAuth('google')} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+                                <span className="font-bold text-red-500">G</span> Register with Google
+                            </button>
+                        )}
+                        {oauthConfig.microsoft && (
+                            <button onClick={() => handleOAuth('microsoft')} className="bg-[#00a4ef] text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-blue-100 dark:shadow-none">
+                                <span className="font-bold">MS</span> Register with Microsoft
+                            </button>
                         )}
                     </div>
-                )}
 
-                {!allowPassword && (
-                    <p className="text-center text-gray-500 mb-6 italic">
-                        Password registration is disabled. Please use one of the providers above.
-                    </p>
-                )}
+                    {allowPassword && (
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase tracking-wide font-bold">
+                                <span className="px-3 bg-white/0 text-gray-400 dark:text-gray-500 backdrop-blur-sm">Or with email</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
-                {allowPassword && (
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('label.realname')}</label>
-                            <input className="w-full p-3 border rounded-lg" placeholder="Max" value={realName} onChange={e => setRealName(e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('label.email')}</label>
-                            <input className="w-full p-3 border rounded-lg" placeholder="max@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('label.password')}</label>
-                            <input className="w-full p-3 border rounded-lg" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-                        </div>
+            {!allowPassword && (
+                <p className="text-center text-gray-500 mb-6 italic text-sm">
+                    Password registration is disabled. Please use one of the providers above.
+                </p>
+            )}
 
-                        <div className="pt-4">
-                            <h3 className="font-bold text-gray-700 mb-2">{t('header.personality')}</h3>
-                            {questions.map(q => (
-                                <div key={q.id} className="mb-3 bg-gray-50 p-3 rounded">
-                                    <p className="text-sm mb-2">{q.text}</p>
-                                    <input
-                                        type="range"
-                                        min="1"
-                                        max="5"
-                                        value={answers[q.id] || 3}
-                                        className="w-full accent-pink-600 cursor-pointer"
-                                        onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: parseInt(e.target.value) }))}
-                                    />
-                                    <div className="flex justify-between text-xs text-gray-400">
-                                        <span>{t('scale.no', 'No')}</span><span>{t('scale.yes', 'Yes')}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <button onClick={onRegister} className="w-full mt-6 bg-pink-600 text-white py-4 rounded-lg font-bold hover:bg-pink-700 transition shadow-lg">
-                            {t('btn.register_now')}
-                        </button>
+            {allowPassword && (
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">{t('label.realname')}</label>
+                        <input className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            placeholder="Max" value={realName} onChange={e => setRealName(e.target.value)} />
                     </div>
-                )}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">{t('label.email')}</label>
+                        <input className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            placeholder="max@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">{t('label.password')}</label>
+                        <input className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            type="password" value={password} onChange={e => setPassword(e.target.value)} />
+                    </div>
+
+                    <div className="pt-6">
+                        <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-4 ml-1">{t('header.personality')}</h3>
+                        {questions.map(q => (
+                            <div key={q.id} className="mb-4 bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-transparent dark:border-white/5">
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{q.text}</p>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="5"
+                                    value={answers[q.id] || 3}
+                                    className="w-full accent-pink-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none dark:bg-gray-700"
+                                    onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: parseInt(e.target.value) }))}
+                                />
+                                <div className="flex justify-between text-xs font-bold text-gray-400 mt-2 uppercase">
+                                    <span>{t('scale.no', 'No')}</span><span>{t('scale.yes', 'Yes')}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button onClick={onRegister} className="w-full mt-6 bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 active:scale-[0.98] transition-all shadow-xl shadow-pink-500/20">
+                        {t('btn.register_now')}
+                    </button>
+                </div>
+            )}
 
 
-                <button onClick={onBack} className="w-full mt-2 text-sm text-gray-500">
-                    {t('btn.cancel')}
-                </button>
-            </div>
+            <button onClick={onBack} className="w-full py-2 mt-4 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-medium transition-colors text-sm">
+                {t('btn.cancel')}
+            </button>
         </div>
     );
 };

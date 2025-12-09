@@ -63,6 +63,12 @@ class UserAdminUpdate(BaseModel):
     is_visible_in_matches: Optional[bool] = None
     two_factor_method: Optional[str] = None
 
+class UserCreateAdmin(BaseModel):
+    username: str
+    email: str
+    password: str
+    role: str = "user"
+
 class UserSettingsUpdate(BaseModel):
     notifications_enabled: Optional[bool] = None
     theme: Optional[str] = None

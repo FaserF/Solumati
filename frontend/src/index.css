@@ -22,6 +22,8 @@
   color-scheme: light dark;
 }
 
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     margin: 0;

@@ -39,7 +39,7 @@ docker-compose up --build
 ```
 
 This will start:
-*   **Backend:** http://localhost:8000
+*   **Backend:** http://localhost:7777
 *   **Frontend:** http://localhost:3000
 
 #### Local Development (Manual)
@@ -103,7 +103,7 @@ docker-compose up --build
 ```
 
 This will start:
-*   **Backend:** http://localhost:8000
+*   **Backend:** http://localhost:7777
 *   **Frontend:** http://localhost:3000
 
 #### Local Development (Manual)

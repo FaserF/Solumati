@@ -6,7 +6,7 @@ import os
 import asyncio
 
 # Local modules
-from database import engine, Base, get_db
+from database import engine, Base, get_db, SessionLocal
 import models, schemas
 from logging_config import logger
 from config import CURRENT_VERSION, TEST_MODE
@@ -52,14 +52,29 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def startup_event():
     logger.info("Starting up Solumati Backend...")
     try:
-        db = next(get_db())
+        try:
+            db = next(get_db())
 
-        # 1. Check Schema Migrations
-        check_schema(db)
+            # 1. Check Schema Migrations
+            check_schema(db)
 
-        # 2. Ensure Core Data
-        ensure_guest_user(db)
-        ensure_admin_user(db)
+            # Check Maintenance Mode
+            from utils import get_setting
+            reg_config_dict = get_setting(db, "registration", {})
+            reg_config = schemas.RegistrationConfig(**reg_config_dict)
+            if reg_config.maintenance_mode:
+                logger.warning(f"!!! MAITENANCE MODE IS ENABLED !!!")
+                logger.warning(f"The system will block non-admin requests.")
+
+            # 2. Ensure Core Data
+            ensure_guest_user(db)
+            ensure_admin_user(db)
+
+            # 3. Test Data
+            if TEST_MODE:
+                generate_dummy_data(db)
+        except Exception as db_exc:
+            logger.error(f"Startup DB Error (Non-critical for server start): {db_exc}")
 
         # 3. Test Data
         if TEST_MODE:
@@ -75,28 +90,49 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from utils import get_setting
 
-@app.get("/public-config", response_model=schemas.PublicConfig)
-def get_public_config(db: Session = Depends(get_db)):
-    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
-    legal_config = schemas.LegalConfig(**get_setting(db, "legal", {}))
+@app.get("/public-config")
+def public_config():
+    # Defaults
+    reg_enabled = True
+    allow_pw = True
+    email_2fa = False
+    maint_mode = False
+    legal_conf = {}
+    providers = {}
 
-    # Determine which providers are configured
-    from config import GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID, MICROSOFT_CLIENT_ID
-    providers = schemas.OAuthProviders(
-        github=bool(GITHUB_CLIENT_ID),
-        google=bool(GOOGLE_CLIENT_ID),
-        microsoft=bool(MICROSOFT_CLIENT_ID)
-    )
+    try:
+        # Try to connect to DB
+        db = SessionLocal()
+        try:
+            reg_config_dict = get_setting(db, "registration", {})
+            reg_config = schemas.RegistrationConfig(**reg_config_dict)
+
+            reg_enabled = reg_config.enabled
+            allow_pw = reg_config.allow_password_registration
+            email_2fa = reg_config.email_2fa_enabled
+            maint_mode = reg_config.maintenance_mode
+
+            legal_conf = get_setting(db, "legal", {})
+
+            # OAuth providers
+            from routers.oauth import get_provider_sso
+            for p in ["github", "google", "microsoft"]:
+                if get_provider_sso(db, p):
+                    providers[p] = True
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Public Config DB Error (using defaults): {e}")
 
     return {
-        "registration_enabled": reg_config.enabled,
-        "email_2fa_enabled": reg_config.email_2fa_enabled,
+        "registration_enabled": reg_enabled,
+        "email_2fa_enabled": email_2fa,
         "test_mode": TEST_MODE,
-        "maintenance_mode": reg_config.maintenance_mode,
+        "maintenance_mode": maint_mode,
         "backend_version": CURRENT_VERSION,
-        "legal": legal_config,
+        "legal": legal_conf,
         "oauth_providers": providers,
-        "allow_password_registration": reg_config.allow_password_registration
+        "allow_password_registration": allow_pw
     }
 
 # --- Include Routers ---

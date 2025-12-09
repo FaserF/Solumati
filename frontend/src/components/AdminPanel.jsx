@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
@@ -258,6 +258,14 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
         return 'none';
     };
 
+    const validateOAuth = (provider, id) => {
+        if (!id) return true;
+        if (provider === 'google') return id.endsWith('.apps.googleusercontent.com');
+        if (provider === 'microsoft') return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (provider === 'github') return id.length > 5;
+        return true;
+    };
+
     const setEncryptionMode = (mode) => {
         setSettings(prev => ({
             ...prev,
@@ -353,6 +361,9 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                             <button onClick={openRolesModal} className="text-sm text-blue-600 hover:text-blue-800 flex gap-2 font-bold items-center border border-blue-200 px-3 py-1 rounded bg-blue-50">
                                 <Info size={14} /> {t('admin.btn.roles', 'Role Info')}
                             </button>
+                            <button onClick={() => setCreateUserModal(true)} className="text-sm text-green-600 hover:text-green-800 flex gap-2 font-bold items-center border border-green-200 px-3 py-1 rounded bg-green-50">
+                                <UserPlus size={14} /> New User
+                            </button>
                             <button onClick={fetchUsers} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium items-center">
                                 <RefreshCw size={14} /> {t('admin.btn.refresh')}
                             </button>
@@ -364,6 +375,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase w-16">{t('admin.table.id')}</th>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">{t('admin.table.user')}</th>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">{t('admin.table.role')}</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase hidden md:table-cell">Registered</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase hidden md:table-cell">Last Login</th>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Visibility</th>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">{t('admin.table.status')}</th>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase text-right">{t('admin.table.actions')}</th>
@@ -386,6 +399,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                                             u.role === 'guest' ? <span className="text-gray-500 font-bold flex items-center gap-1"><UserX size={12} /> Guest</span> :
                                                                 u.role === 'test' ? <span className="text-orange-500 font-bold flex items-center gap-1"><Activity size={12} /> Test</span> :
                                                                     <span className="text-gray-500">User</span>}
+                                                </td>
+                                                <td className="p-4 text-sm text-gray-500 hidden md:table-cell">
+                                                    {u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}
+                                                </td>
+                                                <td className="p-4 text-sm text-gray-500 hidden md:table-cell">
+                                                    {u.last_login ? new Date(u.last_login).toLocaleString() : '-'}
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     {u.is_visible_in_matches ?
@@ -582,80 +601,45 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 Configure Client ID and Secret for each provider. Secrets are masked (******).
                             </p>
 
-                            {/* GitHub */}
-                            <div className="mb-4 border-b pb-4">
-                                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><Github size={16} /> GitHub</h4>
-                                <div className="grid grid-cols-1 gap-2">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client ID</label>
-                                        <input
-                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
-                                            value={settings.oauth?.github?.client_id || ""}
-                                            onChange={e => updateSetting('oauth', 'github', { ...settings.oauth?.github, client_id: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
-                                        <input
-                                            type="password"
-                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
-                                            value={settings.oauth?.github?.client_secret || ""}
-                                            onChange={e => updateSetting('oauth', 'github', { ...settings.oauth?.github, client_secret: e.target.value })}
-                                            placeholder={settings.oauth?.github?.client_secret ? "******" : ""}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            {['github', 'google', 'microsoft'].map(provider => {
+                                const clientId = settings.oauth[provider]?.client_id || "";
+                                const isValid = validateOAuth(provider, clientId);
 
-                            {/* Google */}
-                            <div className="mb-4 border-b pb-4">
-                                <h4 className="font-bold text-gray-800 mb-2">Google</h4>
-                                <div className="grid grid-cols-1 gap-2">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client ID</label>
-                                        <input
-                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
-                                            value={settings.oauth?.google?.client_id || ""}
-                                            onChange={e => updateSetting('oauth', 'google', { ...settings.oauth?.google, client_id: e.target.value })}
-                                        />
+                                return (
+                                    <div key={provider} className="mb-4 border-b pb-4 last:border-b-0">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2 capitalize">
+                                            {provider === 'github' && <Github size={16} />}
+                                            {provider === 'google' && <Globe size={16} />}
+                                            {provider === 'microsoft' && <HardDrive size={16} />}
+                                            {provider}
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 uppercase mb-1 flex justify-between">
+                                                    Client ID
+                                                    {!isValid && <span className="text-red-500 flex items-center gap-1 text-[10px]"><AlertTriangle size={10} /> Invalid Format</span>}
+                                                </label>
+                                                <input
+                                                    className={`w-full p-2 border rounded bg-gray-50 text-gray-900 ${!isValid ? 'border-red-500 focus:ring-red-500' : 'focus:ring-pink-500'}`}
+                                                    value={clientId}
+                                                    onChange={e => updateSetting('oauth', provider, { ...settings.oauth[provider], client_id: e.target.value })}
+                                                    placeholder={`${provider} client id`}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
+                                                <input
+                                                    type="password"
+                                                    className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900 font-mono text-sm"
+                                                    value={settings.oauth[provider]?.client_secret || ""}
+                                                    onChange={e => updateSetting('oauth', provider, { ...settings.oauth[provider], client_secret: e.target.value })}
+                                                    placeholder={settings.oauth[provider]?.client_secret ? "******" : "Secret"}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
-                                        <input
-                                            type="password"
-                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
-                                            value={settings.oauth?.google?.client_secret || ""}
-                                            onChange={e => updateSetting('oauth', 'google', { ...settings.oauth?.google, client_secret: e.target.value })}
-                                            placeholder={settings.oauth?.google?.client_secret ? "******" : ""}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Microsoft */}
-                            <div>
-                                <h4 className="font-bold text-gray-800 mb-2">Microsoft</h4>
-                                <div className="grid grid-cols-1 gap-2">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client ID</label>
-                                        <input
-                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
-                                            value={settings.oauth?.microsoft?.client_id || ""}
-                                            onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth?.microsoft, client_id: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Secret</label>
-                                        <input
-                                            type="password"
-                                            className="w-full p-2 border rounded bg-gray-50 text-gray-900"
-                                            value={settings.oauth?.microsoft?.client_secret || ""}
-                                            onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth?.microsoft, client_secret: e.target.value })}
-                                            placeholder={settings.oauth?.microsoft?.client_secret ? "******" : ""}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                                );
+                            })}
                         </div>
 
                         {/* MAIL SETTINGS */}
@@ -811,13 +795,23 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 <div className="text-2xl font-bold">{diagnostics.current_version}</div>
                                 <div className="text-sm mt-1">
                                     {diagnostics.update_available ? (
-                                        <span className="text-red-500 font-bold flex items-center gap-1">
-                                            <AlertTriangle size={12} /> {t('admin.diag.update_available')} (v{diagnostics.latest_version})
-                                        </span>
+                                        <a
+                                            href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.latest_version.startsWith('v') ? '' : 'v'}${diagnostics.latest_version}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-red-500 font-bold flex items-center gap-1 hover:underline"
+                                        >
+                                            <AlertTriangle size={12} /> {t('admin.diag.update_available')} ({diagnostics.latest_version.startsWith('v') ? diagnostics.latest_version : `v${diagnostics.latest_version}`})
+                                        </a>
                                     ) : (
-                                        <span className="text-green-500 flex items-center gap-1">
+                                        <a
+                                            href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.current_version.startsWith('v') ? '' : 'v'}${diagnostics.current_version}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-green-500 flex items-center gap-1 hover:underline"
+                                        >
                                             <Check size={12} /> {t('admin.diag.up_to_date')}
-                                        </span>
+                                        </a>
                                     )}
                                 </div>
                             </div>
@@ -896,6 +890,39 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                     </div>
                 )
             }
+            {/* Create User Modal */}
+            {createUserModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <UserPlus size={20} className="text-green-600" /> New User
+                        </h3>
+                        <div className="space-y-3">
+                            <input className="w-full p-3 bg-gray-50 rounded-lg border focus:ring-2 focus:ring-green-500 text-gray-900"
+                                placeholder="Username" value={createUserForm.username}
+                                onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })} />
+                            <input className="w-full p-3 bg-gray-50 rounded-lg border focus:ring-2 focus:ring-green-500 text-gray-900"
+                                placeholder="Email" value={createUserForm.email}
+                                onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })} />
+                            <input className="w-full p-3 bg-gray-50 rounded-lg border focus:ring-2 focus:ring-green-500 text-gray-900"
+                                type="password" placeholder="Password" value={createUserForm.password}
+                                onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })} />
+
+                            <select className="w-full p-3 bg-gray-50 rounded-lg border text-gray-900"
+                                value={createUserForm.role}
+                                onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}>
+                                <option value="user">User</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                            <button onClick={handleCreateUser} className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">Create</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

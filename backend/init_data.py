@@ -113,8 +113,9 @@ def generate_dummy_data(db: Session):
     if not TEST_MODE:
         return
 
-    if db.query(models.User).count() > 5:
-        logger.info("TEST_MODE active but data exists, skipping dummy generation.")
+    user_count = db.query(models.User).count()
+    if user_count > 5:
+        logger.info(f"TEST_MODE active but data exists (Users: {user_count}), skipping dummy generation.")
         return
 
     logger.info("Generating dummy users for TEST_MODE...")

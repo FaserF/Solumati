@@ -1,6 +1,9 @@
 /backend/__pycache__
 *.log
 /backend/routers/__pycache__
-/backend/routers/__pycache__
-/backend/routers/__pycache__
+/backend/middleware/__pycache__
+/backend/utils/__pycache__
+/backend/services/__pycache__
+/backend/migrations/__pycache__
+/backend/*/__pycache__
 *.pyc

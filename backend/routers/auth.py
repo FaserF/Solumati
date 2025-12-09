@@ -79,6 +79,11 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
         else:
             raise HTTPException(403, "Account deactivated or banned.")
 
+    # Check Maintenance Mode (Admins allowed)
+    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+    if reg_config.maintenance_mode and user.role != 'admin':
+        raise HTTPException(503, "Maintenance Mode Active. Please try again later.")
+
     # Check 2FA
     if user.two_factor_method != 'none':
         # Trigger email code if method is email
@@ -216,24 +221,29 @@ def webauthn_register_options(user: models.User = Depends(get_current_user_from_
     parsed = urlparse(APP_BASE_URL)
     rp_id = parsed.hostname or "localhost"
 
-    options = generate_registration_options(
-        rp_id=rp_id,
-        rp_name="Solumati",
-        user_id=str(user.id).encode(),
-        user_name=user.email,
-        exclude_credentials=[
-            RegistrationCredential(
-                id=base64url_to_bytes(cred["id"]),
-                transports=cred.get("transports")
-            ) for cred in existing_creds
-        ],
-        authenticator_selection=AuthenticatorSelectionCriteria(
-            authenticator_attachment=AuthenticatorAttachment.CROSS_PLATFORM,
-            user_verification=UserVerificationRequirement.PREFERRED
+    try:
+        options = generate_registration_options(
+            rp_id=rp_id,
+            rp_name="Solumati",
+            user_id=str(user.id).encode(),
+            user_name=str(user.email), # Ensure string
+            exclude_credentials=[
+                RegistrationCredential(
+                    id=base64url_to_bytes(cred["id"]),
+                    transports=cred.get("transports")
+                ) for cred in existing_creds
+            ],
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                authenticator_attachment=AuthenticatorAttachment.CROSS_PLATFORM,
+                user_verification=UserVerificationRequirement.PREFERRED
+            )
         )
-    )
+    except Exception as e:
+        logger.error(f"WebAuthn generation failed: {e}", exc_info=True)
+        raise HTTPException(500, f"Internal Error generating passkey options: {str(e)}")
 
-    user.webauthn_challenge = options.challenge.decode('utf-8') if isinstance(options.challenge, bytes) else options.challenge
+    import base64
+    user.webauthn_challenge = base64.urlsafe_b64encode(options.challenge).decode('utf-8').rstrip('=') if isinstance(options.challenge, bytes) else options.challenge
     db.commit()
 
     return json.loads(options_to_json(options))
@@ -289,10 +299,21 @@ def webauthn_register_verify(req: schemas.WebAuthnRegistrationResponse, request:
 def webauthn_auth_options(body: dict, db: Session = Depends(get_db)):
     """Get auth options for a user (Login Step 1)."""
     user_id = body.get("user_id")
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    username = body.get("username")
+
+    user = None
+    if user_id:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+    elif username:
+        user = db.query(models.User).filter(or_(models.User.email == username, models.User.username == username)).first()
+
     if not user: raise HTTPException(404, "User not found")
 
     existing_creds = json.loads(user.webauthn_credentials or "[]")
+
+    # If no credentials, cannot do passkey login
+    if not existing_creds:
+        raise HTTPException(400, "No passkeys registered for this user.")
 
     from urllib.parse import urlparse
     parsed = urlparse(APP_BASE_URL)
@@ -306,10 +327,14 @@ def webauthn_auth_options(body: dict, db: Session = Depends(get_db)):
         ]
     )
 
-    user.webauthn_challenge = options.challenge.decode('utf-8') if isinstance(options.challenge, bytes) else options.challenge
+    import base64
+    user.webauthn_challenge = base64.urlsafe_b64encode(options.challenge).decode('utf-8').rstrip('=') if isinstance(options.challenge, bytes) else options.challenge
     db.commit()
 
-    return json.loads(options_to_json(options))
+    return {
+        "options": json.loads(options_to_json(options)),
+        "user_id": user.id
+    }
 
 @router.post("/auth/2fa/webauthn/verify")
 def webauthn_auth_verify(req: schemas.WebAuthnAuthResponse, db: Session = Depends(get_db)):

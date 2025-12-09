@@ -53,6 +53,27 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
     logger.info(f"Admin {current_admin.username} updated user {user_id}.")
     return {"status": "success"}
 
+@router.post("/users")
+def admin_create_user(new_user: schemas.UserCreateAdmin, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    if db.query(models.User).filter(models.User.email == new_user.email).first():
+        raise HTTPException(400, "Email already exists")
+    if db.query(models.User).filter(models.User.username == new_user.username).first():
+        raise HTTPException(400, "Username already exists")
+
+    user = models.User(
+        email=new_user.email,
+        username=new_user.username,
+        hashed_password=hash_password(new_user.password),
+        role=new_user.role,
+        is_active=True,
+        is_verified=True,
+        is_guest=False
+    )
+    db.add(user)
+    db.commit()
+    logger.info(f"Admin {current_admin.username} created user {user.username}")
+    return {"status": "success"}
+
 @router.put("/users/{user_id}/punish")
 def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -155,7 +176,7 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
             if response.status == 200:
                 data = json.loads(response.read().decode())
                 latest_version = data.get('tag_name', 'Unknown')
-                if latest_version != CURRENT_VERSION and latest_version != "Unknown":
+                if latest_version.lstrip('v') != CURRENT_VERSION.lstrip('v') and latest_version != "Unknown":
                     update_available = True
     except urllib.error.HTTPError as e:
         if e.code == 404:

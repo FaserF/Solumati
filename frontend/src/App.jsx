@@ -18,6 +18,7 @@ import Discover from './components/Discover';
 import Questionnaire from './components/Questionnaire';
 
 // Import Extracted Components
+import MaintenancePage from './components/MaintenancePage';
 import VerificationBanner from './components/common/VerificationBanner';
 import AuthLayout from './components/layout/AuthLayout';
 
@@ -27,6 +28,7 @@ function App() {
     const [user, setUser] = useState(null);
     const [matches, setMatches] = useState([]);
     const [isGuest, setIsGuest] = useState(false);
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
 
     // Global Config
     const [globalConfig, setGlobalConfig] = useState({
@@ -51,6 +53,7 @@ function App() {
     const [verificationStatus, setVerificationStatus] = useState(null);
     const [verificationMsg, setVerificationMsg] = useState("");
     const [resetToken, setResetToken] = useState(null);
+    const [maintenanceReason, setMaintenanceReason] = useState('startup');
 
     // --- I18n State ---
     const [i18n, setI18n] = useState({});
@@ -61,14 +64,50 @@ function App() {
 
     // --- Startup: Verification, I18n, Config ---
     useEffect(() => {
-        // Fetch Global Config
-        fetch(`${API_URL}/public-config`)
-            .then(res => res.json())
-            .then(data => {
-                setGlobalConfig(data);
-            })
-            .catch(e => console.error("Config fetch error", e));
+        const fetchConfig = () => {
+            fetch(`${API_URL}/public-config`)
+                .then(res => {
+                    if (res.status === 503) {
+                        setMaintenanceMode(true);
+                        setMaintenanceReason('startup');
+                        throw new Error("Maintenance Mode");
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    setGlobalConfig(data);
+                    if (data.maintenance_mode) {
+                        setMaintenanceMode(true);
+                        setMaintenanceReason('manual');
+                    } else if (maintenanceMode) {
+                        setMaintenanceMode(false);
+                    }
+                })
+                .catch(e => {
+                    console.error("Config fetch error", e);
+                    if (e.message === "Maintenance Mode" || e.name === "TypeError") {
+                        setMaintenanceMode(true);
+                        setMaintenanceReason('startup');
+                    }
+                });
+        };
 
+        // Initial Fetch
+        fetchConfig();
+
+        // Polling if in maintenance mode (every 5 seconds)
+        let interval;
+        if (maintenanceMode) {
+            interval = setInterval(fetchConfig, 5000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [maintenanceMode]);
+
+    // --- Translations & URL Handling (Run Once) ---
+    useEffect(() => {
         // Fetch Translations
         const browserLang = navigator.language;
         const shortLang = browserLang.split('-')[0] || 'en';
@@ -112,21 +151,20 @@ function App() {
                         setVerificationMsg(t('verify.success', 'Email successfully verified!'));
                         window.history.replaceState({}, document.title, window.location.pathname);
                     } else {
-                        const userData = {
-                            id: oauthId,
-                            username: oauthUser,
-                            role: oauthRole || 'user',
-                            is_guest: false, // OAuth users are not guests
-                            is_verified: true
-                        };
-                        console.log("OAuth Login Detected:", userData);
-                        finishLogin(userData);
-                        // Clear URL params
-                        window.history.replaceState({}, document.title, window.location.pathname);
+                        // Handle OAuth verify redirect
+                        finishLogin(data);
+                        // Note: finishLogin is defined below, this might be hoisting-dependent or cause issue if defined later.
+                        // Check definition order. finishLogin is const, so not hoisted.
+                        // Actually, finishLogin relies on state setters.
+                        // REFACTOR: We might need to move this logic or ensure finishLogin is available.
+                        // In the original code, `finishLogin` was defined AFTER this useEffect.
+                        // React components function body runs top-down. `useEffect` callback runs AFTER render.
+                        // So checking `finishLogin` inside `useEffect` is fine as long as `finishLogin` is defined in the component scope.
                     }
                 });
         }
     }, []);
+
 
     const questions = [
         { id: 0, text: t('q.0', "I prefer quiet evenings.") },
@@ -273,7 +311,7 @@ function App() {
 
     // View Categories
     const isLanding = view === 'landing';
-    const isLegal = view === 'legal';
+    const isLegal = ['legal', 'imprint', 'privacy'].includes(view);
     const isAuthCardView = ['login', 'register', 'forgot_pw', 'reset_pw', 'verify_2fa'].includes(view);
 
     // Import extracted components
@@ -282,59 +320,75 @@ function App() {
 
     return (
         <div className={`min-h-screen transition-colors duration-500 ${isAuthCardView ? 'animated-gradient overflow-hidden relative' : 'bg-gray-50 dark:bg-[#121212]'}`}>
-            <VerificationBanner
-                status={verificationStatus}
-                message={verificationMsg}
-                onClose={() => setVerificationStatus(null)}
-            />
+            {maintenanceMode && view !== 'login' && (!user || user.role !== 'admin') && (
+                <MaintenancePage
+                    type={maintenanceReason}
+                    onAdminLogin={() => setView('login')}
+                />
+            )}
 
-            <div className="w-full h-full min-h-screen">
-
-                {/* 1. Landing View (Full Screen) */}
-                {isLanding && (
-                    <Landing
-                        onLogin={() => setView('login')}
-                        onRegister={() => setView('register')}
-                        onGuest={handleGuest}
-                        onAdmin={() => setView('login')}
-                        onLegal={() => setView('legal')}
-                        t={t}
+            {(!maintenanceMode || view === 'login' || (user && user.role === 'admin')) && (
+                <div className="w-full h-full min-h-screen">
+                    <VerificationBanner
+                        status={verificationStatus}
+                        message={verificationMsg}
+                        onClose={() => setVerificationStatus(null)}
                     />
-                )}
 
-                {/* 2. Legal View (Document Style) */}
-                {isLegal && (
-                    <div className="container mx-auto max-w-4xl p-8 min-h-screen flex flex-col justify-center">
-                        <div className="glass-panel">
-                            <Legal onBack={() => setView('landing')} t={t} />
-                        </div>
+                    <div className="w-full h-full min-h-screen">
+
+                        {/* 1. Landing View (Full Screen) */}
+                        {isLanding && (
+                            <Landing
+                                onLogin={() => setView('login')}
+                                onRegister={() => setView('register')}
+                                onGuest={handleGuest}
+                                onAdmin={() => setView('login')}
+                                onLegal={() => setView('legal')}
+                                t={t}
+                            />
+                        )}
+
+                        {/* 2. Legal View (Document Style) */}
+                        {isLegal && (
+                            <div className="container mx-auto max-w-4xl p-8 min-h-screen flex flex-col justify-center">
+                                <div className="glass-panel">
+                                    <Legal
+                                        type={view === 'legal' ? 'imprint' : view}
+                                        config={globalConfig.legal}
+                                        onBack={() => user ? setView('dashboard') : setView('landing')}
+                                        t={t}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. Auth Views (Split Screen on Desktop) */}
+                        {isAuthCardView && (
+                            <AuthLayout t={t}>
+                                {view === 'login' && <Login email={emailOrUser} setEmail={setEmailOrUser} password={password} setPassword={setPassword} onLogin={handleLogin} onLoginSuccess={finishLogin} onBack={() => setView('landing')} onForgotPassword={() => setView('forgot_pw')} t={t} config={globalConfig} />}
+                                {view === 'register' && <Register realName={realName} setRealName={setRealName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} answers={answers} setAnswers={setAnswers} questions={questions} onRegister={handleRegister} onBack={() => setView('landing')} t={t} config={globalConfig} />}
+                                {view === 'forgot_pw' && <ForgotPassword onBack={() => setView('login')} t={t} />}
+                                {view === 'reset_pw' && <ResetPassword token={resetToken} onSuccess={() => setView('login')} t={t} />}
+                                {view === 'verify_2fa' && tempAuth && <TwoFactorAuth tempAuth={tempAuth} onVerified={finishLogin} onCancel={() => { setTempAuth(null); setView('login'); }} t={t} />}
+                            </AuthLayout>
+                        )}
+
+                        {/* 4. Dashboard / Main App Layout */}
+                        {!isLanding && !isLegal && !isAuthCardView && (
+                            <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
+                                {view === 'dashboard' && <Dashboard user={user} matches={matches} isGuest={isGuest} testMode={globalConfig.test_mode} onLogout={() => { setUser(null); setView('landing'); }} onRegisterClick={() => setView('register')} onAdminClick={() => setView('adminPanel')} onProfileClick={() => setView('profile')} onSwipeClick={() => setView('swipe')} onQuestionnaireClick={() => setView('questionnaire')} onImprintClick={() => setView('imprint')} onPrivacyClick={() => setView('privacy')} t={t} />}
+                                {view === 'profile' && user && <UserProfile user={user} onBack={() => setView('dashboard')} onOpenSettings={() => setView('settings')} t={t} />}
+                                {view === 'swipe' && user && <Discover user={user} onBack={() => setView('dashboard')} t={t} />}
+                                {view === 'questionnaire' && user && <Questionnaire user={user} onComplete={() => { setView('dashboard'); alert("Profile updated!"); }} t={t} />}
+                                {view === 'settings' && user && <AccountSettings user={user} globalConfig={globalConfig} onBack={() => setView('profile')} onLogout={() => { setUser(null); setView('landing'); }} onResetPassword={() => { setUser(null); setView('forgot_pw'); }} t={t} />}
+                                {view === 'adminPanel' && <AdminPanel user={user} testMode={globalConfig.test_mode} onLogout={() => { setUser(null); setView('landing'); }} onBack={() => setView('dashboard')} t={t} />}
+                            </div>
+                        )}
+
                     </div>
-                )}
-
-                {/* 3. Auth Views (Split Screen on Desktop) */}
-                {isAuthCardView && (
-                    <AuthLayout t={t}>
-                        {view === 'login' && <Login email={emailOrUser} setEmail={setEmailOrUser} password={password} setPassword={setPassword} onLogin={handleLogin} onBack={() => setView('landing')} onForgotPassword={() => setView('forgot_pw')} t={t} config={globalConfig} />}
-                        {view === 'register' && <Register realName={realName} setRealName={setRealName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} answers={answers} setAnswers={setAnswers} questions={questions} onRegister={handleRegister} onBack={() => setView('landing')} t={t} config={globalConfig} />}
-                        {view === 'forgot_pw' && <ForgotPassword onBack={() => setView('login')} t={t} />}
-                        {view === 'reset_pw' && <ResetPassword token={resetToken} onSuccess={() => setView('login')} t={t} />}
-                        {view === 'verify_2fa' && tempAuth && <TwoFactorAuth tempAuth={tempAuth} onVerified={finishLogin} onCancel={() => { setTempAuth(null); setView('login'); }} t={t} />}
-                    </AuthLayout>
-                )}
-
-                {/* 4. Dashboard / Main App Layout */}
-                {!isLanding && !isLegal && !isAuthCardView && (
-                    <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
-                        {view === 'dashboard' && <Dashboard user={user} matches={matches} isGuest={isGuest} testMode={globalConfig.test_mode} onLogout={() => { setUser(null); setView('landing'); }} onRegisterClick={() => setView('register')} onAdminClick={() => setView('adminPanel')} onProfileClick={() => setView('profile')} onSwipeClick={() => setView('swipe')} onQuestionnaireClick={() => setView('questionnaire')} onImprintClick={() => setView('imprint')} onPrivacyClick={() => setView('privacy')} t={t} />}
-                        {view === 'profile' && user && <UserProfile user={user} onBack={() => setView('dashboard')} onOpenSettings={() => setView('settings')} t={t} />}
-                        {view === 'swipe' && user && <Discover user={user} onBack={() => setView('dashboard')} t={t} />}
-                        {view === 'questionnaire' && user && <Questionnaire user={user} onComplete={() => { setView('dashboard'); alert("Profile updated!"); }} t={t} />}
-                        {view === 'settings' && user && <AccountSettings user={user} globalConfig={globalConfig} onBack={() => setView('profile')} onLogout={() => { setUser(null); setView('landing'); }} onResetPassword={() => { setUser(null); setView('forgot_pw'); }} t={t} />}
-                        {view === 'adminPanel' && <AdminPanel user={user} testMode={globalConfig.test_mode} onLogout={() => { setUser(null); setView('landing'); }} onBack={() => setView('dashboard')} t={t} />}
-                    </div>
-                )}
-
-            </div>
+                </div>
+            )}
         </div>
     );
 }

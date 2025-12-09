@@ -7,7 +7,7 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => (
 
         <div className="z-10 text-center max-w-3xl flex flex-col items-center flex-grow justify-center">
             <div className="mb-6 w-32 h-32 md:w-48 md:h-48 relative animate-pulse">
-                <img src="/logo/android-chrome-512x512.png" alt="Solumati Logo" className="w-full h-full drop-shadow-2xl" />
+                <img src="/logo/Solumati.png" alt="Solumati Logo" className="w-full h-full object-contain drop-shadow-2xl" />
             </div>
 
             <h1 className="text-6xl md:text-8xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
