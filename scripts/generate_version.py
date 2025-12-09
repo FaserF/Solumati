@@ -11,8 +11,8 @@ def get_calver():
 def bump_version(current_version, release_type="stable"):
     # Desired Format:
     # Stable: YYYY.MM.N (e.g., 2025.12.1)
-    # Beta:   YYYY.MM.N.bM (e.g., 2025.12.1.b1)
-    # Nightly: YYYY.MM.N.nM (e.g., 2025.12.1.n1)
+    # Beta:   YYYY.MM.N-bM (e.g., 2025.12.1-b1)
+    # Nightly: YYYY.MM.N-nM (e.g., 2025.12.1-n1)
 
     calver = get_calver()
 
@@ -59,31 +59,31 @@ def bump_version(current_version, release_type="stable"):
                 if has_suffix:
                     if current_suffix_type == target_suffix_char:
                         # Same suffix type, bump suffix number
-                        # 2025.12.1.b1 (beta) -> 2025.12.1.b2
-                        return f"{calver}.{current_n}.{target_suffix_char}{current_suffix_num + 1}"
+                        # 2025.12.1-b1 (beta) -> 2025.12.1-b2
+                        return f"{calver}.{current_n}-{target_suffix_char}{current_suffix_num + 1}"
                     else:
                         # Different suffix type.
-                        # e.g. 2025.12.1.n5 (nightly) -> beta?
+                        # e.g. 2025.12.1-n5 (nightly) -> beta?
                         # Let's restart suffix at 1, keep N.
-                        return f"{calver}.{current_n}.{target_suffix_char}1"
+                        return f"{calver}.{current_n}-{target_suffix_char}1"
                 else:
                     # Stable -> Prerelease
-                    # 2025.12.1 -> 2025.12.2.b1 (Bump N, start suffix)
-                    return f"{calver}.{current_n + 1}.{target_suffix_char}1"
+                    # 2025.12.1 -> 2025.12.2-b1 (Bump N, start suffix)
+                    return f"{calver}.{current_n + 1}-{target_suffix_char}1"
         else:
             # New Month
             if release_type == "stable":
                 return f"{calver}.1"
             else:
                 target_suffix_char = 'b' if release_type == 'beta' else 'n'
-                return f"{calver}.1.{target_suffix_char}1"
+                return f"{calver}.1-{target_suffix_char}1"
     else:
         # Fallback for unrecognizable version
         if release_type == "stable":
             return f"{calver}.1"
         else:
             target_suffix_char = 'b' if release_type == 'beta' else 'n'
-            return f"{calver}.1.{target_suffix_char}1"
+            return f"{calver}.1-{target_suffix_char}1"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
