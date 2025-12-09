@@ -46,6 +46,16 @@ const Register = ({
         window.location.href = `${API_URL}/auth/oauth/${provider}/login`;
     };
 
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    const handleRegister = () => {
+        if (password !== confirmPassword) {
+            alert(t('alert.pw_mismatch', "Passwords do not match!"));
+            return;
+        }
+        onRegister();
+    };
+
     if (loadingConfig) {
         return (
             <div className="flex items-center justify-center p-12">
@@ -135,28 +145,17 @@ const Register = ({
                         <input className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
                             type="password" value={password} onChange={e => setPassword(e.target.value)} />
                     </div>
-
-                    <div className="pt-6">
-                        <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-4 ml-1">{t('header.personality')}</h3>
-                        {questions.map(q => (
-                            <div key={q.id} className="mb-4 bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-transparent dark:border-white/5">
-                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{q.text}</p>
-                                <input
-                                    type="range"
-                                    min="1"
-                                    max="5"
-                                    value={answers[q.id] || 3}
-                                    className="w-full accent-pink-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none dark:bg-gray-700"
-                                    onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: parseInt(e.target.value) }))}
-                                />
-                                <div className="flex justify-between text-xs font-bold text-gray-400 mt-2 uppercase">
-                                    <span>{t('scale.no', 'No')}</span><span>{t('scale.yes', 'Yes')}</span>
-                                </div>
-                            </div>
-                        ))}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">{t('settings.confirm_pw', 'Confirm Password')}</label>
+                        <input className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                     </div>
 
-                    <button onClick={onRegister} className="w-full mt-6 bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 active:scale-[0.98] transition-all shadow-xl shadow-pink-500/20">
+                    <div className="pt-2">
+                        {/* Removed Personality Check as per request */}
+                    </div>
+
+                    <button onClick={handleRegister} className="w-full mt-6 bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 active:scale-[0.98] transition-all shadow-xl shadow-pink-500/20">
                         {t('btn.register_now')}
                     </button>
                 </div>

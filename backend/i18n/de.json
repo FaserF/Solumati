@@ -11,7 +11,14 @@
     "landing.opensource": "Kostenlos & Open Source",
     "landing.admin": "Admin",
     "landing.legal": "Rechtliches",
-    "login.title": "Willkommen zurück",
+    "login.title": "Willkommen zurück!",
+    "login.subtitle": "Bitte logge dich ein, um fortzufahren.",
+    "login.btn_github": "Anmelden mit GitHub",
+    "login.btn_google": "Anmelden mit Google",
+    "login.btn_microsoft": "Anmelden mit Microsoft",
+    "login.or_email": "oder mit E-Mail",
+    "login.forgot_pw": "Passwort vergessen?",
+    "btn.login_passkey": "Mit Passkey anmelden",
     "label.email": "E-Mail",
     "label.email_user": "E-Mail oder Benutzername",
     "label.password": "Passwort",
@@ -148,7 +155,17 @@
     "settings.change_pw": "Passwort ändern",
     "settings.curr_pw": "Aktuelles Passwort (zur Bestätigung)",
     "settings.new_pw": "Neues Passwort",
-    "settings.btn_reset_pw": "Passwort zurücksetzen (Logout)",
+    "settings.2fa_title": "Zwei-Faktor-Authentifizierung (2FA)",
+    "settings.btn_setup_totp": "TOTP einrichten (App)",
+    "settings.btn_setup_email": "Email 2FA einrichten",
+    "settings.btn_setup_passkey": "Passkey registrieren",
+    "settings.btn_disable_2fa": "2FA deaktivieren",
+    "settings.confirm_pw": "Neues Passwort bestätigen",
+    "settings.scan_qr": "QR-Code scannen",
+    "settings.secret": "Secret:",
+    "settings.guest_readonly": "Gast-Accounts sind schreibgeschützt.",
+    "profile.intent_label": "SUCHSTATUS",
+    "profile.intent_disabled": "Ändern des Suchstatus momentan deaktiviert.",
     "settings.delete_acc": "Account unwiderruflich löschen",
     "settings.delete_confirm": "Bist du sicher? Alle Daten gehen verloren.",
     "settings.success": "Erfolgreich aktualisiert.",
@@ -186,5 +203,451 @@
     "quest.review": "Überprüfen",
     "quest.finish": "Fertig",
     "quest.next": "Weiter",
-    "quest.saved": "Profil aktualisiert! Jetzt bist du bereit für Matches."
+    "quest.saved": "Profil aktualisiert! Jetzt bist du bereit für Matches.",
+    "dashboard.subtitle": "Leute, die zu dir passen",
+    "dashboard.discover": "Entdecken",
+    "dashboard.complete_profile": "Vervollständige dein Profil",
+    "dashboard.complete_desc": "Beantworte ein paar Fragen, damit unsere KI dein perfektes Match findet. Bessere Daten bedeuten bessere Verbindungen.",
+    "dashboard.start_questionnaire": "Fragebogen starten",
+    "dashboard.try_discover": "Probiere den Entdecken-Modus, um Leute zu finden!",
+    "quest.intro": "Erzähl uns etwas über dich",
+    "settings.ghost_mode": "Ghost Mode",
+    "settings.ghost_mode_label": "Profil verbergen",
+    "settings.ghost_mode_desc": "Du bist für andere nicht sichtbar und kannst keine Matches sehen.",
+    "questions": {
+        "1": {
+            "text": "Wie wichtig ist Religion oder Spiritualität in deinem Leben?",
+            "options": [
+                "Nicht wichtig",
+                "Etwas wichtig",
+                "Sehr wichtig",
+                "Essentiell"
+            ]
+        },
+        "2": {
+            "text": "Wie stehst du zu politischen Diskussionen?",
+            "options": [
+                "Ich vermeide sie",
+                "Bin offen dafür",
+                "Genieße sie",
+                "Nutze sie zum Aussortieren"
+            ]
+        },
+        "3": {
+            "text": "Möchtest du Kinder?",
+            "options": [
+                "Nein",
+                "Vielleicht",
+                "Ja",
+                "Habe bereits welche"
+            ]
+        },
+        "4": {
+            "text": "Wie ehrgeizig bist du im Beruf?",
+            "options": [
+                "Keine Priorität",
+                "Ausgewogen",
+                "Sehr ehrgeizig",
+                "Workaholic"
+            ]
+        },
+        "5": {
+            "text": "Sind dir Erlebnisse oder Besitz wichtiger?",
+            "options": [
+                "Besitz",
+                "Ausgewogen",
+                "Erlebnisse"
+            ]
+        },
+        "6": {
+            "text": "Wie definierst du Erfolg?",
+            "options": [
+                "Reichtum",
+                "Glück",
+                "Einfluss",
+                "Familie"
+            ]
+        },
+        "7": {
+            "text": "Engagierst du dich sozial?",
+            "options": [
+                "Nein",
+                "Gelegentlich",
+                "Aktiv"
+            ]
+        },
+        "8": {
+            "text": "Wie wichtig ist dir, dass die Familie deinen Partner mag?",
+            "options": [
+                "Unwichtig",
+                "Schön wäre es",
+                "Sehr wichtig"
+            ]
+        },
+        "9": {
+            "text": "Glaubst du an Schicksal?",
+            "options": [
+                "Nein",
+                "Vielleicht",
+                "Ja"
+            ]
+        },
+        "10": {
+            "text": "Wie genau nimmst du es mit Regeln?",
+            "options": [
+                "Rebell",
+                "Flexibel",
+                "Regeltreu"
+            ]
+        },
+        "11": {
+            "text": "Wie gehst du mit Konflikten um?",
+            "options": [
+                "Vermeiden",
+                "Kompromiss",
+                "Den Streit gewinnen",
+                "Ruhig diskutieren"
+            ]
+        },
+        "12": {
+            "text": "Introvertiert oder Extrovertiert?",
+            "options": [
+                "Introvertiert",
+                "Ambivertiert",
+                "Extrovertiert"
+            ]
+        },
+        "13": {
+            "text": "Spontaneität vs. Planung?",
+            "options": [
+                "100% Spontan",
+                "Eher Spontan",
+                "Ausgewogen",
+                "Eher Planer",
+                "100% Planer"
+            ]
+        },
+        "14": {
+            "text": "Wie zufrieden bist du aktuell mit deinem Leben?",
+            "options": [
+                "Gar nicht",
+                "Könnte besser sein",
+                "Zufrieden",
+                "Sehr glücklich"
+            ]
+        },
+        "15": {
+            "text": "Bist du eifersüchtig?",
+            "options": [
+                "Nie",
+                "Selten",
+                "Manchmal",
+                "Oft"
+            ]
+        },
+        "16": {
+            "text": "Vertraust du Menschen schnell?",
+            "options": [
+                "Nein",
+                "Braucht Zeit",
+                "Ja"
+            ]
+        },
+        "17": {
+            "text": "Wie tankst du Energie?",
+            "options": [
+                "Alleine",
+                "Mit Freunden",
+                "Aktive Hobbys"
+            ]
+        },
+        "18": {
+            "text": "Entscheidest du eher emotional oder logisch?",
+            "options": [
+                "Emotional",
+                "Ausgewogen",
+                "Logisch"
+            ]
+        },
+        "19": {
+            "text": "Stehst du gerne im Mittelpunkt?",
+            "options": [
+                "Hasse es",
+                "Egal",
+                "Liebe es"
+            ]
+        },
+        "20": {
+            "text": "Bist du risikofreudig?",
+            "options": [
+                "Vorsichtig",
+                "Kalkuliertes Risiko",
+                "Adrenalin-Junkie"
+            ]
+        },
+        "21": {
+            "text": "Rauchen?",
+            "options": [
+                "Nie",
+                "Gesellschaftlich",
+                "Regelmäßig",
+                "Versuche aufzuhören"
+            ]
+        },
+        "22": {
+            "text": "Alkoholkonsum?",
+            "options": [
+                "Nie",
+                "Gesellschaftlich",
+                "Oft"
+            ]
+        },
+        "23": {
+            "text": "Wie oft treibst du Sport?",
+            "options": [
+                "Nie",
+                "Manchmal",
+                "Oft",
+                "Täglich"
+            ]
+        },
+        "24": {
+            "text": "Frühaufsteher oder Nachteule?",
+            "options": [
+                "Frühaufsteher",
+                "Nachteule",
+                "Beides/Weder noch"
+            ]
+        },
+        "25": {
+            "text": "Hast du Haustiere?",
+            "options": [
+                "Nein",
+                "Katzen",
+                "Hunde",
+                "Andere",
+                "Möchte welche",
+                "Allergisch"
+            ]
+        },
+        "26": {
+            "text": "Ernährungsweise?",
+            "options": [
+                "Allesesser",
+                "Vegetarier",
+                "Vegan",
+                "Keto/Paleo",
+                "Andere"
+            ]
+        },
+        "27": {
+            "text": "Reist du gerne?",
+            "options": [
+                "Heimscheißer",
+                "Einmal im Jahr",
+                "Vielreisender",
+                "Digital Nomad"
+            ]
+        },
+        "28": {
+            "text": "Ordentlichkeit?",
+            "options": [
+                "Chaotisch",
+                "Durchschnitt",
+                "Putzteufel"
+            ]
+        },
+        "29": {
+            "text": "Handynutzung?",
+            "options": [
+                "Wenig",
+                "Durchschnitt",
+                "Sehr viel"
+            ]
+        },
+        "30": {
+            "text": "Ausgabeverhalten?",
+            "options": [
+                "Sparsam",
+                "Ausgewogen",
+                "Ausgeber"
+            ]
+        },
+        "31": {
+            "text": "Ideales Wochenende?",
+            "options": [
+                "Wandern/Draußen",
+                "Netflix & Chill",
+                "Feiern",
+                "Lesen/Entspannen",
+                "Produktiv arbeiten"
+            ]
+        },
+        "32": {
+            "text": "Wie sehr schätzt du Kunst und Kultur?",
+            "options": [
+                "Nicht wirklich",
+                "Ein bisschen",
+                "Sehr"
+            ]
+        },
+        "33": {
+            "text": "Kochst du gerne?",
+            "options": [
+                "Ungern",
+                "Zum Überleben",
+                "Gerne",
+                "Leidenschaftlich"
+            ]
+        },
+        "34": {
+            "text": "Musikgeschmack?",
+            "options": [
+                "Pop/Charts",
+                "Rock/Metal",
+                "HipHop/Rap",
+                "Elektronisch",
+                "Klassik/Jazz",
+                "Alles"
+            ]
+        },
+        "35": {
+            "text": "Zockst du Games?",
+            "options": [
+                "Nein",
+                "Nur Mobile",
+                "Casual",
+                "Hardcore"
+            ]
+        },
+        "36": {
+            "text": "Interessierst du dich für Sport?",
+            "options": [
+                "Nein",
+                "Nur Großevents",
+                "Regelmäßig",
+                "Großer Fan"
+            ]
+        },
+        "37": {
+            "text": "Natur oder Stadt?",
+            "options": [
+                "Natur",
+                "Mix",
+                "Stadt"
+            ]
+        },
+        "38": {
+            "text": "Liest du Bücher?",
+            "options": [
+                "Nie",
+                "Selten",
+                "Am liebsten täglich"
+            ]
+        },
+        "39": {
+            "text": "Lieblings-Filmgenre?",
+            "options": [
+                "Action",
+                "Romance",
+                "Comedy",
+                "SciFi/Fantasy",
+                "Horror",
+                "Doku"
+            ]
+        },
+        "40": {
+            "text": "Machst du Ehrenamt?",
+            "options": [
+                "Nein",
+                "Manchmal",
+                "Regelmäßig"
+            ]
+        },
+        "41": {
+            "text": "Sprache der Liebe?",
+            "options": [
+                "Lob & Anerkennung",
+                "Hilfsbereitschaft",
+                "Geschenke",
+                "Zweisamkeit",
+                "Zärtlichkeit"
+            ]
+        },
+        "42": {
+            "text": "Meinung zu offenen Beziehungen?",
+            "options": [
+                "Streng Monogam",
+                "Offen dafür",
+                "Polyamor"
+            ]
+        },
+        "43": {
+            "text": "Präferenz fürs erste Date?",
+            "options": [
+                "Kaffee",
+                "Abendessen",
+                "Aktivität/Spaziergang",
+                "Drinks"
+            ]
+        },
+        "44": {
+            "text": "Längste Beziehung?",
+            "options": [
+                "Keine",
+                "< 1 Jahr",
+                "1-3 Jahre",
+                "3-5 Jahre",
+                "5+ Jahre"
+            ]
+        },
+        "45": {
+            "text": "Wichtigkeit von Sex?",
+            "options": [
+                "Gering",
+                "Mittel",
+                "Hoch",
+                "Sehr hoch"
+            ]
+        },
+        "46": {
+            "text": "Zärtlichkeiten in der Öffentlichkeit?",
+            "options": [
+                "Ungern",
+                "Okay",
+                "Gerne"
+            ]
+        },
+        "47": {
+            "text": "Glaubst du an 'die/den Richtige/n'?",
+            "options": [
+                "Nein",
+                "Romantische Idee",
+                "Ja"
+            ]
+        },
+        "48": {
+            "text": "Wie oft Partner sehen?",
+            "options": [
+                "1x pro Woche",
+                "Mehrmals pro Woche",
+                "Täglich",
+                "Zusammenwohnen"
+            ]
+        },
+        "49": {
+            "text": "Dealbreaker: Rauchen?",
+            "options": [
+                "Nein",
+                "Ja"
+            ]
+        },
+        "50": {
+            "text": "Dealbreaker: Politik?",
+            "options": [
+                "Nein",
+                "Ja"
+            ]
+        }
+    }
 }

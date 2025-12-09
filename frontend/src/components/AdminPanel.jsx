@@ -162,6 +162,23 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
         handleAction(id, 'delete');
     };
 
+    const handleResetUser2FA = async (id) => {
+        if (!confirm("Are you sure you want to reset 2FA for this user? They will need to set it up again.")) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${id}/reset-2fa`, {
+                method: 'POST',
+                headers: authHeaders
+            });
+            if (res.ok) {
+                alert("2FA Reset Successfully.");
+                fetchUsers();
+            } else {
+                const err = await res.json();
+                alert("Error: " + (err.detail || "Unknown"));
+            }
+        } catch (e) { alert("Network Error"); }
+    };
+
     const openEditModal = (user) => {
         setEditForm({
             username: user.username,
@@ -834,23 +851,46 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 <div className="text-2xl font-bold">{diagnostics.current_version}</div>
                                 <div className="text-sm mt-1">
                                     {diagnostics.update_available ? (
-                                        <a
-                                            href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.latest_version.startsWith('v') ? '' : 'v'}${diagnostics.latest_version}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-red-500 font-bold flex items-center gap-1 hover:underline"
-                                        >
-                                            <AlertTriangle size={12} /> {t('admin.diag.update_available')} ({diagnostics.latest_version.startsWith('v') ? diagnostics.latest_version : `v${diagnostics.latest_version}`})
-                                        </a>
+                                        <div>
+                                            <a
+                                                href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.latest_version.startsWith('v') ? '' : 'v'}${diagnostics.latest_version}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-red-500 font-bold flex items-center gap-1 hover:underline"
+                                            >
+                                                <AlertTriangle size={12} /> {t('admin.diag.update_available')} ({diagnostics.latest_version.startsWith('v') ? diagnostics.latest_version : `v${diagnostics.latest_version}`})
+                                            </a>
+                                            {diagnostics.beta_update_available && diagnostics.latest_beta_version && (
+                                                <a
+                                                    href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.latest_beta_version.startsWith('v') ? '' : 'v'}${diagnostics.latest_beta_version}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="block text-xs text-orange-500 mt-1 hover:underline ml-4"
+                                                >
+                                                    (Beta: {diagnostics.latest_beta_version})
+                                                </a>
+                                            )}
+                                        </div>
                                     ) : (
-                                        <a
-                                            href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.current_version.startsWith('v') ? '' : 'v'}${diagnostics.current_version}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-green-500 flex items-center gap-1 hover:underline"
-                                        >
-                                            <Check size={12} /> {t('admin.diag.up_to_date')}
-                                        </a>
+                                        diagnostics.beta_update_available && diagnostics.latest_beta_version ? (
+                                            <a
+                                                href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.latest_beta_version.startsWith('v') ? '' : 'v'}${diagnostics.latest_beta_version}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-orange-500 font-bold flex items-center gap-1 hover:underline"
+                                            >
+                                                <AlertTriangle size={12} /> Beta Update: {diagnostics.latest_beta_version}
+                                            </a>
+                                        ) : (
+                                            <a
+                                                href={`https://github.com/FaserF/Solumati/releases/tag/${diagnostics.current_version.startsWith('v') ? '' : 'v'}${diagnostics.current_version}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-green-500 flex items-center gap-1 hover:underline"
+                                            >
+                                                <Check size={12} /> {t('admin.diag.up_to_date')}
+                                            </a>
+                                        )
                                     )}
                                 </div>
                             </div>
@@ -958,6 +998,39 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
                             <button onClick={handleCreateUser} className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">Create</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit User Modal */}
+            {editModal.show && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <Edit2 size={20} className="text-blue-600" /> Edit User
+                        </h3>
+                        <div className="space-y-3">
+                            <input className="w-full p-3 bg-gray-50 rounded-lg border focus:ring-2 focus:ring-blue-500 text-gray-900"
+                                placeholder="Username" value={editForm.username}
+                                onChange={e => setEditForm({ ...editForm, username: e.target.value })} />
+                            <input className="w-full p-3 bg-gray-50 rounded-lg border focus:ring-2 focus:ring-blue-500 text-gray-900"
+                                placeholder="Email" value={editForm.email}
+                                onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                            <input className="w-full p-3 bg-gray-50 rounded-lg border focus:ring-2 focus:ring-blue-500 text-gray-900"
+                                type="password" placeholder="New Password (Optional)" value={editForm.password}
+                                onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
+
+                            <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
+                                <span className="font-bold text-gray-700">Visible in Matches</span>
+                                <input type="checkbox" className="w-5 h-5 accent-blue-600"
+                                    checked={editForm.is_visible_in_matches}
+                                    onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })} />
+                            </label>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                            <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">Save</button>
                         </div>
                     </div>
                 </div>

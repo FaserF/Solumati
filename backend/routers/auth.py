@@ -30,6 +30,8 @@ from webauthn.helpers.structs import (
     RegistrationCredential,
     AuthenticationCredential,
     AuthenticatorAttachment,
+    PublicKeyCredentialDescriptor,
+
 )
 
 import logging
@@ -38,6 +40,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # --- 2FA Helpers ---
+
 def generate_email_2fa_code(user: models.User, db: Session):
     code = str(random.randint(100000, 999999))
     user.email_2fa_code = code
@@ -84,19 +87,64 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
     if reg_config.maintenance_mode and user.role != 'admin':
         raise HTTPException(503, "Maintenance Mode Active. Please try again later.")
 
-    # Check 2FA
-    if user.two_factor_method != 'none':
-        # Trigger email code if method is email
-        if user.two_factor_method == 'email':
-            generate_email_2fa_code(user, db)
+    # Determine Available 2FA Methods
+    available_methods = []
+    if user.totp_secret:
+        available_methods.append("totp")
 
-        return {
-            "require_2fa": True,
-            "user_id": user.id,
-            "method": user.two_factor_method
-        }
+    # Check for Passkeys
+    try:
+        creds = json.loads(user.webauthn_credentials or "[]")
+        if creds:
+            available_methods.append("passkey")
+    except: pass
 
-    # No 2FA:
+    # Check Email 2FA (Always available if config enabled, or if user specifically opted in?)
+    # Logic: If user opted in OR if they have no other method but global email 2fa is enforced?
+    # For now, let's treat it as: if they acted on it. But previous logic was user.two_factor_method == 'email'.
+    # Let's say if they selected 'email' as method, it's available.
+    # OR better: if global config allows, Email is always an option if they don't have others?
+    # User requirement: "Allow user to select method if multiple available".
+    # We'll stick to: if user.two_factor_method == 'email' OR user has it configured.
+    # Currently Schema only has one 'two_factor_method' string.
+    # BUT, we want to allow selection. So:
+    if user.two_factor_method == 'email':
+        available_methods.append("email")
+    elif reg_config.email_2fa_enabled and not available_methods:
+        # If no other methods, maybe we allow email?
+        # For now, let's strictly follow what they have "setup".
+        pass
+
+    # Profile Completion Check
+    # Considered complete if they have an image and a custom about_me (not default)
+    is_profile_complete = (user.image_url is not None) and (user.about_me != "Ich bin neu hier!")
+
+    # Check 2FA Requirement
+    if available_methods:
+        # If any method is available, we require 2FA authentication
+        # Unless user.two_factor_method is explicitly 'none' (disabled).
+        # But wait, if they have TOTP secret, they likely want 2FA.
+        # The 'two_factor_method' field acts as a 'primary' or 'active' toggle.
+        # If user.two_factor_method == 'none', we skip 2FA even if they have secrets?
+        # User said: "If user has TOTP, he should not be able to set it up again".
+        # Let's assume if two_factor_method is NOT 'none', 2FA is required.
+
+        if user.two_factor_method != 'none':
+             # If method is email, trigger code NOW (legacy support) or wait for selection?
+             # If multiple methods, frontend asks user. If only one, maybe frontend auto-selects.
+             # If Current Method is Email, we should probably generate code just in case.
+             if user.two_factor_method == 'email':
+                  generate_email_2fa_code(user, db)
+
+             return {
+                "require_2fa": True,
+                "user_id": user.id,
+                "method": user.two_factor_method, # Default/Preferred
+                "available_methods": available_methods,
+                "is_profile_complete": is_profile_complete
+            }
+
+    # No 2FA required
     # Trigger Notification (Background)
     ip = request.client.host if request.client else "Unknown"
     ua = request.headers.get("user-agent", "Unknown")
@@ -114,7 +162,8 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
         "username": user.username,
         "role": user.role,
         "is_guest": user.is_guest,
-        "is_admin": user.role == 'admin'
+        "is_admin": user.role == 'admin',
+        "is_profile_complete": is_profile_complete
     }
 
 @router.post("/auth/2fa/verify")
@@ -327,7 +376,7 @@ def webauthn_auth_options(body: dict, db: Session = Depends(get_db)):
         options = generate_authentication_options(
             rp_id=rp_id,
             allow_credentials=[
-                AuthenticationCredential(id=base64url_to_bytes(cred["id"]))
+                PublicKeyCredentialDescriptor(id=base64url_to_bytes(cred["id"]))
                 for cred in existing_creds
             ]
         )

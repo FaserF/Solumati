@@ -200,6 +200,10 @@ function App() {
 
         if (data.role === 'admin') {
             setView('adminPanel');
+        } else if (data.is_profile_complete === false) {
+            // Force Profile Completion
+            alert(t('alert.complete_profile', "Please complete your profile to continue."));
+            setView('profile');
         } else {
             fetchMatches(data.user_id);
             setView('dashboard');
@@ -379,9 +383,21 @@ function App() {
                         {!isLanding && !isLegal && !isAuthCardView && (
                             <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
                                 {view === 'dashboard' && <Dashboard user={user} matches={matches} isGuest={isGuest} testMode={globalConfig.test_mode} maintenanceMode={maintenanceMode} onLogout={() => { setUser(null); setView('landing'); }} onRegisterClick={() => setView('register')} onAdminClick={() => setView('adminPanel')} onProfileClick={() => setView('profile')} onSwipeClick={() => setView('swipe')} onQuestionnaireClick={() => setView('questionnaire')} onImprintClick={() => setView('imprint')} onPrivacyClick={() => setView('privacy')} t={t} />}
-                                {view === 'profile' && user && <UserProfile user={user} onBack={() => setView('dashboard')} onOpenSettings={() => setView('settings')} t={t} />}
+                                {view === 'profile' && user && <UserProfile user={user} initialMode={user.is_profile_complete === false ? 'edit' : 'view'} onBack={() => {
+                                    // If profile was incomplete, forcing back might be weird if they didn't save.
+                                    // But typically onBack goes to dashboard.
+                                    // If we want to be strict, we check again?
+                                    // user object here is the local state. It won't have updated is_profile_complete unless we update it.
+                                    // For now, let's just allow back to dashboard, but maybe they see emptiness.
+                                    // Actually, if they haven't saved, they are still "incomplete".
+                                    // Solving this perfectly requires UserProfile to update parent state on save.
+                                    // For now, redirect to dashboard is standard behavior.
+                                    setView('dashboard');
+                                    // Re-fetch matches in case image update changed something?
+                                    fetchMatches(user.user_id);
+                                }} onOpenSettings={() => setView('settings')} t={t} />}
                                 {view === 'swipe' && user && <Discover user={user} onBack={() => setView('dashboard')} t={t} />}
-                                {view === 'questionnaire' && user && <Questionnaire user={user} onComplete={() => { setView('dashboard'); alert("Profile updated!"); }} t={t} />}
+                                {view === 'questionnaire' && user && <Questionnaire user={user} onComplete={() => { setView('dashboard'); alert("Profile updated!"); }} onClose={() => setView('dashboard')} t={t} />}
                                 {view === 'settings' && user && <AccountSettings user={user} globalConfig={globalConfig} onBack={() => setView('profile')} onLogout={() => { setUser(null); setView('landing'); }} onResetPassword={() => { setUser(null); setView('forgot_pw'); }} t={t} />}
                                 {view === 'adminPanel' && <AdminPanel user={user} testMode={globalConfig.test_mode} maintenanceMode={maintenanceMode} onLogout={() => { setUser(null); setView('landing'); }} onBack={() => setView('dashboard')} t={t} />}
                             </div>

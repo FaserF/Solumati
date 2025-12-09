@@ -112,14 +112,14 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         <div className="absolute top-0 right-0 p-12 bg-white/10 rounded-full -mr-12 -mt-12 blur-3xl"></div>
                         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                             <div>
-                                <h2 className="text-2xl font-bold mb-2">Complete your profile</h2>
-                                <p className="text-indigo-100 max-w-lg">Answer a few questions to help our AI find your perfect match. Better data means better connections.</p>
+                                <h2 className="text-2xl font-bold mb-2">{t('dashboard.complete_profile', "Complete your profile")}</h2>
+                                <p className="text-indigo-100 max-w-lg">{t('dashboard.complete_desc', "Answer a few questions to help our AI find your perfect match. Better data means better connections.")}</p>
                             </div>
                             <button
                                 onClick={onQuestionnaireClick}
                                 className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-bold hover:bg-indigo-50 active:scale-95 transition-all shadow-lg"
                             >
-                                Start Questionnaire
+                                {t('dashboard.start_questionnaire', "Start Questionnaire")}
                             </button>
                         </div>
                     </div>
@@ -129,13 +129,13 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                 <div className="flex justify-between items-end">
                     <div>
                         <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-1">{t('dashboard.title', 'Your Matches')}</h2>
-                        <p className="text-gray-500 dark:text-gray-400">People who vibe with you</p>
+                        <p className="text-gray-500 dark:text-gray-400">{t('dashboard.subtitle', "People who vibe with you")}</p>
                     </div>
                     <button
                         onClick={onSwipeClick}
                         className="bg-black text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-black/20 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-2 group"
                     >
-                        <span>Discover</span>
+                        <span>{t('dashboard.discover', "Discover")}</span>
                         <span className="group-hover:translate-x-1 transition-transform">🚀</span>
                     </button>
                 </div>
@@ -155,7 +155,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                     <div className="text-center py-20 bg-white/40 dark:bg-black/20 rounded-3xl border border-white/50 backdrop-blur-sm">
                         <div className="text-6xl mb-4">😴</div>
                         <h3 className="text-xl font-bold text-gray-400 dark:text-gray-500">{t('dashboard.no_matches', 'No matches yet')}</h3>
-                        <p className="text-gray-400 mt-2">Try the Discover mode to find people!</p>
+                        <p className="text-gray-400 mt-2">{t('dashboard.try_discover', "Try the Discover mode to find people!")}</p>
                     </div>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">

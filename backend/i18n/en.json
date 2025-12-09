@@ -11,7 +11,14 @@
     "landing.opensource": "Free & Open Source",
     "landing.admin": "Admin",
     "landing.legal": "Legal",
-    "login.title": "Welcome back",
+    "login.title": "Welcome back!",
+    "login.subtitle": "Please login to continue.",
+    "login.btn_github": "Login with GitHub",
+    "login.btn_google": "Login with Google",
+    "login.btn_microsoft": "Login with Microsoft",
+    "login.or_email": "or with email",
+    "login.forgot_pw": "Forgot password?",
+    "btn.login_passkey": "Login with Passkey",
     "label.email": "Email",
     "label.email_user": "Email or Username",
     "label.password": "Password",
@@ -148,6 +155,17 @@
     "settings.change_mail": "Change Email Address",
     "settings.change_pw": "Change Password",
     "settings.curr_pw": "Current Password (confirm)",
+    "settings.2fa_title": "Two-Factor Authentication (2FA)",
+    "settings.btn_setup_totp": "Setup TOTP (App)",
+    "settings.btn_setup_email": "Setup Email 2FA",
+    "settings.btn_setup_passkey": "Register Passkey",
+    "settings.btn_disable_2fa": "Disable 2FA",
+    "settings.confirm_pw": "Confirm new password",
+    "settings.scan_qr": "Scan QR Code",
+    "settings.secret": "Secret:",
+    "settings.guest_readonly": "Guest accounts are read-only.",
+    "profile.intent_label": "INTENT",
+    "profile.intent_disabled": "Editing intent currently disabled.",
     "settings.new_pw": "New Password",
     "settings.delete_acc": "Permanently Delete Account",
     "settings.delete_confirm": "Are you sure? All data will be lost.",
@@ -186,5 +204,451 @@
     "quest.review": "Review",
     "quest.finish": "Finish",
     "quest.next": "Next",
-    "quest.saved": "Profile updated! Now you are ready to find your match."
+    "quest.saved": "Profile updated! Now you are ready to find your match.",
+    "dashboard.subtitle": "People who vibe with you",
+    "dashboard.discover": "Discover",
+    "dashboard.complete_profile": "Complete your profile",
+    "dashboard.complete_desc": "Answer a few questions to help our AI find your perfect match. Better data means better connections.",
+    "dashboard.start_questionnaire": "Start Questionnaire",
+    "dashboard.try_discover": "Try the Discover mode to find people!",
+    "quest.intro": "Tell us about yourself",
+    "settings.ghost_mode": "Ghost Mode",
+    "settings.ghost_mode_label": "Hide Profile",
+    "settings.ghost_mode_desc": "You will not be visible to others and cannot see matches.",
+    "questions": {
+        "1": {
+            "text": "How important is religion or spirituality in your life?",
+            "options": [
+                "Not important",
+                "Somewhat important",
+                "Very important",
+                "Essential"
+            ]
+        },
+        "2": {
+            "text": "What is your stance on political discussions?",
+            "options": [
+                "I avoid them",
+                "I'm open to them",
+                "I enjoy them",
+                "Use to screen people"
+            ]
+        },
+        "3": {
+            "text": "Do you want children in the future?",
+            "options": [
+                "No",
+                "Maybe",
+                "Yes",
+                "I already have them"
+            ]
+        },
+        "4": {
+            "text": "How ambitious are you regarding your career?",
+            "options": [
+                "Not a priority",
+                "Balanced",
+                "Very ambitious",
+                "Workaholic"
+            ]
+        },
+        "5": {
+            "text": "Do you prioritize experiences or possessions?",
+            "options": [
+                "Possessions",
+                "Balanced",
+                "Experiences"
+            ]
+        },
+        "6": {
+            "text": "How do you define success?",
+            "options": [
+                "Wealth",
+                "Happiness",
+                "Impact",
+                "Family"
+            ]
+        },
+        "7": {
+            "text": "Are you involved in social causes?",
+            "options": [
+                "No",
+                "Occasionally",
+                "Actively"
+            ]
+        },
+        "8": {
+            "text": "How important is family approval of your partner?",
+            "options": [
+                "Not important",
+                "Nice to have",
+                "Very important"
+            ]
+        },
+        "9": {
+            "text": "Do you believe in fate/destiny?",
+            "options": [
+                "No",
+                "Maybe",
+                "Yes"
+            ]
+        },
+        "10": {
+            "text": "How strictly do you follow rules?",
+            "options": [
+                "Rebel",
+                "Flexible",
+                "Strict follower"
+            ]
+        },
+        "11": {
+            "text": "How do you handle conflict?",
+            "options": [
+                "Avoid it",
+                "Compromise",
+                "Win the argument",
+                "Discuss calmly"
+            ]
+        },
+        "12": {
+            "text": "Introvert or Extrovert?",
+            "options": [
+                "Introvert",
+                "Ambivert",
+                "Extrovert"
+            ]
+        },
+        "13": {
+            "text": "Spontaneity vs. Planning?",
+            "options": [
+                "100% Spontaneous",
+                "Mostly Spontaneous",
+                "Balanced",
+                "Mostly Planner",
+                "100% Planner"
+            ]
+        },
+        "14": {
+            "text": "How satisfied are you with your life right now?",
+            "options": [
+                "Not at all",
+                "Could be better",
+                "Satisfied",
+                "Very happy"
+            ]
+        },
+        "15": {
+            "text": "Are you jealous?",
+            "options": [
+                "Never",
+                "Rarely",
+                "Sometimes",
+                "Often"
+            ]
+        },
+        "16": {
+            "text": "Do you trust people easily?",
+            "options": [
+                "No",
+                "Takes time",
+                "Yes"
+            ]
+        },
+        "17": {
+            "text": "How do you recharge?",
+            "options": [
+                "Alone time",
+                "With friends",
+                "Active hobbies"
+            ]
+        },
+        "18": {
+            "text": "Are you an emotional or logical thinker?",
+            "options": [
+                "Emotional",
+                "Balanced",
+                "Logical"
+            ]
+        },
+        "19": {
+            "text": "Do you enjoy being the center of attention?",
+            "options": [
+                "Hate it",
+                "Indifferent",
+                "Love it"
+            ]
+        },
+        "20": {
+            "text": "Are you a risk-taker?",
+            "options": [
+                "Risk-averse",
+                "Calculated risks",
+                "Adrenaline junkie"
+            ]
+        },
+        "21": {
+            "text": "Smoking?",
+            "options": [
+                "Never",
+                "Socially",
+                "Regularly",
+                "Trying to quit"
+            ]
+        },
+        "22": {
+            "text": "Drinking alcohol?",
+            "options": [
+                "Never",
+                "Socially",
+                "Often"
+            ]
+        },
+        "23": {
+            "text": "How often do you exercise?",
+            "options": [
+                "Never",
+                "Sometimes",
+                "Often",
+                "Daily"
+            ]
+        },
+        "24": {
+            "text": "Are you a morning person or a night owl?",
+            "options": [
+                "Morning",
+                "Night",
+                "Both/Neither"
+            ]
+        },
+        "25": {
+            "text": "Do you have pets?",
+            "options": [
+                "No",
+                "Cats",
+                "Dogs",
+                "Other",
+                "Want them",
+                "Allergic"
+            ]
+        },
+        "26": {
+            "text": "Dietary preference?",
+            "options": [
+                "Omnivore",
+                "Vegetarian",
+                "Vegan",
+                "Keto/Paleo",
+                "Other"
+            ]
+        },
+        "27": {
+            "text": "Do you enjoy traveling?",
+            "options": [
+                "Homebody",
+                "Once a year",
+                "Frequent traveler",
+                "Digital Nomad"
+            ]
+        },
+        "28": {
+            "text": "Cleanliness level?",
+            "options": [
+                "Messy",
+                "Average",
+                "Neat freak"
+            ]
+        },
+        "29": {
+            "text": "Screen time habits?",
+            "options": [
+                "Minimal",
+                "Average",
+                "High (Glued to phone)"
+            ]
+        },
+        "30": {
+            "text": "How do you spend money?",
+            "options": [
+                "Frugal",
+                "Balanced",
+                "Spender"
+            ]
+        },
+        "31": {
+            "text": "Ideal weekend?",
+            "options": [
+                "Hiking/Outdoors",
+                "Netflix & Chill",
+                "Partying",
+                "Reading/Relaxing",
+                "Productive work"
+            ]
+        },
+        "32": {
+            "text": "How much do you value art and culture?",
+            "options": [
+                "Not really",
+                "Somewhat",
+                "Very much"
+            ]
+        },
+        "33": {
+            "text": "Do you enjoy cooking?",
+            "options": [
+                "Hate it",
+                "Survival only",
+                "Enjoy it",
+                "Passionate"
+            ]
+        },
+        "34": {
+            "text": "Music preference?",
+            "options": [
+                "Pop/Charts",
+                "Rock/Metal",
+                "HipHop/Rap",
+                "Electronic",
+                "Classical/Jazz",
+                "Everything"
+            ]
+        },
+        "35": {
+            "text": "Do you like gaming?",
+            "options": [
+                "No",
+                "Mobile only",
+                "Casual",
+                "Hardcore"
+            ]
+        },
+        "36": {
+            "text": "Do you follow sports?",
+            "options": [
+                "No",
+                "Major events only",
+                "Regularly",
+                "Die-hard fan"
+            ]
+        },
+        "37": {
+            "text": "Nature vs. City?",
+            "options": [
+                "Nature",
+                "Mix",
+                "City"
+            ]
+        },
+        "38": {
+            "text": "Do you read books?",
+            "options": [
+                "Never",
+                "Rarely",
+                "Ideally everyday"
+            ]
+        },
+        "39": {
+            "text": "Preferred movie genre?",
+            "options": [
+                "Action",
+                "Romance",
+                "Comedy",
+                "SciFi/Fantasy",
+                "Horror",
+                "Documentary"
+            ]
+        },
+        "40": {
+            "text": "Do you volunteer?",
+            "options": [
+                "No",
+                "Sometimes",
+                "Regularly"
+            ]
+        },
+        "41": {
+            "text": "Love Language?",
+            "options": [
+                "Words of Affirmation",
+                "Acts of Service",
+                "Receiving Gifts",
+                "Quality Time",
+                "Physical Touch"
+            ]
+        },
+        "42": {
+            "text": "Opinion on open relationships?",
+            "options": [
+                "Strictly Monogamous",
+                "Open to it",
+                "Polyamorous"
+            ]
+        },
+        "43": {
+            "text": "First date preference?",
+            "options": [
+                "Coffee",
+                "Dinner",
+                "Activity/Walk",
+                "Drinks"
+            ]
+        },
+        "44": {
+            "text": "How long was your longest relationship?",
+            "options": [
+                "None",
+                "< 1 year",
+                "1-3 years",
+                "3-5 years",
+                "5+ years"
+            ]
+        },
+        "45": {
+            "text": "Importance of sex in a relationship?",
+            "options": [
+                "Low",
+                "Average",
+                "High",
+                "Very High"
+            ]
+        },
+        "46": {
+            "text": "Public displays of affection (PDA)?",
+            "options": [
+                "Dislike",
+                "Okay given context",
+                "Love it"
+            ]
+        },
+        "47": {
+            "text": "Do you believe in 'The One'?",
+            "options": [
+                "No",
+                "Romantic idea",
+                "Yes"
+            ]
+        },
+        "48": {
+            "text": "Ideally, how often do you see your partner?",
+            "options": [
+                "Once a week",
+                "Few times a week",
+                "Daily",
+                "Live together"
+            ]
+        },
+        "49": {
+            "text": "Dealbreaker: Smoking?",
+            "options": [
+                "No",
+                "Yes"
+            ]
+        },
+        "50": {
+            "text": "Dealbreaker: Politics?",
+            "options": [
+                "No",
+                "Yes"
+            ]
+        }
+    }
 }

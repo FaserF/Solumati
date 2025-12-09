@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from datetime import datetime
 import shutil
 import secrets
@@ -88,14 +89,38 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
         if not u: raise HTTPException(404, "User not found")
         curr_answ, curr_int, exc_id = u.answers, u.intent, user_id
 
-    res = []
+    # Prepare Query
     query = db.query(models.User).filter(
-        models.User.id != exc_id, models.User.is_active == True, models.User.id != 0,
-        models.User.is_visible_in_matches == True, models.User.role != 'admin'
+        models.User.id != exc_id,
+        models.User.is_active == True,
+        models.User.id != 0,
+        models.User.role != 'admin'
     )
+
+    # Filtering logic:
+    # Normal users: Must be visible.
+    # Guest (id=0): Can see visible users OR users with role 'test' (even if hidden).
+    if user_id == 0:
+        query = query.filter(
+            or_(
+                models.User.is_visible_in_matches == True,
+                models.User.role == 'test'
+            )
+        )
+    else:
+        query = query.filter(models.User.is_visible_in_matches == True)
+
+    res = []
     for other in query.all():
         compatibility = calculate_compatibility(curr_answ, other.answers, curr_int, other.intent)
         s = compatibility["score"]
+
+        # ESCAPE HATCH FOR GUEST + TEST USERS
+        # If I am guest (user_id=0) and target is 'test', force match
+        if user_id == 0 and other.role == 'test':
+            if s <= 0: s = 95 # Force high score
+            compatibility["details"].append("Guest Mode: Dummy Match")
+
         if s > 0:
             res.append(schemas.MatchResult(
                 user_id=other.id,
@@ -108,10 +133,36 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
     res.sort(key=lambda x: x.score, reverse=True)
     return res
 
-from questions_content import QUESTIONS
+from questions_content import QUESTIONS_SKELETON
+from i18n import get_translations
+
 @router.get("/questions")
-def get_questions():
-    return QUESTIONS
+def get_questions(lang: str = "en"):
+    # Load translations for the requested language
+    t = get_translations(lang)
+    questions_data = t.get("questions", {})
+
+    # Hydrate the skeleton
+    final_questions = []
+    for q_skel in QUESTIONS_SKELETON:
+        qid_str = str(q_skel["id"])
+        if qid_str in questions_data:
+            q_trans = questions_data[qid_str]
+            # Merge
+            final_questions.append({
+                **q_skel,
+                "text": q_trans.get("text", "MISSING TEXT"),
+                "options": q_trans.get("options", [])
+            })
+        else:
+             # Fallback if translation missing (should not happen if EN is complete)
+            final_questions.append({
+                **q_skel,
+                 "text": f"Question {qid_str}",
+                 "options": ["Yes", "No"] # Emergency fallback
+            })
+
+    return final_questions
 
 @router.get("/users/discover", response_model=List[schemas.UserDisplay])
 def discover_users(user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
@@ -181,6 +232,9 @@ def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, user:
 
     if update.password:
         user.hashed_password = hash_password(update.password)
+
+    if update.is_visible_in_matches is not None:
+        user.is_visible_in_matches = update.is_visible_in_matches
 
     db.commit()
     return {"status": "updated", "reverify_needed": not user.is_verified}

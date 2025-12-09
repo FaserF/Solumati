@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       type:
-        description: 'Release Type'
+        description: 'Release Type (Legacy/Auto)'
         required: true
         default: 'minor'
         type: choice
@@ -12,6 +12,11 @@ on:
         - major
         - minor
         - patch
+      prerelease:
+        description: 'Is Beta / Pre-release?'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -35,14 +40,20 @@ jobs:
     - name: Get Current Backend Version
       id: version
       run: |
-        # Ensure we have the script
-        current=$(grep 'BACKEND_VERSION' backend/config.py | cut -d '"' -f 2 || echo "2024.1.0-dev")
-        # Or read from a file if we store it there.
-        # For now, let's calculate based on tags or date.
-        # User wants Year.Month schema.
+        # Get current version from config or tag
+        # For robustness, we try to get the latest tag. If no tag, fallback to config.
+        # But user script relied on config parsing. Let's stick to that for argument "current".
+        current=$(grep 'BACKEND_VERSION' backend/config.py | cut -d '"' -f 2 || echo "2024.1.0")
 
-        # Using our script
-        new_version=$(python3 scripts/generate_version.py --current "0.0.0") # We rely on script to stick to YYYY.MM
+        # Flags
+        PRERELEASE_FLAG=""
+        if [ "${{ inputs.prerelease }}" == "true" ]; then
+          PRERELEASE_FLAG="--prerelease"
+        fi
+
+        new_version=$(python3 scripts/generate_version.py --current "$current" $PRERELEASE_FLAG)
+        echo "Calculated Version: $new_version"
+
         echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
         echo "version=$new_version" >> $GITHUB_OUTPUT
 
@@ -62,7 +73,7 @@ jobs:
         name: Release v${{ env.NEW_VERSION }}
         body_path: CHANGELOG.md
         draft: false
-        prerelease: false
+        prerelease: ${{ inputs.prerelease }}
 
   build-push-docker:
     needs: release

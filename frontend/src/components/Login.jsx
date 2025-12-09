@@ -57,10 +57,9 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
             <div className="text-center mb-8">
                 <img src="/logo/android-chrome-192x192.png" alt={APP_NAME} className="w-16 h-16 mx-auto mb-4 rounded-2xl shadow-lg" />
                 <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">{t('login.title')}</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">Welcome back! Please login to continue.</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">{t('login.subtitle')}</p>
             </div>
 
-            {/* OAuth Section */}
             {/* OAuth Section */}
             <div className="flex flex-col gap-3 mb-8">
                 {/* GitHub */}
@@ -72,7 +71,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                         : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
                         }`}
                 >
-                    <Github size={20} /> Login with GitHub
+                    <Github size={20} /> {t('login.btn_github', 'Login with GitHub')}
                 </button>
 
                 {/* Google */}
@@ -84,7 +83,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                         : "bg-gray-200 dark:bg-gray-800 border border-transparent text-gray-400 cursor-not-allowed opacity-60"
                         }`}
                 >
-                    <span className={`font-bold ${oauth.google ? "text-red-500" : "text-gray-400"}`}>G</span> Login with Google
+                    <span className={`font-bold ${oauth.google ? "text-red-500" : "text-gray-400"}`}>G</span> {t('login.btn_google', 'Login with Google')}
                 </button>
 
                 {/* Microsoft */}
@@ -96,7 +95,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                         : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
                         }`}
                 >
-                    <span className="font-bold">MS</span> Login with Microsoft
+                    <span className="font-bold">MS</span> {t('login.btn_microsoft', 'Login with Microsoft')}
                 </button>
 
                 <div className="relative my-2">
@@ -104,7 +103,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                         <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase tracking-wide font-bold">
-                        <span className="px-3 bg-white/0 text-gray-400 dark:text-gray-500 backdrop-blur-sm">Or with email</span>
+                        <span className="px-3 bg-white/0 text-gray-400 dark:text-gray-500 backdrop-blur-sm">{t('login.or_email', 'Or with email')}</span>
                     </div>
                 </div>
             </div>

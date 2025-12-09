@@ -22,6 +22,13 @@ export const FALLBACK = {
 
     // Login
     'login.title': 'Welcome back',
+    'login.subtitle': 'Welcome back! Please login to continue.',
+    'login.btn_github': 'Login with GitHub',
+    'login.btn_google': 'Login with Google',
+    'login.btn_microsoft': 'Login with Microsoft',
+    'login.or_email': 'Or with email',
+    'login.forgot_pw': 'Forgot Password?',
+    'btn.login_passkey': 'Login with Passkey',
     'label.email_user': 'Email or Username',
     'label.password': 'Password',
     'btn.login': 'Log in',
@@ -41,6 +48,27 @@ export const FALLBACK = {
     '2fa.method_email': 'Email Verification',
     '2fa.method_passkey': 'Passkey (WebAuthn)',
     '2fa.setup_totp_desc': 'Scan the QR code with your app (e.g. Google Authenticator) and enter the code below.',
+
+    // 2FA Recovery (New)
+    '2fa.trouble_logging_in': 'Trouble logging in?',
+    '2fa.recovery_title': 'Account Recovery',
+    '2fa.lost_device': 'Lost 2FA Device?',
+    '2fa.reset_via_email': 'Reset via Email',
+    '2fa.admin_emergency': 'Admin Emergency',
+    '2fa.server_reset': 'Server Reset',
+    '2fa.reset_title': 'Reset 2FA',
+    '2fa.reset_desc': 'Enter your password to receive a reset code via email.',
+    '2fa.enter_code_title': 'Enter Code',
+    '2fa.enter_code_desc': 'Enter the 6-digit code sent to your email.',
+    '2fa.emergency_title': 'Emergency Reset',
+    '2fa.emergency_desc': 'Admin: Enter password to flag account for reset on next reboot.',
+    '2fa.btn_send_code': 'Send Code',
+    '2fa.btn_reset': 'Reset 2FA',
+    '2fa.btn_flag_reset': 'Flag for Reset',
+    '2fa.status_sending': 'Sending...',
+    '2fa.status_verifying': 'Verifying...',
+    '2fa.status_processing': 'Processing...',
+    'btn.back_login': 'Back to Login',
 
     // Register
     'register.title': 'Create profile',

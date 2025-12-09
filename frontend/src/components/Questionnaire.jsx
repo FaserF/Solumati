@@ -12,7 +12,8 @@ const Questionnaire = ({ user, onComplete, onClose, t }) => {
 
     useEffect(() => {
         // Load questions
-        fetch(`${API_URL}/questions`)
+        const lang = navigator.language.split('-')[0] || 'en';
+        fetch(`${API_URL}/questions?lang=${lang}`)
             .then(res => res.json())
             .then(data => {
                 setQuestions(data);
@@ -88,7 +89,7 @@ const Questionnaire = ({ user, onComplete, onClose, t }) => {
                             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                                 {step < totalSteps ? `${t('quest.step', 'Step')} ${step + 1} / ${totalSteps}` : t('quest.review', "Review")}
                             </h2>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm">Tell us about yourself</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">{t('quest.intro', "Tell us about yourself")}</p>
                         </div>
                         <button
                             onClick={onClose}

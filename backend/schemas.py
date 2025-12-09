@@ -22,7 +22,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    answers: Dict[str, int]
+    answers: Optional[Dict[str, int]] = {}
 
 class UserLogin(BaseModel):
     login: str
@@ -179,6 +179,8 @@ class SystemDiagnostics(BaseModel):
     current_version: str
     latest_version: str
     update_available: bool
+    beta_update_available: Optional[bool] = False
+    latest_beta_version: Optional[str] = None
     internet_connected: bool
     disk_total_gb: float
     disk_free_gb: float
@@ -210,10 +212,12 @@ class TwoFactorLoginResponse(BaseModel):
     require_2fa: bool
     user_id: Optional[int] = None
     method: Optional[str] = None
+    available_methods: List[str] = []
     username: Optional[str] = None
     role: Optional[str] = None
     is_guest: Optional[bool] = None
     is_admin: Optional[bool] = None
+    is_profile_complete: Optional[bool] = None
     app_settings: Optional[str] = None
 
 # WebAuthn DTOs

@@ -182,31 +182,99 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
 def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     total, used, free = shutil.disk_usage(".")
 
-    # Try fetching latest version from Github
-    latest_version = "Unknown"
+    # Fetch Releases
+    latest_stable = "Unknown"
+    latest_beta = "Unknown"
     update_available = False
+    beta_update_available = False
+
+    current_ver_str = CURRENT_VERSION.lstrip('v')
+    is_current_beta = "beta" in current_ver_str or "-" in current_ver_str
+
     try:
-        url = "https://api.github.com/repos/FaserF/Solumati/releases/latest"
+        # Fetch list of releases (not just latest stable)
+        url = "https://api.github.com/repos/FaserF/Solumati/releases?per_page=10"
         req = urllib.request.Request(url, headers={'User-Agent': 'Solumati-Backend'})
         with urllib.request.urlopen(req) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode())
-                latest_version = data.get('tag_name', 'Unknown')
-                if latest_version.lstrip('v') != CURRENT_VERSION.lstrip('v') and latest_version != "Unknown":
-                    update_available = True
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            logger.info("Diagnostics: No latest release found on GitHub (404). This is normal for new repos.")
-        else:
-            logger.warning(f"Diagnostics: GitHub API error: {e}")
+
+                # Helper to parse version roughly for comparison [Year, Month, Patch, Beta]
+                def parse_ver(v_str):
+                    v = v_str.lstrip('v')
+                    parts = v.split('-')
+                    base = [int(x) for x in parts[0].split('.')]
+                    beta_num = 0
+                    is_beta = False
+                    if len(parts) > 1:
+                        is_beta = True
+                        if 'beta' in parts[1]:
+                            beta_num = int(parts[1].split('.')[-1])
+
+                    # Return tuple for comparison: (Year, Month, Patch, IsStable(0=beta, 1=stable), BetaNum)
+                    # We want Stable > Beta for same base.
+                    return (base[0], base[1], base[2], 0 if is_beta else 1, beta_num)
+
+                current_tuple = parse_ver(current_ver_str)
+
+                # Find latest
+                found_stable = None
+                found_beta = None
+
+                for rel in data:
+                    tag = rel.get('tag_name', 'v0.0.0')
+                    t_ver = parse_ver(tag)
+
+                    if rel.get('prerelease'):
+                        if not found_beta or t_ver > found_beta[1]: # Compare tuples
+                            found_beta = (tag, t_ver)
+                    else:
+                        if not found_stable or t_ver > found_stable[1]:
+                            found_stable = (tag, t_ver)
+
+                # Logic:
+                # 1. Update Stable
+                if found_stable:
+                    latest_stable = found_stable[0]
+                    # If found stable > current
+                    if found_stable[1] > current_tuple:
+                        update_available = True
+
+                # 2. Update Beta
+                if found_beta:
+                    latest_beta = found_beta[0]
+                    # If found beta > current
+                    if found_beta[1] > current_tuple:
+                        if is_current_beta:
+                            # If we are on beta, we treat newer beta as main update
+                            # UNLESS there is a stable that is even newer?
+                            # Usually if a stable exists > current beta, we prefer stable.
+                            if update_available:
+                                # Stable is available and newer than current.
+                                # Check if beta is even newer than that stable?
+                                if found_beta[1] > found_stable[1]:
+                                    beta_update_available = True
+                                else:
+                                    pass # Stable is the way to go
+                            else:
+                                update_available = True # Show beta as main update
+                                latest_stable = latest_beta # Hack: Display beta as "Latest Version" in frontend
+                        else:
+                            # Current is Stable.
+                            # Beta is available.
+                            if found_beta[1] > found_stable[1] if found_stable else True:
+                                beta_update_available = True
+
     except Exception as e:
-        logger.warning(f"Diagnostics: Could not fetch latest version: {e}")
+        logger.warning(f"Diagnostics: Could not fetch releases: {e}")
 
     return {
         "current_version": CURRENT_VERSION,
-        "latest_version": latest_version,
+        "latest_version": latest_stable, # Should contain the recommended update
+        "latest_beta_version": latest_beta, # Extra field (need to add to schema?)
         "update_available": update_available,
-        "internet_connected": True, # Simplified check
+        "beta_update_available": beta_update_available, # Extra field
+        "internet_connected": True,
         "disk_total_gb": round(total / (2**30), 2),
         "disk_free_gb": round(free / (2**30), 2),
         "disk_percent": round((used / total) * 100, 1),

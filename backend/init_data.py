@@ -1,6 +1,7 @@
 import logging
 import secrets
 import random
+import json
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -52,7 +53,8 @@ def ensure_guest_user(db: Session):
                 hashed_password=hash_password("NOPASSWORD"),
                 real_name="Gast", username="Gast", about_me="System Guest",
                 is_active=True, is_verified=True, is_guest=True, intent="casual",
-                answers=[3,3,3,3], created_at=datetime.utcnow(), role='guest',
+                answers=json.dumps({str(i): 1 for i in range(1, 51)}), # Default answers
+                created_at=datetime.utcnow(), role='guest',
                 is_visible_in_matches=False
             )
             db.add(guest)
@@ -86,7 +88,7 @@ def ensure_admin_user(db: Session):
                     real_name="Administrator", username="admin",
                     about_me="System Administrator",
                     is_active=True, is_verified=True, is_guest=False, role="admin",
-                    intent="admin", answers=[3,3,3,3], created_at=datetime.utcnow(),
+                    intent="admin", answers=json.dumps({}), created_at=datetime.utcnow(),
                     is_visible_in_matches=False
                 )
                 db.add(admin)
@@ -181,6 +183,18 @@ def generate_dummy_data(db: Session):
                 continue
 
             pw = secrets.token_urlsafe(10)
+
+            # Generate answers for all 50 questions
+            from questions_content import QUESTIONS_SKELETON
+            import random
+
+            dummy_answers = {}
+            for q in QUESTIONS_SKELETON:
+                # option_count is now in the skeleton
+                cnt = q.get("option_count", 3)
+                # Store random index 0 to cnt-1
+                dummy_answers[str(q["id"])] = random.randint(0, cnt - 1)
+
             dummy = models.User(
                 email=email,
                 hashed_password=hash_password(pw),
@@ -192,7 +206,7 @@ def generate_dummy_data(db: Session):
                 is_guest=False,
                 role="test",
                 intent=random.choice(intents),
-                answers=[random.randint(1, 4) for _ in range(4)],
+                answers=json.dumps(dummy_answers),
                 created_at=datetime.utcnow(),
                 is_visible_in_matches=True
             )
