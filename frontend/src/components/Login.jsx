@@ -1,7 +1,7 @@
 import React from 'react';
 import { Github, Mail, Unlock, Fingerprint } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
-import { API_URL } from '../config';
+import { API_URL, APP_NAME } from '../config';
 
 const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess, onBack, onForgotPassword, t, config }) => {
     // Fallback if config not yet loaded
@@ -55,7 +55,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
     return (
         <div className="w-full max-w-sm mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="text-center mb-8">
-                <img src="/logo/android-chrome-192x192.png" alt="Solumati" className="w-16 h-16 mx-auto mb-4 rounded-2xl shadow-lg" />
+                <img src="/logo/android-chrome-192x192.png" alt={APP_NAME} className="w-16 h-16 mx-auto mb-4 rounded-2xl shadow-lg" />
                 <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">{t('login.title')}</h2>
                 <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">Welcome back! Please login to continue.</p>
             </div>
@@ -68,8 +68,8 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                     disabled={!oauth.github}
                     onClick={() => handleOAuth('github')}
                     className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${oauth.github
-                            ? "bg-[#24292e] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-gray-200 dark:shadow-none"
-                            : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
+                        ? "bg-[#24292e] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-gray-200 dark:shadow-none"
+                        : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
                         }`}
                 >
                     <Github size={20} /> Login with GitHub
@@ -80,8 +80,8 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                     disabled={!oauth.google}
                     onClick={() => handleOAuth('google')}
                     className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${oauth.google
-                            ? "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm"
-                            : "bg-gray-200 dark:bg-gray-800 border border-transparent text-gray-400 cursor-not-allowed opacity-60"
+                        ? "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm"
+                        : "bg-gray-200 dark:bg-gray-800 border border-transparent text-gray-400 cursor-not-allowed opacity-60"
                         }`}
                 >
                     <span className={`font-bold ${oauth.google ? "text-red-500" : "text-gray-400"}`}>G</span> Login with Google
@@ -92,8 +92,8 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                     disabled={!oauth.microsoft}
                     onClick={() => handleOAuth('microsoft')}
                     className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${oauth.microsoft
-                            ? "bg-[#00a4ef] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-100 dark:shadow-none"
-                            : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
+                        ? "bg-[#00a4ef] text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-100 dark:shadow-none"
+                        : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
                         }`}
                 >
                     <span className="font-bold">MS</span> Login with Microsoft

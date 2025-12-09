@@ -9,8 +9,8 @@ import asyncio
 from database import engine, Base, get_db, SessionLocal
 import models, schemas
 from logging_config import logger
-from config import CURRENT_VERSION, TEST_MODE
-from init_data import check_schema, ensure_guest_user, ensure_admin_user, generate_dummy_data
+from config import CURRENT_VERSION, TEST_MODE, PROJECT_NAME
+from init_data import check_schema, ensure_guest_user, ensure_admin_user, generate_dummy_data, check_emergency_reset
 from tasks import periodic_cleanup_task
 
 # Routers
@@ -27,7 +27,7 @@ try:
 except Exception as e:
     logger.error(f"Error creating database tables: {e}")
 
-app = FastAPI(title="Solumati API", version=CURRENT_VERSION)
+app = FastAPI(title=f"{PROJECT_NAME} API", version=CURRENT_VERSION)
 
 from middleware.maintenance import MaintenanceMiddleware
 
@@ -69,6 +69,7 @@ def startup_event():
             # 2. Ensure Core Data
             ensure_guest_user(db)
             ensure_admin_user(db)
+            check_emergency_reset(db)
 
             # 3. Test Data
             if TEST_MODE:
@@ -117,7 +118,7 @@ def public_config():
             # OAuth providers
             from routers.oauth import get_provider_sso
             for p in ["github", "google", "microsoft"]:
-                if get_provider_sso(db, p):
+                if get_provider_sso(p, db):
                     providers[p] = True
         finally:
             db.close()

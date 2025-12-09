@@ -2,6 +2,7 @@ from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
+from config import PROJECT_NAME
 
 class UserBase(BaseModel):
     email: str

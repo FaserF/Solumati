@@ -1,6 +1,7 @@
 import React from 'react';
+import { APP_NAME } from '../../config';
 
-const AuthLayout = ({ children, t, title = "Solumati", subtitle = "" }) => {
+const AuthLayout = ({ children, t, title = APP_NAME, subtitle = "" }) => {
     // Default fallback if no subtitle
     const tagline = subtitle || t('hero.tagline', "Experience the future of connection. Secure, private, and designed for you.");
 

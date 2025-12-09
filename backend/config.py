@@ -6,6 +6,7 @@ from logging_config import logger
 # --- CONFIGURATION ---
 TEST_MODE = os.getenv("TEST_MODE", "false").lower() in ("true", "1", "yes")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:3000")
+PROJECT_NAME = os.getenv("PROJECT_NAME", "Solumati")
 
 # --- OAUTH CONFIG ---
 # --- OAUTH CONFIG ---

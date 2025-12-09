@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 from sqlalchemy.orm import Session
 import models, schemas
+from config import PROJECT_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
     <body>
         <div class="container">
             <div class="header">
-                <h2 style="color: white; margin: 0;">Solumati</h2>
+                <h2 style="color: white; margin: 0;">{PROJECT_NAME}</h2>
             </div>
             <div class="content">
                 <h1>{title}</h1>
@@ -180,7 +181,7 @@ def send_login_notification(email: str, ip: str, user_agent: str):
     try:
         title = "New Login Detected"
         content = f"""
-        We detected a new login to your Solumati account.<br><br>
+        We detected a new login to your {PROJECT_NAME} account.<br><br>
         <b>IP Address:</b> {ip}<br>
         <b>Device:</b> {user_agent}<br>
         <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>

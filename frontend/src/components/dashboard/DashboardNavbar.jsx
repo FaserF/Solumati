@@ -1,5 +1,6 @@
 import React from 'react';
 import { Settings, User } from 'lucide-react';
+import { APP_NAME } from '../../config';
 
 const DashboardNavbar = ({
     user,
@@ -19,7 +20,7 @@ const DashboardNavbar = ({
                 </div>
                 <div>
                     <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-violet-600 dark:from-pink-400 dark:to-violet-400">
-                        {t('app.title', 'Solumati')}
+                        {t('app.title', APP_NAME)}
                     </h1>
                     <p className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Find your connection</p>
                 </div>

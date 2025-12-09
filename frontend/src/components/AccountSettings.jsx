@@ -186,6 +186,8 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
             if (!resp.ok) throw new Error("Failed to get registration options");
 
             const options = await resp.json();
+            console.log("WebAuthn Options:", options);
+            if (!options || !options.challenge) throw new Error("Invalid registration options received");
 
             const attResp = await startRegistration(options);
 

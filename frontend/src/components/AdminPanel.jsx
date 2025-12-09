@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail } from 'lucide-react';
-import { API_URL, APP_VERSION } from '../config';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock } from 'lucide-react';
+import { API_URL, APP_VERSION, APP_NAME } from '../config';
 
-const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
+const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) => {
     // Role Checks
     const isModerator = user?.role === 'moderator';
     const isAdmin = user?.role === 'admin';
@@ -39,6 +39,29 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
 
     // Test Mail
     const [testMailTarget, setTestMailTarget] = useState("");
+
+    // Create User State
+    const [createUserModal, setCreateUserModal] = useState(false);
+    const [createUserForm, setCreateUserForm] = useState({ username: '', email: '', password: '', role: 'user' });
+
+    const handleCreateUser = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/users`, {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify(createUserForm)
+            });
+            if (res.ok) {
+                setCreateUserModal(false);
+                setCreateUserForm({ username: '', email: '', password: '', role: 'user' }); // Reset
+                fetchUsers();
+                alert("User created successfully.");
+            } else {
+                const err = await res.json();
+                alert("Error: " + (err.detail || "Unknown"));
+            }
+        } catch (e) { alert("Connection Error"); }
+    };
 
     useEffect(() => {
         loadData();
@@ -302,6 +325,19 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                 </div>
             </div>
 
+            {/* MAINTENANCE MODE BANNER */}
+            {
+                maintenanceMode && (
+                    <div className="mb-6 bg-red-100/90 dark:bg-red-900/60 border border-red-500 text-red-800 dark:text-red-100 p-4 rounded-3xl backdrop-blur-sm flex items-start gap-4 animate-pulse">
+                        <AlertTriangle className="flex-shrink-0 mt-1" />
+                        <div>
+                            <p className="font-bold text-lg">{t('alert.maintenance_mode_active', 'Maintenance Mode Active')}</p>
+                            <p className="text-sm opacity-90">{t('alert.maintenance_mode_admin_info', 'The system is currently locked for non-admins.')}</p>
+                        </div>
+                    </div>
+                )
+            }
+
             {/* TEST MODE BANNER */}
             {
                 testMode && (
@@ -430,6 +466,9 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                                 </td>
                                                 <td className="p-4 text-right space-x-2 whitespace-nowrap">
                                                     {/* Action Buttons */}
+                                                    {u.two_factor_method && u.two_factor_method !== 'none' && (
+                                                        <button title="Reset 2FA" onClick={() => handleResetUser2FA(u.id)} className="text-purple-600 hover:bg-purple-50 p-1 rounded"><Unlock size={16} /></button>
+                                                    )}
                                                     <button title={t('admin.btn.edit')} onClick={() => openEditModal(u)} className="text-gray-600 hover:bg-gray-100 p-1 rounded"><Edit2 size={16} /></button>
                                                     {u.is_active && !u.is_verified && (
                                                         <button title={t('admin.btn.verify')} onClick={() => handleAction(u.id, 'verify')} className="text-green-600 hover:bg-green-50 p-1 rounded"><Check size={16} /></button>
@@ -699,7 +738,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode }) => {
                                 <div>
                                     <label className="text-xs font-bold text-gray-700">{t('admin.settings.sender_name')}</label>
                                     <input className="w-full p-2 border rounded focus:ring-2 focus:ring-pink-500 focus:outline-none bg-gray-50 text-gray-900"
-                                        value={settings.mail.sender_name || "Solumati"}
+                                        value={settings.mail.sender_name || APP_NAME}
                                         onChange={e => updateSetting('mail', 'sender_name', e.target.value)}
                                     />
                                 </div>

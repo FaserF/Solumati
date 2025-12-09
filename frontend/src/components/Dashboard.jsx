@@ -1,9 +1,9 @@
 import React from 'react';
-import { AlertTriangle, EyeOff, Activity } from 'lucide-react';
+import { AlertTriangle, EyeOff, Activity, Shield } from 'lucide-react';
 import DashboardNavbar from './dashboard/DashboardNavbar';
 import MatchCard from './dashboard/MatchCard';
 
-const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, onProfileClick, onSwipeClick, onQuestionnaireClick, onImprintClick, onPrivacyClick, t, testMode }) => {
+const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, onProfileClick, onSwipeClick, onQuestionnaireClick, onImprintClick, onPrivacyClick, t, testMode, maintenanceMode }) => {
 
     // Check if user has special roles
     const isAdminOrMod = user && (user.role === 'admin' || user.role === 'moderator');
@@ -13,6 +13,35 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
 
     // Check match visibility
     const isVisible = user?.is_visible_in_matches !== false;
+
+    // 2FA Onboarding Prompt
+    const [show2FAPrompt, setShow2FAPrompt] = React.useState(false);
+
+    React.useEffect(() => {
+        if (user && user.two_factor_method === 'none') {
+            const hasDismissed = localStorage.getItem('dismissed_2fa_prompt');
+            if (!hasDismissed) {
+                setShow2FAPrompt(true);
+            }
+        }
+    }, [user]);
+
+    const dismiss2FAPrompt = () => {
+        localStorage.setItem('dismissed_2fa_prompt', 'true');
+        setShow2FAPrompt(false);
+    };
+
+    const setup2FA = () => {
+        dismiss2FAPrompt();
+        onProfileClick(); // Navigate to Profile (then user clicks Settings)
+        // Or directly call onProfileClick -> setView('settings')?
+        // Dashboard doesn't have direct access to setView('settings').
+        // But App.jsx passed `onProfileClick={() => setView('profile')}`.
+        // And `UserProfile` has `onOpenSettings`.
+        // This is a bit indirect. "Profile -> Settings".
+        // Ideally we should navigate to Settings directly.
+        // But `onProfileClick` is what we have.
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 flex flex-col items-center p-4 md:p-6 pb-24">
@@ -28,6 +57,12 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         </button>
                     </div>
                 )}
+                {maintenanceMode && (
+                    <div className="bg-red-600 text-white px-4 py-1 mt-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto animate-pulse">
+                        <AlertTriangle size={14} />
+                        {t('alert.maintenance_mode_active', 'Maintenance Mode Active')}
+                    </div>
+                )}
                 {testMode && (
                     <div className="bg-orange-500 text-white px-4 py-1 mt-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto">
                         <Activity size={14} />
@@ -35,6 +70,29 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                     </div>
                 )}
             </div>
+
+            {/* 2FA Onboarding Modal */}
+            {show2FAPrompt && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center">
+                        <div className="mx-auto w-16 h-16 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center text-pink-600 mb-6">
+                            <Shield size={32} />
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Protect your Account</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mb-8">
+                            We strongly recommend enabling Two-Factor Authentication (2FA) to secure your data.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={setup2FA} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:scale-[1.02] transition">
+                                Setup 2FA Now
+                            </button>
+                            <button onClick={dismiss2FAPrompt} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-medium py-2">
+                                I'll do it later
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <DashboardNavbar
                 user={user}

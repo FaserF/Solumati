@@ -108,6 +108,49 @@ def ensure_admin_user(db: Session):
         db.rollback()
         logger.error(f"Failed to ensure admin user: {e}")
 
+def check_emergency_reset(db: Session):
+    """Checks if an emergency admin reset was requested."""
+    try:
+        from utils import get_setting, save_setting
+        import models, json
+
+        target_id_str = get_setting(db, "admin_emergency_reset_target", None)
+        if not target_id_str: return
+
+        try:
+            target_id = int(target_id_str)
+        except:
+            return
+
+        user = db.query(models.User).filter(models.User.id == target_id).first()
+        if not user or user.role != 'admin':
+            logger.warning(f"Emergency reset requested for ID {target_id}, but user not found or not admin.")
+            return
+
+        # Perform Reset
+        new_pw = secrets.token_urlsafe(16)
+        user.hashed_password = hash_password(new_pw)
+        user.two_factor_method = 'none'
+        user.totp_secret = None
+        user.webauthn_credentials = "[]"
+        user.webauthn_challenge = None
+
+        # Clear Flag (by saving None or empty?)
+        # get_setting gets a value. We need to DELETE it or set to empty.
+        # SystemSetting is a simple Key-Value. We can delete the row.
+        db.query(models.SystemSetting).filter(models.SystemSetting.key == "admin_emergency_reset_target").delete()
+
+        db.commit()
+
+        sep = "#" * 60
+        msg = f"\n{sep}\nEMERGENCY RESET COMPLETED FOR USER: {user.username}\nNEW PASSWORD: {new_pw}\n{sep}\n"
+        print(msg) # Print to stdout for Docker logs
+        logger.critical(msg)
+
+    except Exception as e:
+        logger.error(f"Error during emergency reset check: {e}")
+        db.rollback()
+
 def generate_dummy_data(db: Session):
     """Generates dummy users if TEST_MODE is active and database is nearly empty."""
     if not TEST_MODE:

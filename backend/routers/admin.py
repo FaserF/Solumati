@@ -108,6 +108,22 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
     db.commit()
     return {"status": "success"}
 
+@router.post("/users/{user_id}/reset-2fa")
+def admin_reset_2fa(user_id: int, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    """Reset 2FA for a specific user (Admin only)."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user: raise HTTPException(404, "User not found")
+
+    user.two_factor_method = 'none'
+    user.totp_secret = None
+    user.webauthn_credentials = "[]"
+    user.webauthn_challenge = None
+
+    logger.info(f"Admin {current_admin.username} reset 2FA for User {user.username} (ID: {user.id})")
+
+    db.commit()
+    return {"status": "success", "message": "2FA Reset successfully"}
+
 @router.get("/settings", response_model=schemas.SystemSettings)
 def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     # Fetch Settings

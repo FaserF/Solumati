@@ -10,9 +10,9 @@ import base64
 from database import get_db
 import models, schemas
 from security import verify_password
-from config import APP_BASE_URL
+from config import APP_BASE_URL, PROJECT_NAME
 from dependencies import get_current_user_from_header
-from utils import get_setting, send_mail_sync
+from utils import get_setting, save_setting, send_mail_sync
 
 # 2FA Libraries
 import pyotp
@@ -170,7 +170,7 @@ def setup_totp(user: models.User = Depends(get_current_user_from_header), db: Se
     user.totp_secret = secret
     db.commit()
 
-    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user.email, issuer_name="Solumati")
+    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user.email, issuer_name=PROJECT_NAME)
     return {"secret": secret, "uri": uri}
 
 @router.post("/users/2fa/verify/totp")
@@ -224,7 +224,7 @@ def webauthn_register_options(user: models.User = Depends(get_current_user_from_
     try:
         options = generate_registration_options(
             rp_id=rp_id,
-            rp_name="Solumati",
+            rp_name=PROJECT_NAME,
             user_id=str(user.id).encode(),
             user_name=str(user.email), # Ensure string
             exclude_credentials=[
@@ -271,9 +271,13 @@ def webauthn_register_verify(req: schemas.WebAuthnRegistrationResponse, request:
         existing_creds = json.loads(user.webauthn_credentials or "[]")
 
         # Convert credential to dict safe for JSON
+        # Need to base64url encode bytes
+        def b64_encode(b):
+            return base64.urlsafe_b64encode(b).decode('utf-8').rstrip('=')
+
         new_cred = {
-            "id": verification.credential_id.decode('utf-8') if isinstance(verification.credential_id, bytes) else verification.credential_id,
-            "public_key": verification.credential_public_key.decode('utf-8') if isinstance(verification.credential_public_key, bytes) else verification.credential_public_key.decode('latin-1'), # encoding trick for bytes
+            "id": b64_encode(verification.credential_id),
+            "public_key": b64_encode(verification.credential_public_key),
             "sign_count": verification.sign_count,
             "transports": req.credential.get("response", {}).get("transports", [])
         }
@@ -319,13 +323,18 @@ def webauthn_auth_options(body: dict, db: Session = Depends(get_db)):
     parsed = urlparse(APP_BASE_URL)
     rp_id = parsed.hostname or "localhost"
 
-    options = generate_authentication_options(
-        rp_id=rp_id,
-        allow_credentials=[
-            AuthenticationCredential(id=base64url_to_bytes(cred["id"]))
-            for cred in existing_creds
-        ]
-    )
+    try:
+        options = generate_authentication_options(
+            rp_id=rp_id,
+            allow_credentials=[
+                AuthenticationCredential(id=base64url_to_bytes(cred["id"]))
+                for cred in existing_creds
+            ]
+        )
+    except Exception as e:
+        logger.error(f"WebAuthn Auth Options Error: {e}", exc_info=True)
+        # Check if it is a padding error, maybe credential ID is corrupted?
+        raise HTTPException(500, f"Internal Error generating auth options: {str(e)}")
 
     import base64
     user.webauthn_challenge = base64.urlsafe_b64encode(options.challenge).decode('utf-8').rstrip('=') if isinstance(options.challenge, bytes) else options.challenge
