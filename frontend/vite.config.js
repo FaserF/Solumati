@@ -44,6 +44,11 @@ export default defineConfig({
         // Inject version from package.json as a global variable
         '__APP_VERSION__': JSON.stringify(process.env.npm_package_version || packageJson.version || '0.0.0')
     },
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        setupFiles: './src/tests/setup.js', // Optional, if needed later
+    },
     resolve: {
         alias: {
             '~': path.resolve(__dirname, './src'),
