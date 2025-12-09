@@ -1,0 +1,74 @@
+name: Android Release Build
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pwa_url:
+        description: 'PWA URL (e.g. https://solumati.de)'
+        required: true
+        default: 'https://solumati.fabiseitz.de'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to upload assets to release
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies
+        run: |
+          npm install -g @bubblewrap/cli
+
+      - name: Generate APK
+        env:
+          # Use input if dispatch, otherwise try secret, fallback to hardcoded default
+          PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://solumati.fabiseitz.de' }}
+        run: |
+          node .github/scripts/build-apk.js
+
+      - name: List Artifacts
+        run: ls -R
+
+      - name: Rename APK for Upload
+        run: |
+          # Find the signed APK. Bubblewrap usually names it app-release-signed.apk
+          # We rename it to something more descriptive
+          mv app-release-signed.apk solumati-release.apk || true
+          mv app-release-bundle.aab solumati-release.aab || true
+
+      - name: Upload APK to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            solumati-release.apk
+            solumati-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact (Workflow Dispatch / Release fallback)
+        uses: actions/upload-artifact@v4
+        with:
+          name: solumati-android
+          path: |
+            solumati-release.apk
+            solumati-release.aab
