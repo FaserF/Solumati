@@ -5,6 +5,7 @@
 [![Docker Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/docker-publish.yml?label=Docker%20Build)](https://github.com/FaserF/Solumati/actions/workflows/docker-publish.yml)
 [![Android Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/android-release.yml?label=Android%20Build)](https://github.com/FaserF/Solumati/actions/workflows/android-release.yml)
 [![iOS Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/ios-release.yml?label=iOS%20Build)](https://github.com/FaserF/Solumati/actions/workflows/ios-release.yml)
+[![Windows Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/windows-release.yml?label=Windows%20Build)](https://github.com/FaserF/Solumati/actions/workflows/windows-release.yml)
 
 **Solumati** is a modern, open-source dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby in a transparent and secure environment.
 
@@ -16,16 +17,16 @@
 
 *   **❤️ Smart Matching:** Algorithms that connect you with people who truly fit your vibe.
 *   **🔭 Discover Mode:** Swipe through profiles to find your next match.
-*   **📱 Native Mobile Apps:** Enhanced mobile experience with native Android (APK) and iOS (IPA) apps.
+*   **📱 Native Apps:** Enhanced experience with native Android (APK), iOS (IPA), and Windows (UWP) apps.
 *   **🛡️ Security First:** Two-Factor Authentication (2FA) and Passkey support.
 *   **🎨 Modern UI:** Sleek, responsive design with Dark Mode support.
 *   **👀 Guest Access:** Try out limited features without creating an account.
 
 ---
 
-## 📱 Mobile Apps
+## 📱 Native Apps
 
-Solumati is available as a native application for both Android and iOS!
+Solumati is available as a native application for Android, iOS, and Windows!
 You can download the latest releases from our **[Releases Page](https://github.com/FaserF/Solumati/releases/latest)**.
 
 ### Android (APK)
@@ -46,6 +47,14 @@ The iOS app allows you to run Solumati as a native app on your iPhone or iPad.
 5. Select the downloaded `.ipa` file.
 6. AltStore will sign and install the app for you (requires refreshing every 7 days).
 
+### Windows (UWP)
+The Windows app provides a native desktop experience.
+**Installation:**
+1. Download the `solumati-release.msixbundle` file.
+2. **Important:** Since the app is self-signed, you may need to enable **Developer Mode** in Windows Settings > Update & Security > For developers.
+3. Double-click the `.msixbundle` file.
+4. Click "Install".
+
 ---
 
 ## 🛠️ For Developers
@@ -55,7 +64,7 @@ Welcome to the technical side of Solumati! This project is a full-stack web appl
 ### Technology Stack
 *   **Frontend:** React (Vite), TailwindCSS, Lucide Icons
 *   **Backend:** Python (FastAPI), SQLAlchemy (SQLite/PostgreSQL)
-*   **Mobile:** Android TWA (Bubblewrap) & iOS WebView
+*   **Apps:** Android (TWA), iOS (WebView), Windows (UWP)
 *   **Containerization:** Docker & Docker Compose
 
 ### Getting Started

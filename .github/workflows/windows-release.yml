@@ -1,0 +1,93 @@
+name: Windows Release Build
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pwa_url:
+        description: 'PWA URL'
+        required: false
+        default: 'https://solumati.fabiseitz.de'
+        type: string
+  workflow_call:
+    inputs:
+      pwa_url:
+        description: 'PWA URL'
+        required: false
+        default: 'https://solumati.fabiseitz.de'
+        type: string
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build MSIXBundle
+        env:
+          PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://solumati.fabiseitz.de' }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: node .github/scripts/build-windows.js
+
+      - name: Rename Bundle for Upload
+        id: rename
+        shell: bash
+        run: |
+          # Extract version from package.json
+          VERSION=$(jq -r .version frontend/package.json)
+          echo "Detected Version: $VERSION"
+
+          # Determine Release Type
+          if [ "${{ github.event_name }}" == "release" ]; then
+            RELEASE_TYPE="stable"
+          elif [[ "$VERSION" == *"beta"* ]] || [[ "$VERSION" == *"b"* ]]; then
+            RELEASE_TYPE="beta"
+          else
+            RELEASE_TYPE="nightly"
+          fi
+
+          BUNDLE_NAME="solumati-${VERSION}-${RELEASE_TYPE}.msixbundle"
+
+          # Find generated bundle in .github/windows/AppPackages
+          # The path might be deep, e.g. AppPackages/Solumati_1.0.0.0_Test/Solumati_1.0.0.0_x86_x64.msixbundle
+          FOUND_BUNDLE=$(find .github/windows/AppPackages -name "*.msixbundle" | head -n 1)
+
+          if [ -z "$FOUND_BUNDLE" ]; then
+            echo "Error: No MSIXBundle found in .github/windows/AppPackages"
+            exit 1
+          fi
+
+          echo "Found Bundle at: $FOUND_BUNDLE"
+          mv "$FOUND_BUNDLE" "$BUNDLE_NAME"
+
+          echo "Renamed to: $BUNDLE_NAME"
+          echo "bundle_path=$BUNDLE_NAME" >> $GITHUB_OUTPUT
+
+          # Also try to find the certificate if useful? No, it's self signed anyway.
+
+      - name: Upload Bundle to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.rename.outputs.bundle_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: solumati-windows
+          path: ${{ steps.rename.outputs.bundle_path }}
