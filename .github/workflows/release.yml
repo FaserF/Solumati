@@ -110,3 +110,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+
+  build-android:
+    needs: release
+    uses: ./.github/workflows/android-release.yml
+    with:
+      tag_name: v${{ needs.release.outputs.new_version }}
+      ref: ${{ needs.release.outputs.commit_sha }}
+    secrets: inherit

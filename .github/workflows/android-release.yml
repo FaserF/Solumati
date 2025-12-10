@@ -4,11 +4,21 @@ on:
   release:
     types: [created]
   workflow_dispatch:
+  workflow_call:
     inputs:
       pwa_url:
-        description: 'PWA URL (e.g. https://solumati.com)'
+        description: 'PWA URL'
         required: false
         default: 'https://solumati.fabiseitz.de'
+        type: string
+      tag_name:
+        description: 'Release Tag Name (e.g. v1.0.0)'
+        required: false
+        type: string
+      ref:
+        description: 'Commit SHA to build'
+        required: false
+        type: string
 
 jobs:
   build-android:
@@ -19,6 +29,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Setup Java JDK
         uses: actions/setup-java@v5
@@ -94,9 +106,10 @@ jobs:
         run: ls -R
 
       - name: Upload APK to Release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.tag_name != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag_name }}
           files: |
             ${{ steps.rename.outputs.apk_path }}
             # ${{ steps.rename.outputs.aab_path }}
