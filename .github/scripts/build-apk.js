@@ -154,7 +154,7 @@ try {
     // using '--manifest' pointing to our generated config
     execSync(
         `bubblewrap build --manifest=${TWA_MANIFEST_PATH} --signingKeyPath=${KEYSTORE_PATH} --signingKeyAlias=android --signingKeyPassword=password --signingStorePassword=password --skipPwaValidation`,
-        { stdio: 'inherit' }
+        { input: `y\n${pkgJson.version}\n${versionCode}\n`, stdio: ['pipe', 'inherit', 'inherit'] }
     );
     console.log('Build completed successfully!');
 } catch (e) {
