@@ -23,7 +23,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    answers: Optional[Dict[str, int]] = {}
+    answers: Optional[Union[Dict[str, int], List[int]]] = {}
 
 class UserLogin(BaseModel):
     login: str
@@ -60,7 +60,7 @@ class UserDisplay(UserBase):
 class UserUpdate(BaseModel):
     about_me: Optional[str] = None
     intent: Optional[str] = None
-    answers: Optional[Dict[str, int]] = None
+    answers: Optional[Union[Dict[str, int], List[int]]] = None
 
 class UserAdminUpdate(BaseModel):
     username: Optional[str] = None

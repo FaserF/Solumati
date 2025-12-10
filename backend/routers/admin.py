@@ -70,7 +70,9 @@ def admin_create_user(new_user: schemas.UserCreateAdmin, db: Session = Depends(g
         role=new_user.role,
         is_active=True,
         is_verified=True,
-        is_guest=False
+        is_guest=False,
+        answers="{}", # Default empty answers
+        intent="longterm" # Default intent
     )
     db.add(user)
     db.commit()

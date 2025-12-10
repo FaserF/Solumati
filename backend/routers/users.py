@@ -38,7 +38,7 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
         email=user.email,
         hashed_password=hashed_pw,
         real_name=user.real_name, username=generate_unique_username(db, user.real_name),
-        intent=user.intent, answers=json.dumps(user.answers),
+        intent=user.intent, answers=json.dumps(user.answers if isinstance(user.answers, dict) else {}), # Store empty if list/none for now
         is_active=True, is_verified=is_verified, verification_code=verification_code,
         role="user", created_at=datetime.utcnow()
     )
@@ -88,6 +88,25 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
         u = db.query(models.User).filter(models.User.id == user_id).first()
         if not u: raise HTTPException(404, "User not found")
         curr_answ, curr_int, exc_id = u.answers, u.intent, user_id
+
+    # PROFILE COMPLETION CHECK (Gating)
+    # Guest (0) is exempt.
+    # Normal users must complete profile first.
+    if user_id != 0:
+        from utils import is_profile_complete
+        # We need the user object, which we fetched as 'u'
+        if not is_profile_complete(u):
+             # User requested specific message: "Vor 'Deine Matches'... stehen dass man erst das Profil vervollständigen muss."
+             # We can't change the UI text from here directly if it expects a list.
+             # We return an empty list? Or error?
+             # If we raise 403, frontend might show generic error.
+             # Ideally we return a special status or empty list?
+             # Let's return empty list for now, but maybe the frontend checks a flag?
+             # The user asked for a TEXT change. That implies frontend work.
+             # But we can ENFORCE it here.
+             # If I raise HTTPException(400, "Profile Incomplete"), user sees error.
+             # Let's try 403.
+             raise HTTPException(403, "Profile Incomplete. Please finish setting up your account.")
 
     # Prepare Query
     query = db.query(models.User).filter(

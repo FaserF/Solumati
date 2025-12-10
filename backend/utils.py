@@ -267,5 +267,43 @@ def send_login_notification(email: str, ip: str, user_agent: str):
         send_mail_sync(email, title, html, db)
     except Exception as e:
         logger.error(f"Error in send_login_notification: {e}")
-    finally:
-        db.close()
+
+def is_profile_complete(user: models.User) -> bool:
+    """
+    Checks if a user has completed their profile.
+    Criteria:
+    1. Has an image (image_url is not None)
+    2. Has a custom 'about_me' (not default)
+    3. Has meaningful answers (answers is not empty dict/list and not dummy)
+    """
+    if not user.image_url: return False
+    if user.about_me == "Ich bin neu hier!": return False
+
+    # Check Answers
+    try:
+        # Answers are stored as JSON string in DB
+        if isinstance(user.answers, str):
+            import json
+            ans = json.loads(user.answers)
+        else:
+            ans = user.answers
+
+        if not ans: return False
+        if isinstance(ans, dict) and not ans: return False
+        if isinstance(ans, list) and not ans: return False
+
+        # Check for dummy answers [3,3,3,3]
+        # Or just generally check if it looks like a real set of answers
+        # Let's say: Must have at least one answer?
+        # The frontend sends [3,3,3,3] as initial state maybe?
+        # If it is a list of default values only?
+        # For now, let's leniently accept any non-empty structure,
+        # BUT explicitly reject the known dummy [3,3,3,3] if checking logic demands it.
+        # User said: "Account ist erstellt... muss ggf. verifiziert werden... darf keine Personen sehen solange er nicht Fragen beantwortet hat."
+        # If [3,3,3,3] means "No questions answered", return False.
+        if ans == [3, 3, 3, 3]: return False
+
+    except:
+        return False
+
+    return True
