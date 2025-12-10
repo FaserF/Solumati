@@ -48,7 +48,7 @@ def generate_email_2fa_code(user: models.User, db: Session):
     db.commit()
 
     # Send Mail
-    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", schemas.RegistrationConfig()))
 
     html = f"""
     <p>Your Solumati verification code is:</p>

@@ -193,13 +193,13 @@ class TestMailRequest(BaseModel):
 
 @router.post("/settings/test-mail")
 def send_test_mail(req: TestMailRequest, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
-    from utils import send_mail_sync
+    from utils import send_mail_sync, create_html_email
     try:
-        html = f"""
-        <h1>Test Mail</h1>
-        <p>This is a test email triggered by {current_admin.username} from the Solumati Admin Console.</p>
-        <p>If you see this, your SMTP configuration is correct!</p>
+        content = f"""
+        This is a test email triggered by {current_admin.username} from the Solumati Admin Console.<br><br>
+        If you see this, your SMTP configuration is correct!
         """
+        html = create_html_email("Test Mail", content, server_domain="")
         send_mail_sync(req.target_email, "Solumati Test Mail", html, db)
         return {"status": "sent"}
     except Exception as e:

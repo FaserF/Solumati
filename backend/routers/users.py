@@ -22,7 +22,7 @@ router = APIRouter()
 @router.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info(f"Attempting to register new user: {user.email}")
-    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", schemas.RegistrationConfig()))
     if not reg_config.enabled: raise HTTPException(403, "Registration disabled.")
 
     if db.query(models.User).filter(models.User.email == user.email).first():

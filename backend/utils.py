@@ -42,28 +42,98 @@ def save_setting(db: Session, key: str, value: dict):
 def create_html_email(title: str, content: str, action_url: str = None, action_text: str = None, server_domain: str = ""):
     if server_domain.endswith("/"): server_domain = server_domain[:-1]
 
+    # Logo URL (GitHub Raw for reliability)
+    logo_url = "https://raw.githubusercontent.com/FaserF/Solumati/main/frontend/public/logo/windows11/Square150x150Logo.png"
+    host_url = "https://solumati.fabiseitz.de"
+    github_url = "https://github.com/FaserF/Solumati"
+
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            body {{ font-family: Helvetica, Arial, sans-serif; background-color: #f4f4f7; color: #333; }}
-            .container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; }}
-            .header {{ background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); padding: 30px; text-align: center; }}
-            .content {{ padding: 40px 30px; line-height: 1.6; color: #51545E; }}
-            .button {{ display: inline-block; background-color: #ec4899; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; margin-top: 20px; }}
+            body {{ font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; margin: 0; padding: 0; }}
+            .email-wrapper {{ width: 100%; background-color: #f0f2f5; padding: 40px 0; }}
+            .email-container {{ max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }}
+
+            .header {{
+                background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+                padding: 40px 20px;
+                text-align: center;
+            }}
+            .logo {{
+                width: 80px;
+                height: 80px;
+                border-radius: 16px;
+                background-color: white;
+                padding: 2px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }}
+            .app-name {{
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                margin-top: 15px;
+                margin-bottom: 0;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+
+            .content {{ padding: 40px 40px; line-height: 1.6; color: #4b5563; font-size: 16px; }}
+            .content h1 {{ color: #111827; font-size: 22px; margin-top: 0; margin-bottom: 20px; }}
+            .content p {{ margin-bottom: 16px; }}
+
+            .button-container {{ text-align: center; margin-top: 30px; margin-bottom: 20px; }}
+            .button {{
+                display: inline-block;
+                background: linear-gradient(to right, #ec4899, #8b5cf6);
+                color: #ffffff !important;
+                text-decoration: none;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                box-shadow: 0 4px 6px rgba(236, 72, 153, 0.25);
+            }}
+
+            .footer {{
+                background-color: #f9fafb;
+                padding: 20px;
+                text-align: center;
+                border-top: 1px solid #e5e7eb;
+                font-size: 12px;
+                color: #9ca3af;
+            }}
+            .footer a {{ color: #8b5cf6; text-decoration: none; margin: 0 8px; }}
+            .footer p {{ margin: 5px 0; }}
         </style>
     </head>
     <body>
-        <div class="container">
-            <div class="header">
-                <h2 style="color: white; margin: 0;">{PROJECT_NAME}</h2>
-            </div>
-            <div class="content">
-                <h1>{title}</h1>
-                <p>{content}</p>
-                {f'<div style="text-align: center;"><a href="{action_url}" class="button">{action_text}</a></div>' if action_url else ''}
+        <div class="email-wrapper">
+            <div class="email-container">
+                <div class="header">
+                    <img src="{logo_url}" alt="Solumati Logo" class="logo">
+                    <p class="app-name">{PROJECT_NAME}</p>
+                </div>
+
+                <div class="content">
+                    <h1>{title}</h1>
+                    <div style="color: #4b5563;">
+                        {content}
+                    </div>
+
+                    {f'<div class="button-container"><a href="{action_url}" class="button">{action_text}</a></div>' if action_url else ''}
+                </div>
+
+                <div class="footer">
+                    <p>Sent via Solumati System</p>
+                    <p>
+                        <a href="{host_url}">Open Solumati</a> •
+                        <a href="{github_url}">GitHub Repository</a>
+                    </p>
+                    <p style="margin-top: 10px; color: #d1d5db;">&copy; {datetime.now().year} Solumati Project</p>
+                </div>
             </div>
         </div>
     </body>
