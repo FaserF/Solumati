@@ -4,6 +4,7 @@
 [![GitHub License](https://img.shields.io/github/license/FaserF/Solumati?color=blue)](LICENSE.md)
 [![Docker Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/docker-publish.yml?label=Docker%20Build)](https://github.com/FaserF/Solumati/actions/workflows/docker-publish.yml)
 [![Android Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/android-release.yml?label=Android%20Build)](https://github.com/FaserF/Solumati/actions/workflows/android-release.yml)
+[![iOS Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/ios-release.yml?label=iOS%20Build)](https://github.com/FaserF/Solumati/actions/workflows/ios-release.yml)
 
 **Solumati** is a modern, open-source dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby in a transparent and secure environment.
 
@@ -15,19 +16,35 @@
 
 *   **❤️ Smart Matching:** Algorithms that connect you with people who truly fit your vibe.
 *   **🔭 Discover Mode:** Swipe through profiles to find your next match.
-*   **📱 Native Android App:** Enhanced mobile experience with a dedicated TWA (Trusted Web Activity) Android app.
+*   **📱 Native Mobile Apps:** Enhanced mobile experience with native Android (APK) and iOS (IPA) apps.
 *   **🛡️ Security First:** Two-Factor Authentication (2FA) and Passkey support.
 *   **🎨 Modern UI:** Sleek, responsive design with Dark Mode support.
 *   **👀 Guest Access:** Try out limited features without creating an account.
 
 ---
 
-## 📱 Android App
+## 📱 Mobile Apps
 
-Solumati is available as a native Android application!
-You can download the latest APK from our **[Releases Page](https://github.com/FaserF/Solumati/releases/latest)**.
+Solumati is available as a native application for both Android and iOS!
+You can download the latest releases from our **[Releases Page](https://github.com/FaserF/Solumati/releases/latest)**.
 
-The app provides a full-screen immersive experience and is built using Bubblewrap (TWA).
+### Android (APK)
+The Android app is built using Bubblewrap (TWA) and provides a full-screen immersive experience.
+**Installation:**
+1. Download the `solumati-release.apk` file.
+2. Open the file on your smartphone.
+3. If prompted, allow installation from "Unknown Sources" in your settings.
+4. Follow the installation prompts.
+
+### iOS (IPA)
+The iOS app allows you to run Solumati as a native app on your iPhone or iPad.
+**Installation (via AltStore):**
+1. Download the `solumati-release.ipa` file.
+2. Ensure you have **[AltStore](https://altstore.io/)** (or SideStore/Sideloadly) installed on your device.
+3. Open AltStore on your device.
+4. Tap the "+" button in the "My Apps" tab.
+5. Select the downloaded `.ipa` file.
+6. AltStore will sign and install the app for you (requires refreshing every 7 days).
 
 ---
 
@@ -38,7 +55,7 @@ Welcome to the technical side of Solumati! This project is a full-stack web appl
 ### Technology Stack
 *   **Frontend:** React (Vite), TailwindCSS, Lucide Icons
 *   **Backend:** Python (FastAPI), SQLAlchemy (SQLite/PostgreSQL)
-*   **Mobile:** Android TWA (Bubblewrap)
+*   **Mobile:** Android TWA (Bubblewrap) & iOS WebView
 *   **Containerization:** Docker & Docker Compose
 
 ### Getting Started

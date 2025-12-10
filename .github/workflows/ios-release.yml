@@ -1,0 +1,90 @@
+name: iOS Release Build
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pwa_url:
+        description: 'PWA URL'
+        required: false
+        default: 'https://solumati.fabiseitz.de'
+        type: string
+  workflow_call:
+    inputs:
+      pwa_url:
+        description: 'PWA URL'
+        required: false
+        default: 'https://solumati.fabiseitz.de'
+        type: string
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build IPA
+        env:
+          PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://solumati.fabiseitz.de' }}
+          # Pass run number for versioning
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: node .github/scripts/build-ipa.js
+
+      - name: Rename IPA for Upload
+        id: rename
+        run: |
+          # Extract version from package.json
+          VERSION=$(jq -r .version frontend/package.json)
+          echo "Detected Version: $VERSION"
+
+          # Determine Release Type
+          if [ "${{ github.event_name }}" == "release" ]; then
+            RELEASE_TYPE="stable"
+          elif [[ "$VERSION" == *"beta"* ]] || [[ "$VERSION" == *"b"* ]]; then
+            RELEASE_TYPE="beta"
+          else
+            RELEASE_TYPE="nightly"
+          fi
+
+          IPA_NAME="solumati-${VERSION}-${RELEASE_TYPE}.ipa"
+
+          # Find generated IPA in ios-build/
+          FOUND_IPA=$(find ios-build -name "*.ipa" | head -n 1)
+
+          if [ -z "$FOUND_IPA" ]; then
+            echo "Error: No IPA found in ios-build/"
+            exit 1
+          fi
+
+          echo "Found IPA at: $FOUND_IPA"
+          mv "$FOUND_IPA" "$IPA_NAME"
+
+          echo "Renamed to: $IPA_NAME"
+          echo "ipa_path=$IPA_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload IPA to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.rename.outputs.ipa_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: solumati-ios
+          path: ${{ steps.rename.outputs.ipa_path }}
