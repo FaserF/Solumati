@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -46,30 +46,54 @@ jobs:
         run: |
           node .github/scripts/build-apk.js
 
+      - name: Rename APK for Upload
+        id: rename
+        run: |
+          # Extract version from package.json
+          VERSION=$(jq -r .version frontend/package.json)
+          echo "Detected Version: $VERSION"
+
+          # Determine Release Type
+          if [ "${{ github.event_name }}" == "release" ]; then
+            RELEASE_TYPE="stable"
+          elif [[ "$VERSION" == *"beta"* ]] || [[ "$VERSION" == *"b"* ]]; then
+            RELEASE_TYPE="beta"
+          else
+            RELEASE_TYPE="nightly"
+          fi
+          echo "Release Type: $RELEASE_TYPE"
+
+          # Define new names
+          APK_NAME="solumati-${VERSION}-${RELEASE_TYPE}.apk"
+          AAB_NAME="solumati-${VERSION}-${RELEASE_TYPE}.aab"
+
+          # Move and Rename
+          # Gradle output is typically in android/app/build/outputs/apk/release/app-release.apk
+          mv android/app/build/outputs/apk/release/app-release.apk $APK_NAME || echo "APK not found at Expected Path"
+          # Bundle output
+          # mv android/app/build/outputs/bundle/release/app-release.aab $AAB_NAME || echo "AAB not found"
+
+          # Set outputs for next steps
+          echo "apk_path=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "aab_path=$AAB_NAME" >> $GITHUB_OUTPUT
+
       - name: List Artifacts
         run: ls -R
 
-      - name: Rename APK for Upload
-        run: |
-          # Find the signed APK. Bubblewrap usually names it app-release-signed.apk
-          # We rename it to something more descriptive
-          mv app-release-signed.apk solumati-release.apk || true
-          mv app-release-bundle.aab solumati-release.aab || true
-
       - name: Upload APK to Release
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            solumati-release.apk
-            solumati-release.aab
+            ${{ steps.rename.outputs.apk_path }}
+            # ${{ steps.rename.outputs.aab_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Artifact (Workflow Dispatch / Release fallback)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: solumati-android
           path: |
-            solumati-release.apk
-            solumati-release.aab
+            ${{ steps.rename.outputs.apk_path }}
+            # ${{ steps.rename.outputs.aab_path }}
