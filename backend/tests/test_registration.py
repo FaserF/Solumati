@@ -11,9 +11,9 @@ from main import app
 from dependencies import require_admin
 import models
 
-client = TestClient(app)
+# client = TestClient(app)
 
-def test_registration_with_list_answers():
+def test_registration_with_list_answers(client):
     """
     Verifies that the registration endpoint accepts 'answers' as a list (frontend legacy behavior)
     and does not crash.
@@ -34,7 +34,7 @@ def test_registration_with_list_answers():
     assert data["email"] == email
     assert "id" in data
 
-def test_admin_create_user_defaults():
+def test_admin_create_user_defaults(client):
     """
     Verifies that creating a user via Admin Panel (which might omit answers/intent) works
     due to default values being applied.
@@ -60,7 +60,7 @@ def test_admin_create_user_defaults():
     assert response.status_code == 200, f"Admin create failed: {response.text}"
     assert response.json()["status"] == "success"
 
-def test_match_gating_incomplete_profile():
+def test_match_gating_incomplete_profile(client):
     """
     Verifies that a user with an incomplete profile (e.g. just registered with dummy answers)
     cannot retrieve matches and receives a 403.

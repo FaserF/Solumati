@@ -11,13 +11,13 @@ from main import app
 from dependencies import get_current_user_from_header, get_db
 import models
 
-client = TestClient(app)
+# client = TestClient(app)
 
 def mock_user_dep(id=1, email="notif@test.com"):
     user = models.User(id=id, email=email, role="user", is_active=True)
     return lambda: user
 
-def test_get_notifications_empty():
+def test_get_notifications_empty(client):
     mock_db = MagicMock()
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep()
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -25,7 +25,7 @@ def test_get_notifications_empty():
     # Mock query returning empty list
     mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
 
-    response = client.get("/api/notifications/notifications", headers={"X-User-ID": "1"})
+    response = client.get("/notifications", headers={"X-User-ID": "1"})
     # Note: Router prefix is usually included?
     # backend/main.py usually includes routers.
     # checking notifications.py -> @router.get("/notifications")
@@ -49,9 +49,10 @@ def test_get_notifications_empty():
     assert response.status_code == 200 # If 404, path is wrong.
     assert response.json() == []
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    del app.dependency_overrides[get_db]
 
-def test_mark_notification_read():
+def test_mark_notification_read(client):
     mock_db = MagicMock()
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep()
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -60,10 +61,11 @@ def test_mark_notification_read():
     mock_notif = models.Notification(id=123, is_read=False, user_id=1)
     mock_db.query.return_value.filter.return_value.first.return_value = mock_notif
 
-    response = client.put("/api/notifications/123/read", headers={"X-User-ID": "1"})
+    response = client.put(f"/notifications/123/read", headers={"X-User-ID": "1"})
 
     assert response.status_code == 200
     assert mock_notif.is_read == True
     mock_db.commit.assert_called_once()
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    del app.dependency_overrides[get_db]

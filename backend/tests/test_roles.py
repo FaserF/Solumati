@@ -10,7 +10,7 @@ from main import app
 from dependencies import require_admin, require_moderator_or_admin, get_current_user_from_header
 import models
 
-client = TestClient(app)
+# client = TestClient(app)
 
 # Helper to mock user
 def mock_user_dep(role="user", id=1):
@@ -18,9 +18,9 @@ def mock_user_dep(role="user", id=1):
     return lambda: user
 
 # --- GUEST TESTS ---
-def test_guest_access_denied():
+def test_guest_access_denied(client):
     # Guests should not access admin panels
-    app.dependency_overrides[require_admin] = mock_user_dep(role="guest") # Should fail inside dependency?
+    # app.dependency_overrides[require_admin] = mock_user_dep(role="guest")  <-- REMOVED: Do not override logic
     # Actually require_admin logic raises 403 if role != admin.
     # We need to override the dependency that *calls* require_admin?
     # No, require_admin IS the dependency. If we return a guest user from it, the *endpoint* thinks we are admin IF the dependency logic was "return user".
@@ -36,10 +36,12 @@ def test_guest_access_denied():
     response = client.get("/admin/reports", headers={"X-User-ID": "1"})
     assert response.status_code == 403
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    if require_admin in app.dependency_overrides:
+        del app.dependency_overrides[require_admin]
 
 # --- TEST USER TESTS ---
-def test_test_user_access_denied():
+def test_test_user_access_denied(client):
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="test")
 
     response = client.get("/admin/users", headers={"X-User-ID": "1"})
@@ -48,10 +50,12 @@ def test_test_user_access_denied():
     response = client.get("/admin/reports", headers={"X-User-ID": "1"})
     assert response.status_code == 403
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    if require_admin in app.dependency_overrides:
+        del app.dependency_overrides[require_admin]
 
 # --- USER TESTS ---
-def test_standard_user_access_denied():
+def test_standard_user_access_denied(client):
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="user")
 
     response = client.get("/admin/users", headers={"X-User-ID": "1"})
@@ -60,10 +64,12 @@ def test_standard_user_access_denied():
     response = client.get("/admin/reports", headers={"X-User-ID": "1"})
     assert response.status_code == 403
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    if require_admin in app.dependency_overrides:
+        del app.dependency_overrides[require_admin]
 
 # --- MODERATOR TESTS ---
-def test_moderator_access():
+def test_moderator_access(client):
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="moderator")
 
     # Mod CANNOT access full user list (Admin only)
@@ -77,10 +83,12 @@ def test_moderator_access():
     response = client.get("/admin/reports", headers={"X-User-ID": "1"})
     assert response.status_code == 200
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    if require_admin in app.dependency_overrides:
+        del app.dependency_overrides[require_admin]
 
 # --- ADMIN TESTS ---
-def test_admin_access():
+def test_admin_access(client):
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="admin")
 
     # Admin CAN access users
@@ -91,4 +99,6 @@ def test_admin_access():
     response = client.get("/admin/reports", headers={"X-User-ID": "1"})
     assert response.status_code == 200
 
-    app.dependency_overrides = {}
+    del app.dependency_overrides[get_current_user_from_header]
+    if require_admin in app.dependency_overrides:
+        del app.dependency_overrides[require_admin]

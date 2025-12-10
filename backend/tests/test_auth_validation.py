@@ -11,15 +11,15 @@ from main import app
 import models
 from database import get_db
 
-client = TestClient(app)
+# client = TestClient(app)  <-- Removed global client
 
-def test_login_invalid_credentials():
+def test_login_invalid_credentials(client):
     payload = {"login": "nonexistent@example.com", "password": "wrongpassword"}
     response = client.post("/login", json=payload)
     assert response.status_code == 401
     assert "Invalid credentials" in response.json()["detail"]
 
-def test_registration_duplicate_email():
+def test_registration_duplicate_email(client):
     # 1. Register User
     unique_str = str(datetime.now().timestamp())
     email = f"dup_{unique_str}@example.com"
@@ -28,7 +28,7 @@ def test_registration_duplicate_email():
         "password": "Password123!",
         "real_name": "Duplicate Test",
         "intent": "longterm",
-        "answers": "[]"
+        "answers": []
     }
     r1 = client.post("/users/", json=payload)
     if r1.status_code != 200:

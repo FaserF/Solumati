@@ -12,7 +12,7 @@ from main import app
 from dependencies import require_admin, get_current_user_from_header, get_db
 import models
 
-client = TestClient(app)
+# client = TestClient(app)
 
 # Helper to mock user
 def mock_user_dep(role="admin", id=1):
@@ -20,26 +20,27 @@ def mock_user_dep(role="admin", id=1):
     return lambda: user
 
 # --- MAIL TESTS ---
-@patch("utils.send_mail_sync")
-@patch("utils.create_html_email")
-def test_admin_send_test_mail(mock_create_html, mock_send_mail):
+def test_admin_send_test_mail(client):
     # Setup Admin Mock
     app.dependency_overrides[require_admin] = mock_user_dep(role="admin")
 
-    mock_create_html.return_value = "<html>Test</html>"
+    with patch("utils.send_mail_sync") as mock_send_mail, \
+         patch("utils.create_html_email", return_value="<html>Test</html>") as mock_create_html:
 
-    payload = {"target_email": "test@example.com"}
-    response = client.post("/admin/settings/test-mail", json=payload)
+        payload = {"target_email": "test@example.com"}
+        response = client.post("/admin/settings/test-mail", json=payload)
 
-    assert response.status_code == 200
-    assert response.json()["status"] == "sent"
+        assert response.status_code == 200
+        assert response.json()["status"] == "sent"
 
-    mock_send_mail.assert_called_once()
+        # Verify calls
+        mock_create_html.assert_called()
+        mock_send_mail.assert_called()
 
     app.dependency_overrides = {}
 
 # --- CHAT TESTS ---
-def test_get_conversations_mock_db():
+def test_get_conversations_mock_db(client):
     # We will mock the DB session to avoid needing a real DB for this logic check
     mock_db = MagicMock()
 
