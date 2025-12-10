@@ -13,9 +13,15 @@ const KEYSTORE_PATH = path.join(process.cwd(), 'android-keystore.jks');
 
 // Clean up stale artifacts to prevent "Missing Checksum" prompts if possible
 if (fs.existsSync(TWA_CHECKSUM_PATH)) fs.unlinkSync(TWA_CHECKSUM_PATH);
-// We don't delete the project files (gradle, app, etc) aggressively to avoid breaking
-// if 'build' expects them, but removing checksum forces a sync check.
-// The input 'y' below handles the regeneration prompt.
+// Force clean build to avoid "Regenerate?" prompts
+if (fs.existsSync(ANDROID_OUTPUT_DIR)) {
+    console.log('Cleaning existing android output directory...');
+    fs.rmSync(ANDROID_OUTPUT_DIR, { recursive: true, force: true });
+}
+
+// Set Bubblewrap Env Vars to avoid password prompts as a fallback
+process.env.BUBBLEWRAP_KEYSTORE_PASSWORD = 'password';
+process.env.BUBBLEWRAP_KEY_PASSWORD = 'password';
 
 // Validate Environment
 const pwaUrl = process.env.PWA_URL;
@@ -148,7 +154,7 @@ try {
     // using '--manifest' pointing to our generated config
     execSync(
         `bubblewrap build --manifest=${TWA_MANIFEST_PATH} --signingKeyPath=${KEYSTORE_PATH} --signingKeyAlias=android --signingKeyPassword=password --signingStorePassword=password --skipPwaValidation`,
-        { input: `y\n${pkgJson.version}\n${versionCode}\n`, stdio: ['pipe', 'inherit', 'inherit'] }
+        { stdio: 'inherit' }
     );
     console.log('Build completed successfully!');
 } catch (e) {
