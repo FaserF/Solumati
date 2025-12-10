@@ -133,6 +133,10 @@ class MailConfig(BaseModel):
     smtp_user: Optional[str] = None
     smtp_password: Optional[str] = None
     smtp_ssl: bool = False
+    smtp_tls: bool = True
+    sender_name: Optional[str] = "Solumati"
+    from_email: Optional[str] = None
+
 class NotificationBase(BaseModel):
     title: str
     message: str
