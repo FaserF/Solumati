@@ -26,8 +26,9 @@ async def fetch_dummy_image(client: httpx.AsyncClient, username: str) -> str:
     filename = f"{username}.jpg"
     file_path = os.path.join(save_dir, filename)
 
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     try:
-        resp = await client.get(url, follow_redirects=True, timeout=10.0)
+        resp = await client.get(url, headers=headers, follow_redirects=True, timeout=10.0)
         if resp.status_code == 200:
             with open(file_path, "wb") as f:
                 f.write(resp.content)
@@ -243,6 +244,36 @@ def check_emergency_reset(db: Session):
         db.rollback()
 
 
+def fix_dummy_user_roles(db: Session):
+    """
+    Ensures that all dummy users (identified by suffix ' Dummy' in real_name)
+    have the role 'test'.
+    """
+    try:
+        # Find users ending with ' Dummy' who do not have role 'test'
+        dummies = db.query(models.User).filter(
+            models.User.real_name.like("% Dummy"),
+            models.User.role != "test"
+        ).all()
+
+        count = 0
+        for u in dummies:
+            # Safety check: skip system users if they somehow match
+            if u.id in [0, 1, 3]:
+                continue
+
+            u.role = "test"
+            count += 1
+
+        if count > 0:
+            db.commit()
+            logger.info(f"Fixed role for {count} dummy users -> Set to 'test'.")
+
+    except Exception as e:
+        logger.error(f"Failed to fix dummy user roles: {e}")
+        db.rollback()
+
+
 async def generate_dummy_data(db: Session):
     """Generates 20 random dummy users if TEST_MODE is active and database is nearly empty."""
     if not TEST_MODE:
@@ -331,7 +362,7 @@ async def generate_dummy_data(db: Session):
                     "is_active": True,
                     "is_verified": True,
                     "is_guest": False,
-                    "role": "user",
+                    "role": "test",
                     "intent": arch["intent"],
                     "answers": json.dumps(user_answers),
                     "created_at": datetime.utcnow(),
@@ -360,7 +391,7 @@ async def generate_dummy_data(db: Session):
         db.commit()
 
         sep = "=" * 60
-        logger.info(f"\n{sep}\nGENERATED {len(created_dummies)} DUMMY USERS (Role: 'user')\n{sep}")
+        logger.info(f"\n{sep}\nGENERATED {len(created_dummies)} DUMMY USERS (Role: 'test')\n{sep}")
         for creds in created_dummies:
             print(f"Dummy: {creds}")
         print(sep)

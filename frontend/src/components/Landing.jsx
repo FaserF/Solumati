@@ -29,8 +29,8 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
                     >
                         <Smartphone size={24} />
                         <div className="text-left">
-                            <div className="font-bold text-sm">Get the Android App</div>
-                            <div className="text-xs opacity-90">Download APK</div>
+                            <div className="font-bold text-sm">{t('landing.get_android', "Get the Android App")}</div>
+                            <div className="text-xs opacity-90">{t('landing.download_apk', "Download APK")}</div>
                         </div>
                     </a>
                 )}
@@ -73,7 +73,7 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
                             }`}>
                             {APP_RELEASE_TYPE === 'beta' ? <Info size={14} /> : <AlertTriangle size={14} />}
                             <span className="text-xs font-bold uppercase tracking-wider">
-                                {APP_RELEASE_TYPE === 'beta' ? 'Beta Access' : 'Nightly Build'}
+                                {APP_RELEASE_TYPE === 'beta' ? t('landing.beta_access', 'Beta Access') : 'Nightly Build'}
                             </span>
                         </div>
                         <div className="text-[10px] font-mono text-gray-600 mt-1 mr-2 opacity-60">

@@ -3,7 +3,7 @@ import { X, Flag, User as UserIcon, MessageCircle } from 'lucide-react';
 import { API_URL } from '../config';
 import ReportModal from './ReportModal';
 
-const PublicProfile = ({ userId, onClose, onChat }) => {
+const PublicProfile = ({ userId, onClose, onChat, t }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [questions, setQuestions] = useState([]);
@@ -119,14 +119,14 @@ const PublicProfile = ({ userId, onClose, onChat }) => {
                 <div className="w-full md:w-2/3 p-6 md:p-10 flex flex-col">
                     <div className="flex-1 space-y-8">
                         <div>
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">About Me</h3>
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{t('profile.about_me', 'About Me')}</h3>
                             <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed whitespace-pre-line">
-                                {user.about_me || "No description provided."}
+                                {user.about_me || t('profile.no_bio', "No description provided.")}
                             </p>
                         </div>
 
                         <div>
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Details</h3>
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">{t('profile.details', 'Details')}</h3>
                             <div className="flex flex-wrap gap-2">
                                 {/* Only show a few curated details for public view, or all if we have valid questions */}
                                 {questions.filter(q => ['Personality', 'Interest'].includes(q.category)).map(q => {
@@ -155,7 +155,7 @@ const PublicProfile = ({ userId, onClose, onChat }) => {
                             onClick={() => setReportModalOpen(true)}
                             className="flex items-center gap-2 text-red-500 hover:text-red-700 font-medium transition text-sm"
                         >
-                            <Flag size={16} /> Report User
+                            <Flag size={16} /> {t('btn.report_user', 'Report User')}
                         </button>
                     </div>
                 </div>
@@ -165,6 +165,7 @@ const PublicProfile = ({ userId, onClose, onChat }) => {
                 <ReportModal
                     user={user}
                     onClose={() => setReportModalOpen(false)}
+                    t={t}
                 />
             )}
         </div>

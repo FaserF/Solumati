@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import ChatWindow from './ChatWindow';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle } from 'lucide-react';
 import { API_URL, APP_VERSION, APP_NAME, APP_RELEASE_TYPE } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) => {
@@ -247,15 +247,19 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             if (res.ok) {
                 alert(t('admin.settings.saved'));
                 setUnsavedChanges(false);
+                return true;
             }
-            else alert(t('admin.settings.save_error'));
-        } catch (e) { alert("Network Error"); }
+            else {
+                alert(t('admin.settings.save_error'));
+                return false;
+            }
+        } catch (e) { alert("Network Error"); return false; }
     };
 
     const sendTestMail = async () => {
         if (unsavedChanges) {
-            alert(t('admin.settings.unsaved_warning', "Please save changes first!"));
-            return;
+            const success = await saveSettings();
+            if (!success) return;
         }
         if (!testMailTarget) return alert("Please enter target address.");
         try {
@@ -664,12 +668,25 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                     <div className="grid gap-6">
                         {/* MAIL SETTINGS - REDESIGNED */}
                         <div className="bg-white rounded-xl shadow p-6">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 border-b pb-4">
-                                <Mail className="text-blue-500" />
-                                {t('admin.settings.mail', 'Mail Settings')}
-                            </h2>
+                            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800">
+                                    <Mail className="text-blue-500" />
+                                    {t('admin.settings.mail', 'Mail Settings')}
+                                </h2>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="toggle"
+                                        checked={settings.mail.enabled}
+                                        onChange={(e) => updateSetting('mail', 'enabled', e.target.checked)}
+                                    />
+                                    <span className={`font-bold text-sm px-2 py-1 rounded ${settings.mail.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {settings.mail.enabled ? 'ENABLED' : 'DISABLED'}
+                                    </span>
+                                </label>
+                            </div>
 
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className={`grid md:grid-cols-2 gap-6 transition-opacity ${!settings.mail.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.smtp_server')}</label>
@@ -712,8 +729,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                         <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.smtp_user')}</label>
                                         <input
                                             type="text"
-                                            value={settings.mail.smtp_username}
-                                            onChange={(e) => updateSetting('mail', 'smtp_username', e.target.value)}
+                                            value={settings.mail.smtp_user || ''}
+                                            onChange={(e) => updateSetting('mail', 'smtp_user', e.target.value)}
                                             className="w-full p-2 border rounded-lg"
                                             placeholder="user@example.com"
                                         />
@@ -736,8 +753,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.sender_address')}</label>
                                     <input
                                         type="email"
-                                        value={settings.mail.sender_email || ''}
-                                        onChange={(e) => updateSetting('mail', 'sender_email', e.target.value)}
+                                        value={settings.mail.from_email || ''}
+                                        onChange={(e) => updateSetting('mail', 'from_email', e.target.value)}
                                         className="w-full p-2 border rounded-lg"
                                         placeholder="noreply@example.com"
                                     />
@@ -980,17 +997,19 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
-                                        <input
-                                            type="email"
-                                            value={settings.support_chat?.email_target || ''}
-                                            onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
-                                            className="w-full p-2 border rounded-lg"
-                                            placeholder="support@solumati.com"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
-                                    </div>
+                                    {isMailConfigured() && (
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
+                                            <input
+                                                type="email"
+                                                value={settings.support_chat?.email_target || ''}
+                                                onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
+                                                className="w-full p-2 border rounded-lg"
+                                                placeholder="support@solumati.com"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

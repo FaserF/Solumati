@@ -481,11 +481,11 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-lg"><Smartphone size={20} /></div>
                                             <div>
-                                                <div className="font-bold text-gray-800 dark:text-gray-200">Authenticator App</div>
+                                                <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.auth_app', 'Authenticator App')}</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                                     {securityState.has_totp ? (
-                                                        <span className="text-green-600 font-bold flex items-center gap-1">Enabled {securityState.current_method === 'totp' && "(Active)"}</span>
-                                                    ) : "Not configured"}
+                                                        <span className="text-green-600 font-bold flex items-center gap-1">{t('btn.enabled', 'Enabled')} {securityState.current_method === 'totp' && "(Active)"}</span>
+                                                    ) : t('btn.not_configured', 'Not configured')}
                                                 </div>
                                             </div>
                                         </div>
@@ -500,7 +500,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                             </button>
                                         ) : (
                                             <button onClick={startTotp} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                                Setup
+                                                {t('btn.setup', 'Setup')}
                                             </button>
                                         )}
                                     </div>
@@ -510,11 +510,11 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg"><Fingerprint size={20} /></div>
                                             <div>
-                                                <div className="font-bold text-gray-800 dark:text-gray-200">Passkeys</div>
+                                                <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.passkeys', 'Passkeys')}</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                                     {securityState.has_passkeys ? (
-                                                        <span className="text-green-600 font-bold flex items-center gap-1">Enabled {securityState.current_method === 'passkey' && "(Active)"}</span>
-                                                    ) : "Not configured"}
+                                                        <span className="text-green-600 font-bold flex items-center gap-1">{t('btn.enabled', 'Enabled')} {securityState.current_method === 'passkey' && "(Active)"}</span>
+                                                    ) : t('btn.not_configured', 'Not configured')}
                                                 </div>
                                             </div>
                                         </div>
@@ -529,7 +529,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                             </button>
                                         ) : (
                                             <button onClick={enablePasskey} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                                Add
+                                                {t('btn.add', 'Add')}
                                             </button>
                                         )}
                                     </div>
@@ -540,11 +540,11 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-lg"><Mail size={20} /></div>
                                                 <div>
-                                                    <div className="font-bold text-gray-800 dark:text-gray-200">Email Verification</div>
+                                                    <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_verify', 'Email Verification')}</div>
                                                     <div className="text-xs text-gray-500 dark:text-gray-400">
                                                         {securityState.current_method === 'email' ? (
                                                             <span className="text-green-600 font-bold">Active Method</span>
-                                                        ) : "Available"}
+                                                        ) : t('btn.available', "Available")}
                                                     </div>
                                                 </div>
                                             </div>
@@ -559,7 +559,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                                 </button>
                                             ) : (
                                                 <button onClick={enableEmail2FA} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                                    Use This
+                                                    {t('btn.use_this', 'Use This')}
                                                 </button>
                                             )}
                                         </div>
@@ -645,42 +645,49 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                                 <LinkIcon className="text-blue-500" /> {t('settings.connected_accounts', 'Connected Accounts')}
                             </h2>
                             <div className="space-y-3">
-                                {/* GitHub */}
-                                <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
-                                    <div className="flex items-center gap-3">
-                                        <Github size={20} className="text-gray-700 dark:text-gray-300" />
-                                        <span className="font-bold dark:text-white">GitHub</span>
-                                    </div>
-                                    {isConnected('github') ? (
-                                        <button onClick={() => handleDisconnect('github')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
-                                    ) : (
-                                        <button onClick={() => handleConnect('github')} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
-                                    )}
-                                </div>
-                                {/* Google */}
-                                <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
-                                    <div className="flex items-center gap-3">
-                                        <Chrome size={20} className="text-red-500" />
-                                        <span className="font-bold dark:text-white">Google</span>
-                                    </div>
-                                    {isConnected('google') ? (
-                                        <button onClick={() => handleDisconnect('google')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
-                                    ) : (
-                                        <button onClick={() => handleConnect('google')} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
-                                    )}
-                                </div>
-                                {/* Microsoft */}
-                                <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
-                                    <div className="flex items-center gap-3">
-                                        <Globe size={20} className="text-blue-500" />
-                                        <span className="font-bold dark:text-white">Microsoft</span>
-                                    </div>
-                                    {isConnected('microsoft') ? (
-                                        <button onClick={() => handleDisconnect('microsoft')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
-                                    ) : (
-                                        <button onClick={() => handleConnect('microsoft')} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
-                                    )}
-                                </div>
+                                {(() => {
+                                    const oauthConfig = globalConfig?.oauth_providers || {};
+                                    return (
+                                        <>
+                                            {/* GitHub */}
+                                            <div className={`flex items-center justify-between p-3 border rounded-lg dark:border-gray-700 ${!oauthConfig.github ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                                                <div className="flex items-center gap-3">
+                                                    <Github size={20} className="text-gray-700 dark:text-gray-300" />
+                                                    <span className="font-bold dark:text-white">GitHub</span>
+                                                </div>
+                                                {isConnected('github') ? (
+                                                    <button onClick={() => handleDisconnect('github')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
+                                                ) : (
+                                                    <button onClick={() => handleConnect('github')} disabled={!oauthConfig.github} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
+                                                )}
+                                            </div>
+                                            {/* Google */}
+                                            <div className={`flex items-center justify-between p-3 border rounded-lg dark:border-gray-700 ${!oauthConfig.google ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                                                <div className="flex items-center gap-3">
+                                                    <Chrome size={20} className="text-red-500" />
+                                                    <span className="font-bold dark:text-white">Google</span>
+                                                </div>
+                                                {isConnected('google') ? (
+                                                    <button onClick={() => handleDisconnect('google')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
+                                                ) : (
+                                                    <button onClick={() => handleConnect('google')} disabled={!oauthConfig.google} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
+                                                )}
+                                            </div>
+                                            {/* Microsoft */}
+                                            <div className={`flex items-center justify-between p-3 border rounded-lg dark:border-gray-700 ${!oauthConfig.microsoft ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                                                <div className="flex items-center gap-3">
+                                                    <Globe size={20} className="text-blue-500" />
+                                                    <span className="font-bold dark:text-white">Microsoft</span>
+                                                </div>
+                                                {isConnected('microsoft') ? (
+                                                    <button onClick={() => handleDisconnect('microsoft')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
+                                                ) : (
+                                                    <button onClick={() => handleConnect('microsoft')} disabled={!oauthConfig.microsoft} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
+                                                )}
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
 
@@ -695,14 +702,10 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                 <div className="mt-8 pt-6 border-t text-center text-xs text-gray-400">
                     <p>
                         <a href={`https://github.com/FaserF/Solumati/releases/tag/${globalConfig?.backend_version}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-gray-500">
-                            Solumati v{globalConfig?.backend_version || "..."}
+                            Solumati v{globalConfig?.backend_version || "..."} (FE: {APP_VERSION})
                         </a>
-                        <span> (FE: </span>
-                        <a href={`https://github.com/FaserF/Solumati/releases/tag/v${APP_VERSION}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-gray-500">
-                            {APP_VERSION}
-                        </a>)
                     </p>
-                    <p>All rights reserved.</p>
+                    <p>{t('footer.all_rights', 'All rights reserved.')}</p>
                 </div>
             </div>
         </div >

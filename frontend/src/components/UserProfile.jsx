@@ -110,7 +110,7 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
                                 </>
                             ) : (
                                 <button onClick={() => setMode('view')} className="bg-black/50 backdrop-blur text-white px-4 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-black/60 transition shadow-sm">
-                                    <X size={16} /> Cancel
+                                    <X size={16} /> {t('btn.cancel', 'Cancel')}
                                 </button>
                             )}
                         </div>
@@ -140,9 +140,9 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
                             <h1 className="text-3xl font-bold mt-4 dark:text-white">{user.username}</h1>
                             <p className="text-gray-500">
                                 {mode === 'view' ? (
-                                    intent === 'longterm' ? "Looking for Relationship" :
-                                        intent === 'friends' ? "Looking for Friends" :
-                                            intent === 'shortterm' ? "Looking for Fun" :
+                                    intent === 'longterm' ? t('intent.longterm', "Looking for Relationship") :
+                                        intent === 'friends' ? t('intent.friends', "Looking for Friends") :
+                                            intent === 'shortterm' ? t('intent.shortterm', "Looking for Fun") :
                                                 intent // Custom intent fallback
                                 ) : "Editing Profile"}
                             </p>
@@ -154,12 +154,12 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
                                 <div>
                                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">{t('profile.about_me')}</h3>
                                     <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line leading-relaxed text-lg">
-                                        {aboutMe || <span className="italic text-gray-400">No bio yet.</span>}
+                                        {aboutMe || <span className="italic text-gray-400">{t('profile.no_bio', 'No bio yet.')}</span>}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Details</h3>
+                                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t('profile.details', 'Details')}</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {Object.entries(userAnswers).map(([qid, ansIdx]) => {
                                             const label = getAnswerLabel(qid);
@@ -173,7 +173,7 @@ const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) 
                                             );
                                         })}
                                         {questions.length > 0 && Object.keys(userAnswers).length === 0 && (
-                                            <p className="text-gray-400 italic">No details added yet.</p>
+                                            <p className="text-gray-400 italic">{t('profile.no_details', 'No details added yet.')}</p>
                                         )}
                                     </div>
                                 </div>

@@ -214,7 +214,18 @@ function build() {
                 console.log('Injecting signing configuration into build.gradle...');
                 let buildGradle = fs.readFileSync(buildGradlePath, 'utf8');
 
-                // 1. Add signingConfigs block to android {}
+                // 1. Ensure compileSdk is present
+                if (!buildGradle.includes('compileSdk')) {
+                    console.log('Injecting compileSdk...');
+                    buildGradle = buildGradle.replace('android {', 'android {\n    compileSdk 34');
+                }
+
+                // 2. Apply signingConfig to release build type
+                // We do this BEFORE injecting the signingConfigs block to avoid matching "release {" inside signingConfigs
+                // We'll replace "release {" with "release {\n            signingConfig signingConfigs.release"
+                buildGradle = buildGradle.replace('release {', 'release {\n            signingConfig signingConfigs.release');
+
+                // 3. Add signingConfigs block to android {}
                 const signingConfigBlock = `
     signingConfigs {
         release {
@@ -227,23 +238,8 @@ function build() {
                 // Insert after "android {"
                 buildGradle = buildGradle.replace('android {', 'android {' + signingConfigBlock);
 
-                // 2. Apply signingConfig to release build type
-                // We look for 'buildTypes {' then 'release {' inside it.
-                // A safe heuristic is to replace 'release {' with 'release { signingConfig signingConfigs.release'
-                // verifying we are inside buildTypes is harder with simple replace, but 'release {' is standard.
-                // However, to be safer vs debug builds, we can try to find the release block specifically.
-                // Most bubblewrap templates look like:
-                // buildTypes {
-                //     release {
-                //         minifyEnabled true
-                //         ...
-                //     }
-                // }
-                // We'll just replace "release {" with "release {\n            signingConfig signingConfigs.release"
-                buildGradle = buildGradle.replace('release {', 'release {\n            signingConfig signingConfigs.release');
-
                 fs.writeFileSync(buildGradlePath, buildGradle);
-                console.log('build.gradle updated with signing config.');
+                console.log('build.gradle updated with signing config and compileSdk.');
             } else {
                 console.warn('Warning: Could not find android/app/build.gradle to inject signing config.');
             }

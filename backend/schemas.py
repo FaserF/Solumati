@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, EmailStr
 from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
@@ -161,6 +161,7 @@ class LegalConfig(BaseModel):
 # --- OAuth Dynamic Config ---
 
 class OAuthProviderConfig(BaseModel):
+    enabled: bool = False
     client_id: Optional[str] = ""
     client_secret: Optional[str] = ""
 

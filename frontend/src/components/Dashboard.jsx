@@ -108,16 +108,16 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         <div className="mx-auto w-16 h-16 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center text-pink-600 mb-6">
                             <Shield size={32} />
                         </div>
-                        <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Protect your Account</h2>
+                        <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{t('dashboard.2fa_promo_title', 'Protect your Account')}</h2>
                         <p className="text-gray-500 dark:text-gray-400 mb-8">
-                            We strongly recommend enabling Two-Factor Authentication (2FA) to secure your data.
+                            {t('dashboard.2fa_promo_text', "We strongly recommend enabling Two-Factor Authentication (2FA) to secure your data.")}
                         </p>
                         <div className="flex flex-col gap-3">
                             <button onClick={setup2FA} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:scale-[1.02] transition">
-                                Setup 2FA Now
+                                {t('dashboard.2fa_btn_setup', 'Setup 2FA Now')}
                             </button>
                             <button onClick={dismiss2FAPrompt} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-medium py-2">
-                                I'll do it later
+                                {t('dashboard.2fa_btn_later', "I'll do it later")}
                             </button>
                         </div>
                     </div>
@@ -153,13 +153,13 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                     onClick={() => setActiveTab('matches')}
                     className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'matches' ? 'bg-white dark:bg-gray-700 shadow-sm text-pink-600' : 'text-gray-500 hover:bg-white/50'}`}
                 >
-                    Matches
+                    {t('dashboard.tab_matches', 'Matches')}
                 </button>
                 <button
                     onClick={() => setActiveTab('inbox')}
                     className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'inbox' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500 hover:bg-white/50'}`}
                 >
-                    Inbox
+                    {t('dashboard.tab_inbox', 'Inbox')}
                 </button>
             </div>
 
@@ -184,12 +184,12 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         {!isVisible ? (
                             <div className="bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur p-12 rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-center">
                                 <EyeOff size={48} className="mx-auto text-gray-400 mb-4" />
-                                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">You are hidden</h3>
+                                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">{t('dashboard.hidden_title', 'You are hidden')}</h3>
                                 <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-                                    Your profile is not visible to others, so you won't receive new matches. Enable visibility in settings to get back in the game.
+                                    {t('dashboard.hidden_desc', "Your profile is not visible to others, so you won't receive new matches. Enable visibility in settings to get back in the game.")}
                                 </p>
                                 <button onClick={onProfileClick} className="text-pink-600 font-bold hover:text-pink-700 hover:underline">
-                                    Change Settings
+                                    {t('dashboard.change_settings', 'Change Settings')}
                                 </button>
                             </div>
                         ) : matches.length === 0 ? (
@@ -206,6 +206,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                                         match={m}
                                         isGuest={isGuest}
                                         onClick={() => setSelectedUser(m)}
+                                        t={t}
                                     />
                                 ))}
                             </div>
@@ -218,7 +219,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         {inboxConversations.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400">
                                 <div className="text-4xl mb-4">📭</div>
-                                <p>No conversations yet.</p>
+                                <p>{t('dashboard.no_convos', 'No conversations yet.')}</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -267,6 +268,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                     userId={selectedUser.user_id}
                     onClose={() => setSelectedUser(null)}
                     onChat={() => handleOpenChat(selectedUser)}
+                    t={t}
                 />
             )}
 
@@ -283,6 +285,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         token={localStorage.getItem('token')}
                         onClose={() => setActiveChatUser(null)}
                         supportChatEnabled={supportChatEnabled}
+                        t={t}
                     />
                 </div>
             )}

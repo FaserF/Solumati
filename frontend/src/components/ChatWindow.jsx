@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatWindow.css';
 
-const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabled = false }) => {
+const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabled = false, t }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [status, setStatus] = useState("disconnected"); // connected, disconnected
@@ -138,14 +138,14 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyPress={handleKeyPress}
-                            placeholder="Type a message..."
+                            placeholder={t ? t('chat.placeholder', "Type a message...") : "Type a message..."}
                             disabled={status !== "connected"}
                         />
-                        <button onClick={sendMessage} disabled={status !== "connected"}>Send</button>
+                        <button onClick={sendMessage} disabled={status !== "connected"}>{t ? t('btn.send', 'Send') : 'Send'}</button>
                     </>
                 ) : (
                     <div className="w-full text-center text-xs text-gray-400 italic py-2 bg-gray-50 rounded">
-                        This is a read-only support channel.
+                        {t ? t('chat.readonly', 'This is a read-only support channel.') : 'This is a read-only support channel.'}
                     </div>
                 )}
             </div>

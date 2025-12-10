@@ -10,7 +10,7 @@ from database import engine, Base, get_db, SessionLocal
 import models, schemas
 from logging_config import logger
 from config import CURRENT_VERSION, TEST_MODE, PROJECT_NAME
-from init_data import check_schema, ensure_guest_user, ensure_admin_user, ensure_support_user, generate_dummy_data, check_emergency_reset
+from init_data import check_schema, ensure_guest_user, ensure_admin_user, ensure_support_user, generate_dummy_data, check_emergency_reset, fix_dummy_user_roles
 from tasks import periodic_cleanup_task
 
 # Routers
@@ -51,6 +51,7 @@ async def startup_event():
         ensure_admin_user(db)
         ensure_guest_user(db)
         ensure_support_user(db)
+        fix_dummy_user_roles(db)
         check_emergency_reset(db)
 
         if TEST_MODE:

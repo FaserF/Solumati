@@ -12,7 +12,12 @@ router = APIRouter()
 def get_public_config(db: Session = Depends(get_db)):
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
     legal_config = schemas.LegalConfig(**get_setting(db, "legal", {}))
-    oauth_config = schemas.OAuthProviders(**get_setting(db, "oauth", {}))
+    raw_oauth = get_setting(db, "oauth", {})
+    oauth_config = schemas.OAuthProviders(
+        github=raw_oauth.get('github', {}).get('enabled', False),
+        google=raw_oauth.get('google', {}).get('enabled', False),
+        microsoft=raw_oauth.get('microsoft', {}).get('enabled', False)
+    )
     maint_mode = get_setting(db, "maintenance_mode", False)
     support_conf = get_setting(db, "support_chat", {"enabled": False})
 

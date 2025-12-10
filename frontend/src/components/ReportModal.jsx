@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { API_URL } from '../config';
 
-const ReportModal = ({ user, onClose }) => {
+const ReportModal = ({ user, onClose, t }) => {
     const [reason, setReason] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -41,7 +41,7 @@ const ReportModal = ({ user, onClose }) => {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold text-red-600 flex items-center gap-2">
-                        <AlertTriangle size={24} /> Report User
+                        <AlertTriangle size={24} /> {t ? t('btn.report_user', 'Report User') : 'Report User'}
                     </h3>
                     <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
                         <X size={20} className="text-gray-500" />
@@ -49,12 +49,13 @@ const ReportModal = ({ user, onClose }) => {
                 </div>
 
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    Reporting <strong>{user.username}</strong>. Please describe the issue (spam, harassment, fake profile, etc.).
+                    {t ? t('report.modal_title', 'Reporting {name}').replace('{name}', user.username || 'User') : `Reporting ${user.username}`}
+                    . {t ? t('report.description', 'Please describe the issue (spam, harassment, fake profile, etc.).') : 'Please describe the issue.'}
                 </p>
 
                 <textarea
                     className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-900 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:outline-none min-h-[100px] mb-4"
-                    placeholder="Reason for reporting..."
+                    placeholder={t ? t('report.reason_placeholder', "Reason for reporting...") : "Reason..."}
                     value={reason}
                     onChange={e => setReason(e.target.value)}
                 />
@@ -64,14 +65,14 @@ const ReportModal = ({ user, onClose }) => {
                         onClick={onClose}
                         className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-bold"
                     >
-                        Cancel
+                        {t ? t('btn.cancel', 'Cancel') : 'Cancel'}
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
                         className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition flex items-center gap-2"
                     >
-                        {loading ? "Sending..." : "Submit Report"}
+                        {loading ? (t ? t('btn.sending', 'Sending...') : "Sending...") : (t ? t('report.submit', "Submit Report") : "Submit Report")}
                     </button>
                 </div>
             </div>

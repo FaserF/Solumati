@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from typing import List
 import urllib.request
@@ -154,7 +155,7 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     # Save Mail, Registration, Legal (Direct save)
     save_setting(db, "mail", settings.mail.dict())
     save_setting(db, "registration", settings.registration.dict())
-    save_setting(db, "registration", settings.registration.dict())
+    # Duplicate removed
     save_setting(db, "legal", settings.legal.dict())
     save_setting(db, "support_chat", settings.support_chat.dict())
 
@@ -183,6 +184,24 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
 
     logger.info(f"Admin {current_admin.username} updated system settings.")
     return {"status": "updated"}
+
+class TestMailRequest(BaseModel):
+    target_email: str
+
+@router.post("/settings/test-mail")
+def send_test_mail(req: TestMailRequest, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    from utils import send_mail_sync
+    try:
+        html = f"""
+        <h1>Test Mail</h1>
+        <p>This is a test email triggered by {current_admin.username} from the Solumati Admin Console.</p>
+        <p>If you see this, your SMTP configuration is correct!</p>
+        """
+        send_mail_sync(req.target_email, "Solumati Test Mail", html, db)
+        return {"status": "sent"}
+    except Exception as e:
+        logger.error(f"Test mail failed: {e}")
+        raise HTTPException(500, f"Failed to send mail: {str(e)}")
 
 @router.get("/diagnostics", response_model=schemas.SystemDiagnostics)
 def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):

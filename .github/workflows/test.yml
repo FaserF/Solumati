@@ -23,6 +23,9 @@ jobs:
       run: |
         cd backend
         pytest
+    - name: Verify i18n Sync
+      run: |
+        python backend/tests/check_i18n.py
 
   frontend-test:
     runs-on: ubuntu-latest

@@ -22,7 +22,7 @@ const DashboardNavbar = ({
                     <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-violet-600 dark:from-pink-400 dark:to-violet-400">
                         {t('app.title', APP_NAME)}
                     </h1>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Find your connection</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">{t('navbar.find_connection', 'Find your connection')}</p>
                 </div>
             </div>
 
