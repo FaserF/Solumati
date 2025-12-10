@@ -28,7 +28,7 @@ const TwoFactorAuth = () => {
     }, [tempAuth, navigate]);
 
     // 3. Early return for rendering only (after hooks)
-    if (!tempAuth) return null;
+    // MOVED DOWN
 
     const onVerified = (data) => {
         finalizeLogin(data);
@@ -41,10 +41,12 @@ const TwoFactorAuth = () => {
 
     // Auto-trigger passkey if method matches (only in verify view)
     useEffect(() => {
-        if (view === 'verify' && tempAuth.method === 'passkey') {
+        if (view === 'verify' && tempAuth && tempAuth.method === 'passkey') {
             handlePasskey();
         }
-    }, [view, tempAuth.method]);
+    }, [view, tempAuth?.method]);
+
+    if (!tempAuth) return null;
 
     const handleMethodSelect = (method) => {
         tempAuth.method = method; // Update local ref of method

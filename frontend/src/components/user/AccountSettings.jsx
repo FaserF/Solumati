@@ -39,23 +39,18 @@ const AccountSettings = () => {
         has_passkeys: false
     });
 
-    if (!user) return null;
-
-    // Use Global Theme Context
-    // Theme is handled by useAuth now
-    // const { theme, setTheme } = useTheme();
-
     const [loading, setLoading] = useState(false);
     const [totpSetup, setTotpSetup] = useState(null);
     const [totpCode, setTotpCode] = useState("");
 
-    const headers = {
+    const headers = user ? {
         'Content-Type': 'application/json',
         'X-User-ID': user.user_id.toString()
-    };
+    } : {};
 
     // --- 1. Fetch User Data on Mount ---
     useEffect(() => {
+        if (!user) return;
         const fetchUserData = async () => {
             // ... Code to fetch user data ...
             // We need to keep this but we have to be careful about setting 'theme'
@@ -90,7 +85,7 @@ const AccountSettings = () => {
             } catch (e) { console.error("Failed to load user profile", e); }
         };
         fetchUserData();
-    }, [user.user_id]);
+    }, [user?.user_id]);
 
     // Removed local useEffect for theme application as ThemeContext handles it
 
@@ -302,6 +297,8 @@ const AccountSettings = () => {
 
     // Check if 2FA is already active (Legacy/Global check, mostly unused now in favor of securityState)
     // const has2FA = user.two_factor_method && user.two_factor_method !== 'none';
+
+    if (!user) return null;
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col dark:bg-gray-900 transition-colors duration-200">

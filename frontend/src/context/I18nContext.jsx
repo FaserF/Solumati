@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL, FALLBACK } from '../config';
 
 const I18nContext = createContext();

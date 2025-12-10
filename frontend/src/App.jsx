@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { ConfigProvider } from './context/ConfigContext';
 import { AuthProvider } from './context/AuthContext';
 import { I18nProvider } from './context/I18nContext';
