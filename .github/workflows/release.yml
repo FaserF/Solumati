@@ -3,20 +3,20 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      type:
-        description: 'Release Type (Legacy/Auto)'
+      release_type:
+        description: 'Release Type'
         required: true
-        default: 'minor'
+        default: 'stable'
         type: choice
         options:
-        - major
-        - minor
-        - patch
-      prerelease:
-        description: 'Is Beta / Pre-release?'
-        required: true
-        default: false
-        type: boolean
+        - stable
+        - beta
+        - nightly
+      version_override:
+        description: 'Manual version (leave empty for auto-increment, e.g. 2025.12.5)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -38,20 +38,32 @@ jobs:
       with:
         python-version: '3.14'
 
-    - name: Get Current Backend Version
+    - name: Calculate Version
       id: version
       run: |
         # Get current version from frontend/package.json (Source of Truth)
         current=$(jq -r .version frontend/package.json)
 
-        # Flags
-        RELEASE_TYPE="stable"
-        if [ "${{ inputs.prerelease }}" == "true" ]; then
-          RELEASE_TYPE="beta"
+        # Use input release type (stable/beta/nightly)
+        RELEASE_TYPE="${{ inputs.release_type }}"
+
+        # Check for manual version override
+        if [ -n "${{ inputs.version_override }}" ]; then
+          new_version="${{ inputs.version_override }}"
+          # Add suffix for non-stable releases if not present
+          if [ "$RELEASE_TYPE" == "beta" ] && [[ ! "$new_version" =~ -b ]]; then
+            new_version="${new_version}-b1"
+          elif [ "$RELEASE_TYPE" == "nightly" ] && [[ ! "$new_version" =~ -n ]]; then
+            new_version="${new_version}-n1"
+          fi
+        else
+          # Auto-generate version
+          new_version=$(python3 scripts/generate_version.py --current "$current" --type $RELEASE_TYPE)
         fi
 
-        new_version=$(python3 scripts/generate_version.py --current "$current" --type $RELEASE_TYPE)
-        echo "Calculated Version: $new_version"
+        echo "Release Type: $RELEASE_TYPE"
+        echo "Current Version: $current"
+        echo "New Version: $new_version"
 
         echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
         echo "RELEASE_TYPE=$RELEASE_TYPE" >> $GITHUB_ENV
@@ -101,7 +113,7 @@ jobs:
         target_commitish: ${{ steps.commit.outputs.commit_sha }}
         body_path: CHANGELOG.md
         draft: false
-        prerelease: ${{ inputs.prerelease }}
+        prerelease: ${{ inputs.release_type != 'stable' }}
 
   build-push-docker:
     needs: release
