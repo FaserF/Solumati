@@ -1,5 +1,5 @@
 import Foundation
 
 struct Config {
-    static let pwaUrl = URL(string: "https://solumati.fabiseitz.de")!
+    static let pwaUrl = URL(string: "https://solumati.fabiseitz.de/?source=ios")!
 }

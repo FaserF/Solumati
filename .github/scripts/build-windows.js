@@ -44,7 +44,7 @@ namespace Solumati
 {
     public static class Config
     {
-        public static readonly Uri PwaUrl = new Uri("${pwaUrl}");
+        public static readonly Uri PwaUrl = new Uri("${pwaUrl}/?source=windows");
     }
 }
 `;

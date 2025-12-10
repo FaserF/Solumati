@@ -1,34 +1,59 @@
-import { Lock, Github, Heart, Scale, AlertTriangle, Beaker, Info, Smartphone } from 'lucide-react';
+import { Lock, Github, Heart, Scale, AlertTriangle, Beaker, Info, Smartphone, Monitor } from 'lucide-react';
 import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 
 const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
-    const isAndroid = /Android/i.test(navigator.userAgent);
+    // Platform Detection
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isAndroid = /android/i.test(userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+    const isWindows = /windows phone/i.test(userAgent) || /windows/i.test(userAgent);
 
-    // Check if running in TWA (APK) or standard Android browser
-    const isTwa = new URLSearchParams(window.location.search).get('source') === 'twa';
-    const showAndroidCta = isAndroid && !isTwa;
+    // App Detection (via query param ?source=... or standalone mode)
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source'); // 'twa', 'ios', 'windows'
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isApp = source || isStandalone;
 
-    const handleAndroidDownload = async (e) => {
-        e.preventDefault();
+    const showAndroidCta = isAndroid && !isApp;
+    const showIOSCta = isIOS && !isApp;
+    const showWindowsCta = isWindows && !isApp;
+
+    const handleDownload = async (platform) => {
         try {
-            // Fetch latest release data from GitHub
             const response = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
             if (response.ok) {
                 const data = await response.json();
-                // Find the asset that ends with .apk
-                const apkAsset = data.assets.find(asset => asset.name.endsWith('.apk'));
-                if (apkAsset) {
-                    window.location.href = apkAsset.browser_download_url;
+                let asset;
+                if (platform === 'android') asset = data.assets.find(a => a.name.endsWith('.apk'));
+                if (platform === 'ios') asset = data.assets.find(a => a.name.endsWith('.ipa'));
+                if (platform === 'windows') asset = data.assets.find(a => a.name.endsWith('.msixbundle'));
+
+                if (asset) {
+                    window.location.href = asset.browser_download_url;
                     return;
                 }
             }
-            // Fallback: Open Release Page if API fails or no APK found
             window.open('https://github.com/FaserF/Solumati/releases/latest', '_blank');
         } catch (error) {
-            console.error("Failed to fetch latest release:", error);
+            console.error("Failed to fetch release:", error);
             window.open('https://github.com/FaserF/Solumati/releases/latest', '_blank');
         }
     };
+
+    // Render Banner Helper
+    const AppBanner = ({ platform, icon: Icon, title, sub, onClick, color }) => (
+        <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); onClick(); }}
+            className={`mb-8 flex items-center gap-2 ${color} text-white px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg animate-bounce`}
+        >
+            <Icon size={24} />
+            <div className="text-left">
+                <div className="font-bold text-sm">{title}</div>
+                <div className="text-xs opacity-90">{sub}</div>
+            </div>
+        </a>
+    );
 
     return (
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -47,17 +72,34 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
                 </p>
 
                 {showAndroidCta && (
-                    <a
-                        href="#"
-                        onClick={handleAndroidDownload}
-                        className="mb-8 flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg animate-bounce"
-                    >
-                        <Smartphone size={24} />
-                        <div className="text-left">
-                            <div className="font-bold text-sm">{t('landing.get_android', "Get the Android App")}</div>
-                            <div className="text-xs opacity-90">{t('landing.download_apk', "Download APK")}</div>
-                        </div>
-                    </a>
+                    <AppBanner
+                        platform="android"
+                        icon={Smartphone}
+                        title={t('landing.get_android', "Get the Android App")}
+                        sub={t('landing.download_apk', "Download APK")}
+                        onClick={() => handleDownload('android')}
+                        color="bg-gradient-to-r from-green-500 to-emerald-600"
+                    />
+                )}
+                {showIOSCta && (
+                    <AppBanner
+                        platform="ios"
+                        icon={Smartphone}
+                        title={t('landing.get_ios', "Get the iOS App")}
+                        sub={t('landing.download_ipa', "Download IPA (AltStore)")}
+                        onClick={() => handleDownload('ios')}
+                        color="bg-gradient-to-r from-blue-500 to-blue-600"
+                    />
+                )}
+                {showWindowsCta && (
+                    <AppBanner
+                        platform="windows"
+                        icon={Monitor}
+                        title={t('landing.get_windows', "Get the Windows App")}
+                        sub={t('landing.download_msix', "Download App")}
+                        onClick={() => handleDownload('windows')}
+                        color="bg-gradient-to-r from-blue-600 to-indigo-600"
+                    />
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mx-auto">
@@ -107,7 +149,7 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

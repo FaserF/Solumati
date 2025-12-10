@@ -39,7 +39,7 @@ console.log('Updating Config.swift...');
 const configContent = `import Foundation
 
 struct Config {
-    static let pwaUrl = URL(string: "${pwaUrl}")!
+    static let pwaUrl = URL(string: "${pwaUrl}/?source=ios")!
 }
 `;
 fs.writeFileSync(CONFIG_SWIFT_PATH, configContent);

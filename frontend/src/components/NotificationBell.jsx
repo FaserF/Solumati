@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, Smartphone } from 'lucide-react';
-import { API_URL } from '../../config';
+import { API_URL } from '../config';
 
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String) {
