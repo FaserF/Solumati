@@ -1,18 +1,33 @@
 # Solumati - Find Your Match ❤️
 
-**Solumati** is a modern dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby.
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/FaserF/Solumati?color=pink&label=Latest%20Release)
+![GitHub License](https://img.shields.io/github/license/FaserF/Solumati?color=blue)
+![Docker Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/docker-publish.yml?label=Docker%20Build)
+![Android Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/android-release.yml?label=Android%20Build)
 
-## What is Solumati?
+**Solumati** is a modern, open-source dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby in a transparent and secure environment.
 
-Solumati isn't just another dating app; it's a community. We believe in transparency and real connections.
-With our intuitive interface, you can manage your profile, define what you are looking for, and start discovering interesting people immediately.
+![Solumati Preview](https://github.com/FaserF/Solumati/raw/main/frontend/public/logo/Solumati.png)
 
-### Key Features
-*   **Smart Matching:** Our algorithm helps you find people who truly fit you based on your answers and interests.
-*   **Discover Mode:** Swipe through profiles to find your next match.
-*   **Detailed Profiles:** Share more about yourself with a customizable "About Me" and Intent section.
-*   **Guest Access:** Just curious? Try out our limited Guest Mode without an account!
-*   **Security First:** We prioritize your data with optional features like Two-Factor Authentication.
+---
+
+## ✨ Features
+
+*   **❤️ Smart Matching:** Algorithms that connect you with people who truly fit your vibe.
+*   **🔭 Discover Mode:** Swipe through profiles to find your next match.
+*   **📱 Native Android App:** Enhanced mobile experience with a dedicated TWA (Trusted Web Activity) Android app.
+*   **🛡️ Security First:** Two-Factor Authentication (2FA) and Passkey support.
+*   **🎨 Modern UI:** Sleek, responsive design with Dark Mode support.
+*   **👀 Guest Access:** Try out limited features without creating an account.
+
+---
+
+## 📱 Android App
+
+Solumati is available as a native Android application!
+You can download the latest APK from our **[Releases Page](https://github.com/FaserF/Solumati/releases/latest)**.
+
+The app provides a full-screen immersive experience and is built using Bubblewrap (TWA).
 
 ---
 
@@ -23,120 +38,58 @@ Welcome to the technical side of Solumati! This project is a full-stack web appl
 ### Technology Stack
 *   **Frontend:** React (Vite), TailwindCSS, Lucide Icons
 *   **Backend:** Python (FastAPI), SQLAlchemy (SQLite/PostgreSQL)
+*   **Mobile:** Android TWA (Bubblewrap)
 *   **Containerization:** Docker & Docker Compose
 
 ### Getting Started
 
-#### Prerequisites
-*   [Docker](https://www.docker.com/) & Docker Compose
-*   *Alternatively just Python 3.9+ and Node.js 18+ for local non-docker dev.*
-
-#### Running with Docker (Recommended)
+#### Option A: Running with Docker (Recommended)
 The easiest way to run the entire stack is using Docker Compose.
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 This will start:
-*   **Backend:** http://localhost:7777
 *   **Frontend:** http://localhost:3000
+*   **Backend:** http://localhost:7777
 
-#### Local Development (Manual)
+#### Option B: Local Development (Manual)
 
-**Backend:**
-1.  Navigate to `backend/`.
-2.  Install dependencies: `pip install -r requirements.txt`
-3.  Run the server:
-    ```bash
-    uvicorn main:app --reload
-    ```
+If you prefer to run services individually without Docker:
 
-**Frontend:**
-1.  Navigate to `frontend/`.
-2.  Install dependencies: `npm install`
-3.  Start the dev server:
-```
+**1. Backend Setup**
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 7777
 ```
 
-#### Homeassistant Addon
-You can find a Addon here: [Solumati Addon](https://github.com/FaserF/hassio-addons/tree/master/solumati)
+**2. Frontend Setup**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-# Solumati - Find Your Match ❤️
-
-**Solumati** is a modern dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby.
-
-## What is Solumati?
-
-Solumati isn't just another dating app; it's a community. We believe in transparency and real connections.
-With our intuitive interface, you can manage your profile, define what you are looking for, and start discovering interesting people immediately.
-
-### Key Features
-*   **Smart Matching:** Our algorithm helps you find people who truly fit you based on your answers and interests.
-*   **Discover Mode:** Swipe through profiles to find your next match.
-*   **Detailed Profiles:** Share more about yourself with a customizable "About Me" and Intent section.
-*   **Guest Access:** Just curious? Try out our limited Guest Mode without an account!
-*   **Security First:** We prioritize your data with optional features like Two-Factor Authentication.
+#### Option C: Home Assistant Addon
+Solumati is also available as a Home Assistant Addon!
+Check out the repository here: **[Solumati Addon](https://github.com/FaserF/hassio-addons/tree/master/solumati)**
 
 ---
 
-## 🛠️ For Developers
+### ⚙️ Configuration
 
-Welcome to the technical side of Solumati! This project is a full-stack web application built with modern technologies.
-
-### Technology Stack
-*   **Frontend:** React (Vite), TailwindCSS, Lucide Icons
-*   **Backend:** Python (FastAPI), SQLAlchemy (SQLite/PostgreSQL)
-*   **Containerization:** Docker & Docker Compose
-
-### Getting Started
-
-#### Prerequisites
-*   [Docker](https://www.docker.com/) & Docker Compose
-*   *Alternatively just Python 3.9+ and Node.js 18+ for local non-docker dev.*
-
-#### Running with Docker (Recommended)
-The easiest way to run the entire stack is using Docker Compose.
-
-```bash
-docker-compose up --build
-```
-
-This will start:
-*   **Backend:** http://localhost:7777
-*   **Frontend:** http://localhost:3000
-
-#### Local Development (Manual)
-
-**Backend:**
-1.  Navigate to `backend/`.
-2.  Install dependencies: `pip install -r requirements.txt`
-3.  Run the server:
-    ```bash
-    uvicorn main:app --reload
-    ```
-
-**Frontend:**
-1.  Navigate to `frontend/`.
-2.  Install dependencies: `npm install`
-3.  Start the dev server:
-    ```bash
-    npm run dev
-    ```
-
-### Testing
-*   **Guest Mode:** You can log in as a Guest to test basic UI features without registering.
-*   **Test Mode:** Set `TEST_MODE=true` in backend environment to enable debug banners.
-
-### OAuth Configuration
-To enable login via GitHub, Google, or Microsoft, set the following environment variables (e.g., in `docker-compose.yml`):
-
+#### OAuth (Social Login)
+To enable login via GitHub, Google, or Microsoft, set the following environment variables in the Admin Console:
 *   `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`
 *   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
 *   `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`
 
-If configured, these options will appear on the login and register pages. Registration via password can be disabled in the Admin Panel.
+#### Testing
+*   **Test Mode:** Set `TEST_MODE=true` in backend environment variables to enable debug features.
 
-### License
-Solumati is open-source software.
-```
+---
+
+### 📄 License
+Solumati is open-source software licensed under the [GNU Affero General Public License v3.0](LICENSE.md).

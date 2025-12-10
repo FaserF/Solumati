@@ -7,7 +7,15 @@ const REQUIRED_ENV_VARS = ['PWA_URL'];
 const PWA_MANIFEST_PATH = path.join(__dirname, '../../frontend/manifest.json');
 const PACKAGE_JSON_PATH = path.join(__dirname, '../../frontend/package.json');
 const TWA_MANIFEST_PATH = path.join(process.cwd(), 'twa-manifest.json');
+const TWA_CHECKSUM_PATH = path.join(process.cwd(), '.twa-manifest.json.checksum');
+const ANDROID_OUTPUT_DIR = path.join(process.cwd(), 'android'); // Default output is usually root, but let's be careful.
 const KEYSTORE_PATH = path.join(process.cwd(), 'android-keystore.jks');
+
+// Clean up stale artifacts to prevent "Missing Checksum" prompts if possible
+if (fs.existsSync(TWA_CHECKSUM_PATH)) fs.unlinkSync(TWA_CHECKSUM_PATH);
+// We don't delete the project files (gradle, app, etc) aggressively to avoid breaking
+// if 'build' expects them, but removing checksum forces a sync check.
+// The input 'y' below handles the regeneration prompt.
 
 // Validate Environment
 const pwaUrl = process.env.PWA_URL;
