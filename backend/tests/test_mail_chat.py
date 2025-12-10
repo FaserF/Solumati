@@ -20,8 +20,8 @@ def mock_user_dep(role="admin", id=1):
     return lambda: user
 
 # --- MAIL TESTS ---
-@patch("routers.admin.send_mail_sync")
-@patch("routers.admin.create_html_email")
+@patch("utils.send_mail_sync")
+@patch("utils.create_html_email")
 def test_admin_send_test_mail(mock_create_html, mock_send_mail):
     # Setup Admin Mock
     app.dependency_overrides[require_admin] = mock_user_dep(role="admin")
@@ -29,7 +29,7 @@ def test_admin_send_test_mail(mock_create_html, mock_send_mail):
     mock_create_html.return_value = "<html>Test</html>"
 
     payload = {"target_email": "test@example.com"}
-    response = client.post("/api/admin/settings/test-mail", json=payload)
+    response = client.post("/admin/settings/test-mail", json=payload)
 
     assert response.status_code == 200
     assert response.json()["status"] == "sent"
@@ -85,7 +85,7 @@ def test_get_conversations_mock_db():
 
     # Also need to patch `decrypt_message` since we don't have the real key setup in tests possibly
     with patch("routers.chat.decrypt_message", return_value="Hello World"):
-        response = client.get("/api/chat/conversations", headers={"X-User-ID": "1"})
+        response = client.get("/chat/conversations", headers={"X-User-ID": "1"})
 
     assert response.status_code == 200
     data = response.json()

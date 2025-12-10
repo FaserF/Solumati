@@ -1,9 +1,19 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
+import { useI18n } from '../context/I18nContext';
 import ChatWindow from './ChatWindow';
 import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone } from 'lucide-react';
 import { API_URL, APP_VERSION, APP_NAME, APP_RELEASE_TYPE } from '../config';
 
-const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) => {
+const AdminPanel = () => {
+    const { user, logout } = useAuth();
+    const { globalConfig, maintenanceMode } = useConfig();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+
+    const testMode = globalConfig?.test_mode;
     // Role Checks
     const isModerator = user?.role === 'moderator';
     const isAdmin = user?.role === 'admin';
@@ -375,7 +385,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="bg-gray-200 dark:bg-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-all">
+                    <button onClick={() => navigate('/dashboard')} className="bg-gray-200 dark:bg-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-all">
                         <ArrowLeft size={18} /> {t('btn.back')}
                     </button>
                 </div>

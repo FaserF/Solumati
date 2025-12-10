@@ -2,9 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 import { startRegistration } from '@simplewebauthn/browser';
-import { useTheme } from './ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
+import { useI18n } from '../context/I18nContext';
 
-const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalConfig }) => {
+const AccountSettings = () => {
+    const { user, logout, updateUser, applyTheme, theme } = useAuth();
+    const { globalConfig } = useConfig();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+
+    // Handlers
+    const onBack = () => navigate(-1);
+    const onLogout = logout;
+    const onResetPassword = () => { logout(); navigate('/forgot-password'); };
+
     if (!user) return null;
     // --- Tabs ---
     const [activeTab, setActiveTab] = useState('app');
@@ -28,7 +41,8 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
     });
 
     // Use Global Theme Context
-    const { theme, setTheme } = useTheme();
+    // Theme is handled by useAuth now
+    // const { theme, setTheme } = useTheme();
 
     const [loading, setLoading] = useState(false);
     const [totpSetup, setTotpSetup] = useState(null);
@@ -55,7 +69,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                         try {
                             const s = typeof userData.app_settings === 'string' ? JSON.parse(userData.app_settings) : userData.app_settings;
                             setNotificationsEnabled(s.notifications_enabled || false);
-                            if (s.theme) setTheme(s.theme);
+                            if (s.theme) applyTheme(s.theme);
                         } catch (e) { console.error("Error parsing settings", e); }
                     }
 
@@ -84,7 +98,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
         try {
             // Update State
             if (newPrefs.notifications_enabled !== undefined) setNotificationsEnabled(newPrefs.notifications_enabled);
-            if (newPrefs.theme !== undefined) setTheme(newPrefs.theme);
+            if (newPrefs.theme !== undefined) applyTheme(newPrefs.theme);
 
             const payload = { ...newPrefs };
 

@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { API_URL } from '../config';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useI18n } from '../context/I18nContext';
 
-const ResetPassword = ({ token, onSuccess, t }) => {
+const ResetPassword = () => {
+    const { t } = useI18n();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const token = searchParams.get('token');
+
+    const onSuccess = () => navigate('/login');
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
     const [loading, setLoading] = useState(false);

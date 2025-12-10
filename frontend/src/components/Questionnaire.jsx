@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 import { ChevronRight, ChevronLeft, CheckCircle, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 
-const Questionnaire = ({ user, onComplete, onClose, t }) => {
+const Questionnaire = ({ onComplete, onClose }) => {
+    const { user } = useAuth();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+
+    // Wrappers if props are missing
+    const handleComplete = onComplete || (() => navigate('/dashboard'));
+    const handleClose = onClose || (() => navigate('/dashboard'));
     const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState({});
     const [step, setStep] = useState(0);
@@ -55,7 +65,7 @@ const Questionnaire = ({ user, onComplete, onClose, t }) => {
             });
 
             if (res.ok) {
-                onComplete();
+                handleComplete();
             } else {
                 alert("Failed to save answers.");
             }
@@ -92,7 +102,7 @@ const Questionnaire = ({ user, onComplete, onClose, t }) => {
                             <p className="text-gray-500 dark:text-gray-400 text-sm">{t('quest.intro', "Tell us about yourself")}</p>
                         </div>
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="p-2 rounded-full bg-white dark:bg-[#1e1e1e] hover:bg-gray-100 dark:hover:bg-[#2e2e2e] text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-white transition shadow-sm border border-gray-100 dark:border-white/10"
                             title={t('btn.cancel', 'Cancel')}
                         >

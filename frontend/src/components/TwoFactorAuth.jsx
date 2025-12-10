@@ -2,8 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 import { Shield, Smartphone, Mail, Fingerprint, HelpCircle, ArrowLeft } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 
-const TwoFactorAuth = ({ tempAuth, onVerified, onCancel, t }) => {
+const TwoFactorAuth = () => {
+    const { tempAuth, finalizeLogin, logout } = useAuth();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+
+    const onVerified = (data) => {
+        finalizeLogin(data);
+        navigate('/dashboard');
+    };
+    const onCancel = () => {
+        logout();
+        navigate('/login');
+    };
+
+    if (!tempAuth) {
+        // Redirect if accessed directly without auth flow
+        useEffect(() => { navigate('/login'); }, []);
+        return null;
+    }
     const [view, setView] = useState(() => {
         // Init state: if multiple methods available, show selector
         if (tempAuth.available_methods && tempAuth.available_methods.length > 1) {

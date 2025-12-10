@@ -28,7 +28,7 @@ def test_registration_with_list_answers():
         "answers": [3, 3, 3, 3] # This should now be accepted
     }
 
-    response = client.post("/api/users/", json=payload)
+    response = client.post("/users/", json=payload)
     assert response.status_code == 200, f"Registration failed: {response.text}"
     data = response.json()
     assert data["email"] == email
@@ -52,7 +52,7 @@ def test_admin_create_user_defaults():
         # answers and intent are OMITTED, should default
     }
 
-    response = client.post("/api/admin/users", json=payload)
+    response = client.post("/admin/users", json=payload)
 
     # Clean up override
     app.dependency_overrides = {}
@@ -75,7 +75,7 @@ def test_match_gating_incomplete_profile():
         "intent": "longterm",
         "answers": [3, 3, 3, 3] # Incomplete/Dummy answers
     }
-    reg_response = client.post("/api/users/", json=payload)
+    reg_response = client.post("/users/", json=payload)
     assert reg_response.status_code == 200
     user_id = reg_response.json()["id"]
 
@@ -101,7 +101,7 @@ def test_match_gating_incomplete_profile():
     # Security Note: This means anyone can check matches for any ID?
     # Probably a security flaw but out of scope for this fix.
 
-    response = client.get(f"/api/matches/{user_id}")
+    response = client.get(f"/matches/{user_id}")
 
     # EXPECTATION: 403 Forbidden because profile is incomplete
     assert response.status_code == 403, f"Expected 403 for incomplete profile, got {response.status_code}"

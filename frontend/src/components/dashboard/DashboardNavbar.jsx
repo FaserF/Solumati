@@ -48,7 +48,8 @@ const DashboardNavbar = ({
                     </button>
                 </div>
             </div>
-            );
+        </div>
+    );
 };
 
-            export default DashboardNavbar;
+export default DashboardNavbar;

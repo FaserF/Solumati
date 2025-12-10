@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { X, Heart, ChevronLeft, MapPin, CheckCircle, Quote } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 import { API_URL } from '../config';
 
-const Discover = ({ user, onBack, t }) => {
+const Discover = () => {
+    const { user } = useAuth();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+    const onBack = () => navigate('/dashboard');
     const [candidates, setCandidates] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);

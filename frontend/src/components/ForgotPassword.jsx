@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { API_URL } from '../config';
+import { useNavigate } from 'react-router-dom';
+import { useI18n } from '../context/I18nContext';
 
-const ForgotPassword = ({ onBack, t }) => {
+const ForgotPassword = () => {
+    const { t } = useI18n();
+    const navigate = useNavigate();
+    const onBack = () => navigate('/login');
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);

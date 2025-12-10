@@ -38,6 +38,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def startup_event():
     logger.info(f"Starting {PROJECT_NAME} v{CURRENT_VERSION}")
 
+    # DEBUG: Print Routes
+    for route in app.routes:
+        if hasattr(route, "path"):
+            print(f"ROUTE: {route.path}")
+
     # Create DB Session for Init
     db = SessionLocal()
     try:

@@ -1,7 +1,28 @@
 import { Lock, Github, Heart, Scale, AlertTriangle, Beaker, Info, Smartphone, Monitor } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 
-const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
+const Landing = () => {
+    const { t } = useI18n();
+    const { guestLogin } = useAuth();
+    const navigate = useNavigate();
+
+    const onLogin = () => navigate('/login');
+    const onRegister = () => navigate('/register');
+    const onAdmin = () => navigate('/login');
+    const onLegal = () => navigate('/imprint');
+
+    const onGuest = async () => {
+        const result = await guestLogin();
+        if (result.status === 'success') {
+            navigate('/dashboard');
+        } else {
+            console.error("Guest login failed", result.error);
+            alert("Guest login failed");
+        }
+    };
     // Platform Detection
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isAndroid = /android/i.test(userAgent);

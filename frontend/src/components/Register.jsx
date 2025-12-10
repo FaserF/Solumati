@@ -1,62 +1,86 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 import { Github } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
+import { useI18n } from '../context/I18nContext';
 
-const Register = ({
-    realName, setRealName,
-    email, setEmail,
-    password, setPassword,
-    answers, setAnswers,
-    questions,
-    onRegister, onBack, t, config
-}) => {
+const Register = () => {
+    const { t } = useI18n();
+    const { globalConfig, fetchConfig } = useConfig();
+    const { register } = useAuth();
+    const navigate = useNavigate();
+
+    // Local State
+    const [realName, setRealName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    // Config State
     const [registrationEnabled, setRegistrationEnabled] = useState(true);
     const [allowPassword, setAllowPassword] = useState(true);
-    const [loadingConfig, setLoadingConfig] = useState(!config);
-    const [oauthConfig, setOauthConfig] = useState(config?.oauth_providers || {});
+    const [oauthConfig, setOauthConfig] = useState({});
+    const [loadingConfig, setLoadingConfig] = useState(true);
 
+    // Sync with globalConfig
     useEffect(() => {
-        if (config) {
-            setRegistrationEnabled(config.registration_enabled);
-            setAllowPassword(config.allow_password_registration !== false); // Default to true if undefined
-            setOauthConfig(config.oauth_providers);
+        if (globalConfig) {
+            setRegistrationEnabled(globalConfig.registration_enabled);
+            setAllowPassword(globalConfig.allow_password_registration !== false);
+            setOauthConfig(globalConfig.oauth_providers || {});
             setLoadingConfig(false);
-            return;
+        } else {
+            // Fallback fetch if config is missing?
+            // ConfigProvider handles fetching, but maybe it hasn't finished?
+            // Since ConfigProvider renders children always, globalConfig might be initial state.
+            // We can rely on it updating.
         }
+    }, [globalConfig]);
 
-        const checkConfig = async () => {
-            try {
-                const res = await fetch(`${API_URL}/public-config`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setRegistrationEnabled(data.registration_enabled);
-                    setAllowPassword(data.allow_password_registration !== false);
-                    setOauthConfig(data.oauth_providers || {});
-                }
-            } catch (e) {
-                console.warn("Could not fetch config", e);
-            } finally {
-                setLoadingConfig(false);
-            }
-        };
-        checkConfig();
-    }, [config]);
 
     const handleOAuth = (provider) => {
         window.location.href = `${API_URL}/auth/oauth/${provider}/login`;
     };
 
-    const [confirmPassword, setConfirmPassword] = useState("");
-
-    const handleRegister = () => {
+    const handleRegister = async () => {
         if (password !== confirmPassword) {
             alert(t('alert.pw_mismatch', "Passwords do not match!"));
             return;
         }
-        onRegister();
+
+        // Hardcoded generic questions for now, since they were passed as props previously
+        // Ideally we should move questions definition to a shared constant or fetch them?
+        // App.jsx defined them.
+        const questions = [
+            { id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }
+        ];
+        // Default answers (all 3)
+        const answersArray = questions.map(q => 3);
+
+        const payload = {
+            email,
+            password,
+            real_name: realName,
+            intent: "longterm", // Default
+            answers: answersArray
+        };
+
+        const result = await register(payload);
+        if (result.status === 'success') {
+            alert(t('alert.welcome', `Welcome`) + `, ${result.data.username}!`);
+            navigate('/dashboard');
+        } else if (result.status === 'pending_verification') {
+            alert(t('register.check_mail', "Account created! Please check your email to activate your account."));
+            navigate('/');
+        } else {
+            const errVal = typeof result.error?.detail === 'object' ? JSON.stringify(result.error.detail) : result.error?.detail || JSON.stringify(result.error);
+            alert(t('alert.error', "Error: ") + errVal);
+        }
     };
 
-    if (loadingConfig) {
+    if (loadingConfig && !globalConfig) { // Show loading if no config at all
         return (
             <div className="flex items-center justify-center p-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
@@ -64,7 +88,6 @@ const Register = ({
         );
     }
 
-    // Completely disabled
     if (!registrationEnabled) {
         return (
             <div className="text-center p-8">
@@ -73,7 +96,7 @@ const Register = ({
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                     {t('register.disabled_msg')}
                 </p>
-                <button onClick={onBack} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:opacity-80 transition">
+                <button onClick={() => navigate('/')} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:opacity-80 transition">
                     {t('register.btn_back_home')}
                 </button>
             </div>
@@ -152,7 +175,10 @@ const Register = ({
                     </div>
 
                     <div className="pt-2">
-                        {/* Removed Personality Check as per request */}
+                        {/* Hidden fields / default values for now.
+                             Ideally questions should be re-implemented if needed.
+                             For now, we default to 3.
+                         */}
                     </div>
 
                     <button onClick={handleRegister} className="w-full mt-6 bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 active:scale-[0.98] transition-all shadow-xl shadow-pink-500/20">
@@ -162,7 +188,7 @@ const Register = ({
             )}
 
 
-            <button onClick={onBack} className="w-full py-2 mt-4 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-medium transition-colors text-sm">
+            <button onClick={() => navigate('/')} className="w-full py-2 mt-4 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-medium transition-colors text-sm">
                 {t('btn.cancel')}
             </button>
         </div>

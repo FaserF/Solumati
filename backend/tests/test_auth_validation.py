@@ -15,7 +15,7 @@ client = TestClient(app)
 
 def test_login_invalid_credentials():
     payload = {"login": "nonexistent@example.com", "password": "wrongpassword"}
-    response = client.post("/auth/login", json=payload)
+    response = client.post("/login", json=payload)
     assert response.status_code == 401
     assert "Invalid credentials" in response.json()["detail"]
 
@@ -30,7 +30,7 @@ def test_registration_duplicate_email():
         "intent": "longterm",
         "answers": "[]"
     }
-    r1 = client.post("/api/users/", json=payload)
+    r1 = client.post("/users/", json=payload)
     if r1.status_code != 200:
         # If user mock persists across tests?
         # Ideally tests use test DB. Assuming clean or unique email works.
@@ -39,7 +39,7 @@ def test_registration_duplicate_email():
     assert r1.status_code == 200
 
     # 2. Try Duplicate
-    r2 = client.post("/api/users/", json=payload)
+    r2 = client.post("/users/", json=payload)
     assert r2.status_code == 400
     assert "Email already registered" in r2.json()["detail"]
 

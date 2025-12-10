@@ -1,7 +1,15 @@
 import React from 'react';
 import { ChevronLeft, Mail, Phone, MapPin, Scale, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useConfig } from '../context/ConfigContext';
+import { useI18n } from '../context/I18nContext';
 
-const Legal = ({ type, config, onBack, t }) => {
+const Legal = ({ type }) => {
+    const { globalConfig } = useConfig();
+    const config = globalConfig?.legal;
+    const { t } = useI18n();
+    const navigate = useNavigate();
+    const onBack = () => navigate(-1);
     // Default to empty strings if config is missing to avoid crashes
     const {
         company_name = "Solumati Inc.",

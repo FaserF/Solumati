@@ -1,17 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Activity, Shield, EyeOff, LifeBuoy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PublicProfile from './PublicProfile';
 import DashboardNavbar from './dashboard/DashboardNavbar';
 import MatchCard from './dashboard/MatchCard';
 import ChatWindow from './ChatWindow';
 import { APP_VERSION, API_URL } from '../config';
+import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
+import { useI18n } from '../context/I18nContext';
 
-const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, onProfileClick, onSwipeClick, onQuestionnaireClick, onImprintClick, onPrivacyClick, t, testMode, maintenanceMode, supportChatEnabled }) => {
+const Dashboard = () => {
+    const { user, isGuest, logout } = useAuth();
+    const { globalConfig, maintenanceMode } = useConfig();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+
+    const testMode = globalConfig?.test_mode;
+    const supportChatEnabled = globalConfig?.support_chat_enabled;
+
+    // Matches State
+    const [matches, setMatches] = useState([]);
 
     // State for viewing public profiles
     const [selectedUser, setSelectedUser] = React.useState(null);
     // State for active chat
     const [activeChatUser, setActiveChatUser] = React.useState(null);
+
+    // Fetch Matches
+    useEffect(() => {
+        if (user && user.user_id) {
+            fetch(`${API_URL}/matches/${user.user_id}`)
+                .then(res => res.ok ? res.json() : [])
+                .then(data => setMatches(data || []))
+                .catch(e => console.error("Match fetch failed", e));
+        }
+    }, [user]);
 
     // Check if user has special roles
     const isAdminOrMod = user && (user.role === 'admin' || user.role === 'moderator');
@@ -41,7 +65,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
 
     const setup2FA = () => {
         dismiss2FAPrompt();
-        onProfileClick();
+        navigate('/profile');
     };
 
     const handleOpenChat = (targetUser) => {
@@ -102,6 +126,11 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
         }
     };
 
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 flex flex-col items-center p-4 md:p-6 pb-24">
 
@@ -111,7 +140,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                     <div className="bg-yellow-400 text-yellow-900 px-4 py-2 mt-2 rounded-full font-bold flex items-center gap-2 shadow-lg pointer-events-auto">
                         <AlertTriangle size={18} />
                         <span className="text-sm">{t('dashboard.guest_warning')}</span>
-                        <button onClick={onRegisterClick} className="ml-4 bg-black text-white text-xs px-3 py-1 rounded-lg hover:bg-gray-800 transition">
+                        <button onClick={() => navigate('/register')} className="ml-4 bg-black text-white text-xs px-3 py-1 rounded-lg hover:bg-gray-800 transition">
                             {t('landing.btn_register')}
                         </button>
                     </div>
@@ -157,9 +186,9 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                 user={user}
                 isGuest={isGuest}
                 isAdminOrMod={isAdminOrMod}
-                onAdminClick={onAdminClick}
-                onProfileClick={onProfileClick}
-                onLogout={onLogout}
+                onAdminClick={() => navigate('/admin')}
+                onProfileClick={() => navigate('/profile')}
+                onLogout={handleLogout}
                 t={t}
             />
 
@@ -170,7 +199,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                         <h3 className="font-bold text-gray-900 dark:text-white">{t('dashboard.complete_profile', 'Complete your Profile')}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.better_matches', 'Answer questions to get better matches!')}</p>
                     </div>
-                    <button onClick={onQuestionnaireClick} className="px-4 py-2 bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition">
+                    <button onClick={() => navigate('/questionnaire')} className="px-4 py-2 bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition">
                         {t('btn.start')}
                     </button>
                 </div>
@@ -202,7 +231,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                                 <p className="text-gray-500 dark:text-gray-400">{t('dashboard.subtitle', "People who vibe with you")}</p>
                             </div>
                             <button
-                                onClick={onSwipeClick}
+                                onClick={() => navigate('/discover')}
                                 className="bg-black text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-black/20 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-2 group"
                             >
                                 <span>{t('dashboard.discover', "Discover")}</span>
@@ -217,7 +246,7 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
                                 <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
                                     {t('dashboard.hidden_desc', "Your profile is not visible to others, so you won't receive new matches. Enable visibility in settings to get back in the game.")}
                                 </p>
-                                <button onClick={onProfileClick} className="text-pink-600 font-bold hover:text-pink-700 hover:underline">
+                                <button onClick={() => navigate('/profile')} className="text-pink-600 font-bold hover:text-pink-700 hover:underline">
                                     {t('dashboard.change_settings', 'Change Settings')}
                                 </button>
                             </div>
@@ -330,10 +359,10 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
 
             {/* Footer */}
             <div className="w-full max-w-5xl mt-12 mb-6 flex justify-center gap-6 text-sm text-gray-400">
-                <button onClick={onImprintClick} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <button onClick={() => navigate('/imprint')} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                     {t('footer.imprint', 'Impressum')}
                 </button>
-                <button onClick={onPrivacyClick} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <button onClick={() => navigate('/privacy')} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                     {t('footer.privacy', 'Datenschutz')}
                 </button>
             </div>

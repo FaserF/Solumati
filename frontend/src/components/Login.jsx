@@ -1,14 +1,38 @@
-import React from 'react';
-import { Github, Mail, Unlock, Fingerprint } from 'lucide-react';
+import React, { useState } from 'react';
+import { Github, Fingerprint } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
+import { useNavigate } from 'react-router-dom';
 import { API_URL, APP_NAME } from '../config';
+import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
+import { useI18n } from '../context/I18nContext';
 
-const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess, onBack, onForgotPassword, t, config }) => {
-    // Fallback if config not yet loaded
-    const oauth = config?.oauth_providers || {};
+const Login = () => {
+    const { t } = useI18n();
+    const { globalConfig } = useConfig();
+    const { login, finalizeLogin } = useAuth();
+    const navigate = useNavigate();
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    // Config fallback
+    const oauth = globalConfig?.oauth_providers || {};
 
     const handleOAuth = (provider) => {
         window.location.href = `${API_URL}/auth/oauth/${provider}/login`;
+    };
+
+    const handleLogin = async () => {
+        const result = await login(email, password);
+        if (result.status === 'success') {
+            navigate('/dashboard');
+        } else if (result.status === '2fa') {
+            navigate('/verify-2fa');
+        } else {
+            const errVal = result.error?.detail || JSON.stringify(result.error);
+            alert(t('alert.login_failed', "Login failed: ") + errVal);
+        }
     };
 
     const handlePasskeyLogin = async () => {
@@ -42,7 +66,8 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
 
             if (verifyRes.ok) {
                 const userData = await verifyRes.json();
-                if (onLoginSuccess) onLoginSuccess(userData);
+                finalizeLogin(userData); // Use context method
+                navigate('/dashboard');
             } else {
                 alert("Passkey verification failed.");
             }
@@ -116,7 +141,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                         placeholder="user / mail@example.com"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && onLogin()}
+                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
                     />
                 </div>
                 <div>
@@ -127,17 +152,17 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                         placeholder="••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && onLogin()}
+                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
                     />
                 </div>
 
                 <div className="flex justify-end">
-                    <button onClick={onForgotPassword} className="text-sm font-bold text-pink-500 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">
+                    <button onClick={() => navigate('/forgot-password')} className="text-sm font-bold text-pink-500 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">
                         {t('login.forgot_pw', 'Forgot Password?')}
                     </button>
                 </div>
 
-                <button onClick={onLogin} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gray-200 dark:shadow-gray-900/20">
+                <button onClick={handleLogin} className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gray-200 dark:shadow-gray-900/20">
                     {t('btn.login')}
                 </button>
 
@@ -145,7 +170,7 @@ const Login = ({ email, setEmail, password, setPassword, onLogin, onLoginSuccess
                     <Fingerprint /> {t('btn.login_passkey', 'Login with Passkey')}
                 </button>
 
-                <button onClick={onBack} className="w-full py-2 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-medium transition-colors text-sm">
+                <button onClick={() => navigate('/')} className="w-full py-2 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white font-medium transition-colors text-sm">
                     {t('btn.back')}
                 </button>
             </div>

@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Save, Settings, ChevronLeft, Upload, Edit2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 import { API_URL } from '../config';
 
-const UserProfile = ({ user, onBack, onOpenSettings, t, initialMode = 'view' }) => {
+const UserProfile = ({ initialMode = 'view' }) => {
+    const { user } = useAuth();
+    const { t } = useI18n();
+    const navigate = useNavigate();
+
+    const onBack = () => navigate('/dashboard');
+    const onOpenSettings = () => navigate('/settings');
     // Mode: 'view' or 'edit'
     const [mode, setMode] = useState(initialMode);
     const [loading, setLoading] = useState(false);
