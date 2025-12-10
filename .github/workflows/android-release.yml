@@ -1,6 +1,6 @@
 name: Android Release Build
 
-
+on:
   workflow_dispatch:
     inputs:
       pwa_url:
