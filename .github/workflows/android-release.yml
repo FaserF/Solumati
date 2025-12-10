@@ -94,8 +94,16 @@ jobs:
           AAB_NAME="solumati-${VERSION}-${RELEASE_TYPE}.aab"
 
           # Move and Rename
-          # Find APK (recursive search in android/)
-          APK_PATH=$(find android -name "*.apk" -type f | head -n 1)
+          # Find APK (recursive search in android/), excluding unsigned ones
+          APK_PATH=$(find android -name "*.apk" ! -name "*unsigned*" -type f | head -n 1)
+
+          # Debug: List found APK if any
+          if [ -n "$APK_PATH" ]; then
+            echo "Selected APK: $APK_PATH"
+          else
+            echo "Debug: Available APKs:"
+            find android -name "*.apk" -type f
+          fi
           if [ -z "$APK_PATH" ]; then
             echo "Error: No APK found in android/ directory"
             exit 1
