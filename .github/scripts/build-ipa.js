@@ -99,6 +99,30 @@ if (sourceIcon) {
     console.warn('No source icon found. Proceeding without App Icon.');
 }
 
+// 4.1 Password Logic (similar to Android/Windows)
+// Even if we don't use it for signing *yet* (unsigned IPA), we prepare the logic as requested.
+const KEYCHAIN_PWD_PATH = path.join(process.cwd(), 'ios-keychain.pwd');
+let keychainPassword = process.env.IOS_KEYCHAIN_PASSWORD;
+
+if (!keychainPassword) {
+    if (fs.existsSync(KEYCHAIN_PWD_PATH)) {
+        console.log('Reading keychain password from cached file...');
+        keychainPassword = fs.readFileSync(KEYCHAIN_PWD_PATH, 'utf8').trim();
+    } else {
+        console.log('Generating new default keychain password...');
+        // Format: RepoName + 15 random chars
+        const repoNameFull = process.env.GITHUB_REPOSITORY || 'Solumati';
+        const repoName = repoNameFull.split('/')[1] || repoNameFull;
+        const randomSuffix = require('crypto').randomBytes(8).toString('hex').slice(0, 15);
+        keychainPassword = `${repoName}${randomSuffix}`;
+
+        // Save for caching
+        fs.writeFileSync(KEYCHAIN_PWD_PATH, keychainPassword);
+        console.log(`Generated and saved password to ${KEYCHAIN_PWD_PATH} for caching.`);
+    }
+}
+// Note: This password can be used when we enable Code Signing and need to create/unlock a temporary keychain.
+
 // 5. Run XcodeGen
 console.log('Running XcodeGen...');
 try {

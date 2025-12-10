@@ -18,8 +18,7 @@
     <AppxBundlePlatforms>x86|x64|arm64</AppxBundlePlatforms>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="**\*.cs" Exclude="**\obj\**;**\bin\**" />
-    <Page Include="**\*.xaml" Exclude="**\obj\**;**\bin\**" SubType="Designer" Generator="MSBuild:Compile" />
+    <!-- Explicit Compile/Page removed to avoid NETSDK1022 duplicate items error -->
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

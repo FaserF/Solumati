@@ -9,10 +9,31 @@ const FRONTEND_DIR = path.join(__dirname, '../../frontend');
 const PACKAGE_JSON_PATH = path.join(FRONTEND_DIR, 'package.json');
 const CONFIG_CS_PATH = path.join(PROJECT_DIR, 'Config.cs');
 const MANIFEST_PATH = path.join(PROJECT_DIR, 'Package.appxmanifest');
+const CERT_PWD_PATH = path.join(process.cwd(), 'windows-certificate.pwd');
 
 // Ensure assets dir
 if (!fs.existsSync(ASSETS_DIR)) {
     fs.mkdirSync(ASSETS_DIR, { recursive: true });
+}
+
+// 1. Password Logic (similar to Android)
+let certPassword = process.env.WINDOWS_CERT_PASSWORD;
+if (!certPassword) {
+    if (fs.existsSync(CERT_PWD_PATH)) {
+        console.log('Reading certificate password from cached file...');
+        certPassword = fs.readFileSync(CERT_PWD_PATH, 'utf8').trim();
+    } else {
+        console.log('Generating new default certificate password...');
+        // Format: RepoName + 15 random chars
+        const repoNameFull = process.env.GITHUB_REPOSITORY || 'Solumati';
+        const repoName = repoNameFull.split('/')[1] || repoNameFull;
+        const randomSuffix = require('crypto').randomBytes(8).toString('hex').slice(0, 15);
+        certPassword = `${repoName}${randomSuffix}`;
+
+        // Save for caching
+        fs.writeFileSync(CERT_PWD_PATH, certPassword);
+        console.log(`Generated and saved password to ${CERT_PWD_PATH} for caching.`);
+    }
 }
 
 // 1. Read Config
@@ -111,12 +132,13 @@ $thumb.Dispose()
 
 // 5. Generate Certificate if missing
 const pfxPath = path.join(PROJECT_DIR, 'Solumati_TemporaryKey.pfx');
+// We always try to use the password for signing. If cert is missing, we create it with that password.
 if (!fs.existsSync(pfxPath)) {
     console.log('Generating Self-Signed Certificate...');
     // New-SelfSignedCertificate returns the Cert object. We need to export it.
     const psCert = `
 $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\\CurrentUser\\My -Type CodeSigningCert -Subject "CN=Solumati"
-$pwd = ConvertTo-SecureString -String "password" -Force -AsPlainText
+$pwd = ConvertTo-SecureString -String "${certPassword}" -Force -AsPlainText
 Export-PfxCertificate -Cert $cert -FilePath "${pfxPath}" -Password $pwd
     `;
     try {
@@ -142,7 +164,7 @@ try {
         '/p:AppxPackageDir=..\\AppPackages',
         '/p:AppxPackageSigningEnabled=true',
         `/p:PackageCertificateKeyFile="${pfxPath}"`,
-        '/p:PackageCertificatePassword="password"'
+        `/p:PackageCertificatePassword="${certPassword}"`
     ];
 
     execSync(`msbuild ${args.join(' ')}`, { cwd: PROJECT_DIR, stdio: 'inherit' });
