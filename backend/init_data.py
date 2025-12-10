@@ -28,8 +28,13 @@ async def fetch_dummy_image(client: httpx.AsyncClient, username: str) -> str:
 
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     try:
-        resp = await client.get(url, headers=headers, follow_redirects=True, timeout=10.0)
+        resp = await client.get(url, headers=headers, follow_redirects=True, timeout=15.0)
         if resp.status_code == 200:
+            content_type = resp.headers.get("content-type", "")
+            if "image" not in content_type:
+                logger.warning(f"Invalid content type for {username}: {content_type}")
+                return None
+
             with open(file_path, "wb") as f:
                 f.write(resp.content)
             logger.info(f"Downloaded AI profile pic for {username}")

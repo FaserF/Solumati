@@ -558,7 +558,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                                     {u.role === 'admin' ? <span className="text-red-600 font-bold flex items-center gap-1"><Shield size={12} /> Admin</span> :
                                                         u.role === 'moderator' ? <span className="text-blue-600 font-bold flex items-center gap-1"><Shield size={12} /> Mod</span> :
                                                             u.role === 'guest' ? <span className="text-orange-500 font-medium flex items-center gap-1"><UserMinus size={12} /> Guest</span> :
-                                                                <span className="text-gray-600 flex items-center gap-1"><Users size={12} /> User</span>}
+                                                                u.role === 'test' ? <span className="text-purple-500 font-medium flex items-center gap-1"><Beaker size={12} /> Test</span> :
+                                                                    <span className="text-gray-600 flex items-center gap-1"><Users size={12} /> User</span>}
                                                 </td>
                                                 <td className="p-4 text-sm text-gray-500 hidden md:table-cell">{formatDate(u.created_at)}</td>
                                                 <td className="p-4 text-sm text-gray-500 hidden md:table-cell">{formatDate(u.last_login)}</td>
