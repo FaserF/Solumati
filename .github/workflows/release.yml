@@ -119,3 +119,19 @@ jobs:
       tag_name: v${{ needs.release.outputs.new_version }}
       ref: ${{ needs.release.outputs.commit_sha }}
     secrets: inherit
+
+  build-ios:
+    needs: release
+    uses: ./.github/workflows/ios-release.yml
+    with:
+      tag_name: v${{ needs.release.outputs.new_version }}
+      ref: ${{ needs.release.outputs.commit_sha }}
+    secrets: inherit
+
+  build-windows:
+    needs: release
+    uses: ./.github/workflows/windows-release.yml
+    with:
+      tag_name: v${{ needs.release.outputs.new_version }}
+      ref: ${{ needs.release.outputs.commit_sha }}
+    secrets: inherit

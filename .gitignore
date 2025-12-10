@@ -7,3 +7,4 @@
 /backend/migrations/__pycache__
 /backend/*/__pycache__
 *.pyc
+/backend/static/images/dummies

@@ -3,13 +3,18 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/FaserF/Solumati?color=pink&label=Latest%20Release)](https://github.com/FaserF/Solumati/releases/latest)
 [![GitHub License](https://img.shields.io/github/license/FaserF/Solumati?color=blue)](LICENSE.md)
 [![Docker Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/docker-publish.yml?label=Docker%20Build)](https://github.com/FaserF/Solumati/actions/workflows/docker-publish.yml)
-[![Android Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/android-release.yml?label=Android%20Build)](https://github.com/FaserF/Solumati/actions/workflows/android-release.yml)
-[![iOS Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/ios-release.yml?label=iOS%20Build)](https://github.com/FaserF/Solumati/actions/workflows/ios-release.yml)
-[![Windows Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/windows-release.yml?label=Windows%20Build)](https://github.com/FaserF/Solumati/actions/workflows/windows-release.yml)
+[![Release Pipeline](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/release.yml?label=Release%20Pipeline)](https://github.com/FaserF/Solumati/actions/workflows/release.yml)
 
 **Solumati** is a modern, open-source dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby in a transparent and secure environment.
 
 <img src="https://github.com/FaserF/Solumati/raw/main/frontend/public/logo/Solumati.png" alt="Solumati Preview" width="200" />
+
+> [!WARNING]
+> **Active Development / Beta**
+>
+> This project is currently in **heavy development** and is considered **BETA/NIGHTLY** software.
+> While many features are functional, it may contain bugs, incomplete features, or breaking changes.
+> **It is NOT recommended for production use until a stable release is available.**
 
 ---
 
