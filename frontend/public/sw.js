@@ -1,3 +1,25 @@
+const CACHE_NAME = 'solumati-v1';
+
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+    // Simple Network-First Strategy
+    if (event.request.method !== 'GET') return;
+
+    event.respondWith(
+        fetch(event.request)
+            .catch(() => {
+                return caches.match(event.request);
+            })
+    );
+});
+
 self.addEventListener('push', function (event) {
     const data = event.data.json();
     const options = {

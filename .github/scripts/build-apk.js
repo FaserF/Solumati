@@ -160,7 +160,7 @@ function build() {
                 navigationDividerColorDark: pwaManifest.theme_color || '#000000',
                 backgroundColor: pwaManifest.background_color || '#ffffff',
                 enableNotifications: true,
-                startUrl: '/',
+                startUrl: '/?source=twa',
                 iconUrl: icon512Local, // Use local server URL
                 maskableIconUrl: icon512Local, // Use local server URL
                 splashScreenFadeOutDuration: 300,

@@ -4,6 +4,32 @@ import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
     const isAndroid = /Android/i.test(navigator.userAgent);
 
+    // Check if running in TWA (APK) or standard Android browser
+    const isTwa = new URLSearchParams(window.location.search).get('source') === 'twa';
+    const showAndroidCta = isAndroid && !isTwa;
+
+    const handleAndroidDownload = async (e) => {
+        e.preventDefault();
+        try {
+            // Fetch latest release data from GitHub
+            const response = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
+            if (response.ok) {
+                const data = await response.json();
+                // Find the asset that ends with .apk
+                const apkAsset = data.assets.find(asset => asset.name.endsWith('.apk'));
+                if (apkAsset) {
+                    window.location.href = apkAsset.browser_download_url;
+                    return;
+                }
+            }
+            // Fallback: Open Release Page if API fails or no APK found
+            window.open('https://github.com/FaserF/Solumati/releases/latest', '_blank');
+        } catch (error) {
+            console.error("Failed to fetch latest release:", error);
+            window.open('https://github.com/FaserF/Solumati/releases/latest', '_blank');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-gray-900 to-black opacity-90"></div>
@@ -20,11 +46,10 @@ const Landing = ({ onLogin, onRegister, onGuest, onAdmin, onLegal, t }) => {
                     {t('landing.tagline')}
                 </p>
 
-                {isAndroid && (
+                {showAndroidCta && (
                     <a
-                        href="https://github.com/FaserF/Solumati/releases/latest"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="#"
+                        onClick={handleAndroidDownload}
                         className="mb-8 flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg animate-bounce"
                     >
                         <Smartphone size={24} />
