@@ -906,8 +906,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 </div>
 
                                 {/* Google */}
-                                <div className="border rounded-xl p-4 bg-gray-50">
-                                    <h3 className="font-bold mb-4 flex items-center gap-2"><Globe size={18} /> Google</h3>
+                                <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
+                                    <h3 className="font-bold mb-4 flex items-center gap-2 dark:text-white"><Globe size={18} /> Google</h3>
                                     <div className="space-y-3">
                                         <label className="flex items-center gap-2 text-sm font-medium">
                                             <input
@@ -942,8 +942,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 </div>
 
                                 {/* Microsoft */}
-                                <div className="border rounded-xl p-4 bg-gray-50">
-                                    <h3 className="font-bold mb-4 flex items-center gap-2"><Server size={18} /> Microsoft</h3>
+                                <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
+                                    <h3 className="font-bold mb-4 flex items-center gap-2 dark:text-white"><Server size={18} /> Microsoft</h3>
                                     <div className="space-y-3">
                                         <label className="flex items-center gap-2 text-sm font-medium">
                                             <input
@@ -1003,19 +1003,21 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    {isMailConfigured() && (
-                                        <div>
+                                    <div className={!isMailConfigured() ? 'opacity-50 grayscale' : ''}>
+                                        <div className="flex justify-between">
                                             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
-                                            <input
-                                                type="email"
-                                                value={settings.support_chat?.email_target || ''}
-                                                onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
-                                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                placeholder="support@solumati.com"
-                                            />
-                                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
+                                            {!isMailConfigured() && <span className="text-xs text-red-500 font-bold">Mail Server not configured</span>}
                                         </div>
-                                    )}
+                                        <input
+                                            type="email"
+                                            value={settings.support_chat?.email_target || ''}
+                                            onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
+                                            disabled={!isMailConfigured()}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
+                                            placeholder="support@solumati.local"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
