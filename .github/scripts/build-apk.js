@@ -274,6 +274,40 @@ function build() {
 
             console.log('APK Build completed successfully!');
 
+            // --- Generate assetlinks.json information ---
+            try {
+                console.log('\n--- TWA ASSET LINKS VERIFICATION ---');
+                const keytoolCmd = `keytool -list -v -keystore ${KEYSTORE_PATH} -alias "${keyAlias}" -storepass "${storePassword}"`;
+                const keytoolOutput = execSync(keytoolCmd).toString();
+                // Find SHA256: ...
+                const sha256Match = keytoolOutput.match(/SHA256:\s*([A-Fa-f0-9:]+)/);
+                if (sha256Match) {
+                    const fingerprint = sha256Match[1];
+                    const assetLinksJson = [
+                        {
+                            "relation": ["delegate_permission/common.handle_all_urls"],
+                            "target": {
+                                "namespace": "android_app",
+                                "package_name": "com.solumati.twa",
+                                "sha256_cert_fingerprints": [fingerprint]
+                            }
+                        }
+                    ];
+                    console.log('To hide the browser bar, you MUST serve the following content at:');
+                    console.log(`https://${host}/.well-known/assetlinks.json`);
+                    console.log('\n' + JSON.stringify(assetLinksJson, null, 2) + '\n');
+
+                    // Also save it to a file
+                    fs.writeFileSync(path.join(ANDROID_OUTPUT_DIR, 'assetlinks.json'), JSON.stringify(assetLinksJson, null, 2));
+                    console.log(`Saved assetlinks.json to ${path.join(ANDROID_OUTPUT_DIR, 'assetlinks.json')}`);
+                } else {
+                    console.warn('Could not extract SHA256 fingerprint from keytool output.');
+                }
+            } catch (e) {
+                console.warn('Failed to generate assetlinks info:', e.message);
+            }
+            console.log('------------------------------------\n');
+
         } catch (e) {
             console.error('Build failed:', e);
             process.exit(1);

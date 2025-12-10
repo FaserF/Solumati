@@ -196,6 +196,7 @@ class SystemSettings(BaseModel):
     legal: LegalConfig
     oauth: OAuthConfig = OAuthConfig()
     support_chat: SupportChatConfig = SupportChatConfig()
+    assetlinks: List[Dict[str, Any]] = []
 
 class SystemDiagnostics(BaseModel):
     current_version: str

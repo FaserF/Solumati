@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import ChatWindow from './ChatWindow';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone } from 'lucide-react';
 import { API_URL, APP_VERSION, APP_NAME, APP_RELEASE_TYPE } from '../config';
 
 const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) => {
@@ -46,6 +46,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
 
     // Test Mail
     const [testMailTarget, setTestMailTarget] = useState("");
+
+    // Asset Links State
+    const [assetLinksText, setAssetLinksText] = useState("[]");
+    const [assetLinksError, setAssetLinksError] = useState(null);
 
     // Create User State
     const [createUserModal, setCreateUserModal] = useState(false);
@@ -115,7 +119,9 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
         try {
             const res = await fetch(`${API_URL}/admin/settings`, { headers: authHeaders });
             if (res.ok) {
-                setSettings(await res.json());
+                const data = await res.json();
+                setSettings(data);
+                setAssetLinksText(JSON.stringify(data.assetlinks || [], null, 2));
                 setUnsavedChanges(false);
             }
         } catch (e) { setError("Could not load settings."); }
@@ -1010,6 +1016,44 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                             <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ASSET LINKS SETTINGS */}
+                        <div className="bg-white rounded-xl shadow p-6">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 border-b pb-4">
+                                <Smartphone className="text-green-500" />
+                                App Integrity (TWA Asset Links)
+                            </h2>
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-600">
+                                    To hide the browser bar in the Android App (TWA), you must configure the Digital Asset Links JSON here.
+                                    The build script outputs this JSON.
+                                </p>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Asset Links JSON</label>
+                                    <textarea
+                                        value={assetLinksText}
+                                        onChange={(e) => {
+                                            setAssetLinksText(e.target.value);
+                                            setAssetLinksError(null);
+                                        }}
+                                        onBlur={() => {
+                                            try {
+                                                const parsed = JSON.parse(assetLinksText);
+                                                if (!Array.isArray(parsed)) throw new Error("Must be a JSON Array");
+                                                setSettings(prev => ({ ...prev, assetlinks: parsed }));
+                                                setUnsavedChanges(true);
+                                                setAssetLinksText(JSON.stringify(parsed, null, 2)); // Reformat
+                                            } catch (e) {
+                                                setAssetLinksError("Invalid JSON: " + e.message);
+                                            }
+                                        }}
+                                        className={`w-full p-2 border rounded-lg h-48 text-sm font-mono ${assetLinksError ? 'border-red-500 bg-red-50' : ''}`}
+                                        placeholder='[{"relation": ["delegate_permission/common.handle_all_urls"], ...}]'
+                                    />
+                                    {assetLinksError && <p className="text-xs text-red-500 font-bold mt-1">{assetLinksError}</p>}
                                 </div>
                             </div>
                         </div>

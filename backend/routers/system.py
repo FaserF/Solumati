@@ -44,3 +44,10 @@ async def get_i18n(lang: str):
 @router.get('/health')
 async def health_check():
     return {"status": "ok"}
+
+@router.get("/.well-known/assetlinks.json")
+def get_assetlinks(db: Session = Depends(get_db)):
+    """Serves the Digital Asset Links JSON for Android TWA verification."""
+    # Fetch from System Settings
+    links = get_setting(db, "assetlinks", [])
+    return links

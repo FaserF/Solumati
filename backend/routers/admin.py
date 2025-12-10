@@ -135,6 +135,7 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
     oauth_conf = get_setting(db, "oauth", schemas.OAuthConfig().dict()) # Get Raw
     support_conf = get_setting(db, "support_chat", schemas.SupportChatConfig().dict())
+    assetlinks = get_setting(db, "assetlinks", [])
 
     # Mask Secrets for UI
     # We do not want to send the actual secrets to the frontend
@@ -147,7 +148,8 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
         "registration": reg_conf,
         "legal": legal_conf,
         "oauth": oauth_conf,
-        "support_chat": support_conf
+        "support_chat": support_conf,
+        "assetlinks": assetlinks
     }
 
 @router.put("/settings")
@@ -158,6 +160,7 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     # Duplicate removed
     save_setting(db, "legal", settings.legal.dict())
     save_setting(db, "support_chat", settings.support_chat.dict())
+    save_setting(db, "assetlinks", settings.assetlinks)
 
     # Save OAuth (Handle Secrets)
     # 1. Fetch existing secrets to keep them if not changed
