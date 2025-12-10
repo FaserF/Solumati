@@ -49,15 +49,12 @@ def ensure_guest_user(db: Session):
 
         # Define promotional data
         promo_about = (
-            "👋 Hey, welcome to the Solumati Universe!\n\n"
-            "I'm your virtual guide, giving you a sneak peek of what's possible.\n"
-            "Here, real values and personality count, not just fast swipes. 🧠❤️\n\n"
-            "🚀 Ready for the Real Thing?\n"
-            "Sign up now to unleash full potential:\n"
-            "► Chat with real humans\n"
-            "► Find someone who truly gets you\n"
-            "► Join our community\n\n"
-            "Your perfect match is waiting! What are you waiting for? ✨"
+            "Hey! 🚀 I'm the Solumati Explorer, your sneak peek into a world where real vibes matter more than fast swipes.\n\n"
+            "**Sign up to unlock the full experience:**\n"
+            "✨ Chat with real people\n"
+            "✨ Discover your true soulmate\n"
+            "✨ Join a community that values YOU\n\n"
+            "Don't just watch—be part of the story. Your match is waiting! ❤️"
         )
         promo_intent = "Solumati Explorer 🌟"
 
@@ -93,7 +90,7 @@ def ensure_guest_user(db: Session):
 def ensure_support_user(db: Session):
     try:
         support = db.query(models.User).filter(models.User.id == 3).first()
-        target_about = "Your direct line to the Solumati Team. 🛠️ We've got your back!"
+        target_about = "We are Solumati. 🛠️\nQuestions? Bugs? Ideas?\n\nWe're here to make your experience smooth and awesome. Drop us a message, and we'll get back to you ASAP.\n\n*Your Team Solumati*"
 
         if not support:
             logger.info("Creating Support User (ID 3)...")
@@ -141,7 +138,7 @@ def ensure_admin_user(db: Session):
                     email="admin@solumati.local",
                     hashed_password=hash_password(initial_password),
                     real_name="Administrator", username="admin",
-                    about_me="System-Status: Online. 🟢 Der Wächter über Bits und Bytes.",
+                    about_me="System Status: **Operational** 🟢\n\nGuardian of the Codebase. Keeping the servers running and the vibes flowing.\nif (problem) { fix_it(); }",
                     is_active=True, is_verified=True, is_guest=False, role="admin",
                     intent="admin", answers=json.dumps({}), created_at=datetime.utcnow(),
                     is_visible_in_matches=False
@@ -155,7 +152,7 @@ def ensure_admin_user(db: Session):
 
         else:
             # Admin exists, ensure description is up to date
-            target_about = "System Status: Online. 🟢 The Guardian of Bits and Bytes."
+            target_about = "System Status: **Operational** 🟢\n\nGuardian of the Codebase. Keeping the servers running and the vibes flowing.\nif (problem) { fix_it(); }"
             if admin.about_me != target_about:
                 admin.about_me = target_about
                 db.commit()
@@ -298,7 +295,7 @@ def generate_dummy_data(db: Session):
                 is_active=True,
                 is_verified=True,
                 is_guest=False,
-                role="test",
+                role="user",
                 intent=arch["intent"],
                 answers=json.dumps(user_answers),
                 created_at=datetime.utcnow(),
@@ -310,7 +307,7 @@ def generate_dummy_data(db: Session):
         db.commit()
 
         sep = "=" * 60
-        logger.info(f"\n{sep}\nGENERATED {len(created_dummies)} DUMMY USERS (Role: 'test')\n{sep}")
+        logger.info(f"\n{sep}\nGENERATED {len(created_dummies)} DUMMY USERS (Role: 'user')\n{sep}")
         for creds in created_dummies:
             print(f"Dummy: {creds}")
         print(sep)

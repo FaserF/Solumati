@@ -3,41 +3,44 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
+// Import Bubblewrap Core
+// Note: We need to handle potential CommonJS/ESM issues if @bubblewrap/core is ESM-only.
+// However, in Node 20 environment in CI, we can likely require it or import().
+// Given the repo source uses `import ...`, it might be compiled to CJS or ESM.
+// Standard usage in scripts usually supports require if it's main entry is CJS.
+// If it fails, we might need a dynamic import. But let's try standard require first.
+let TwaGenerator, TwaManifest, ConsoleLog;
+try {
+    const bubblewrap = require('@bubblewrap/core');
+    TwaGenerator = bubblewrap.TwaGenerator;
+    TwaManifest = bubblewrap.TwaManifest;
+    ConsoleLog = bubblewrap.ConsoleLog;
+} catch (e) {
+    console.error('Failed to load @bubblewrap/core. Ensure it is installed.', e);
+    process.exit(1);
+}
+
 // Configuration
-const REQUIRE_ENV_VARS = ['PWA_URL'];
 const PWA_MANIFEST_PATH = path.join(__dirname, '../../frontend/manifest.json');
 const PACKAGE_JSON_PATH = path.join(__dirname, '../../frontend/package.json');
-// Use temp dir for TWA manifest to avoid "existing project" detection and "Regenerate?" prompts in CWD
-const TWA_MANIFEST_PATH = path.join(os.tmpdir(), `twa-manifest-${Date.now()}.json`);
-const LOCAL_TWA_MANIFEST_PATH = path.join(process.cwd(), 'twa-manifest.json');
-const TWA_CHECKSUM_PATH = path.join(process.cwd(), '.twa-manifest.json.checksum');
-const ANDROID_OUTPUT_DIR = path.join(process.cwd(), 'android'); // Default output is usually root, but let's be careful.
+// Use temp dir for TWA manifest not needed anymore since we pass object directly,
+// but we might want to save it for debugging.
+const ANDROID_OUTPUT_DIR = path.join(process.cwd(), 'android');
 const KEYSTORE_PATH = path.join(process.cwd(), 'android-keystore.jks');
 
-// Clean up stale artifacts to prevent "Missing Checksum" prompts
-if (fs.existsSync(TWA_CHECKSUM_PATH)) fs.unlinkSync(TWA_CHECKSUM_PATH);
-if (fs.existsSync(LOCAL_TWA_MANIFEST_PATH)) {
-    console.log('Removing stale local twa-manifest.json...');
-    fs.unlinkSync(LOCAL_TWA_MANIFEST_PATH);
-}
-// Force clean build to avoid "Regenerate?" prompts
+// Clean up previous build
 if (fs.existsSync(ANDROID_OUTPUT_DIR)) {
     console.log('Cleaning existing android output directory...');
     fs.rmSync(ANDROID_OUTPUT_DIR, { recursive: true, force: true });
 }
 
-// Set Bubblewrap Env Vars to avoid password prompts as a fallback
-process.env.BUBBLEWRAP_KEYSTORE_PASSWORD = 'password';
-process.env.BUBBLEWRAP_KEY_PASSWORD = 'password';
-
 // Validate Environment
 const pwaUrl = process.env.PWA_URL;
 if (!pwaUrl) {
-    console.error('Error: PWA_URL environment variable is required (e.g., https://solumati.de)');
+    console.error('Error: PWA_URL environment variable is required');
     process.exit(1);
 }
 
-// Clean URL (remove trailing slash)
 const baseUrl = pwaUrl.replace(/\/$/, '');
 const host = new URL(baseUrl).hostname;
 
@@ -64,34 +67,34 @@ if (!icon512) {
 }
 
 // Determine Version Code
-// Use GitHub Run Number if available, otherwise default to 1
 const versionCode = parseInt(process.env.GITHUB_RUN_NUMBER) || 1;
 
-// Construct TWA Manifest (Bubblewrap Config)
-const twaManifest = {
-    packageId: `com.solumati.twa`, // Fixed package ID to ensure updates work
+// Prepare TWA Manifest Configuration Object
+// This must match TwaManifestJson interface
+const twaManifestConfig = {
+    packageId: `com.solumati.twa`,
     host: host,
     name: pwaManifest.name || 'Solumati',
     launcherName: pwaManifest.short_name || pwaManifest.name || 'Solumati',
     display: pwaManifest.display || 'standalone',
     themeColor: pwaManifest.theme_color || '#000000',
+    themeColorDark: pwaManifest.theme_color || '#000000',
     navigationColor: pwaManifest.theme_color || '#000000',
     navigationColorDark: pwaManifest.theme_color || '#000000',
     navigationDividerColor: pwaManifest.theme_color || '#000000',
     navigationDividerColorDark: pwaManifest.theme_color || '#000000',
     backgroundColor: pwaManifest.background_color || '#ffffff',
     enableNotifications: true,
-    startUrl: '/', // Relative to host
+    startUrl: '/',
     iconUrl: icon512,
-    maskableIconUrl: icon512, // Assuming the connection is safe given "purpose": "any maskable"
+    maskableIconUrl: icon512,
     splashScreenFadeOutDuration: 300,
     signingKey: {
         path: KEYSTORE_PATH,
         alias: 'android',
     },
-    appVersion: pkgJson.version,
+    appVersion: pkgJson.version, // versionName
     appVersionCode: versionCode,
-    serviceAccountJsonFile: null, // Not used for now
     shortcuts: [],
     generatorApp: 'bubblewrap-script',
     webManifestUrl: `${baseUrl}/manifest.json`,
@@ -109,14 +112,10 @@ const twaManifest = {
     fullScopeUrl: baseUrl
 };
 
-console.log('Generating twa-manifest.json...');
-fs.writeFileSync(TWA_MANIFEST_PATH, JSON.stringify(twaManifest, null, 2));
-
 // Generate Keystore if missing
 if (!fs.existsSync(KEYSTORE_PATH)) {
     console.log('Generating temporary keystore for signing...');
     try {
-        // keytool is usually in PATH in CI environments with Java installed
         execSync(
             `keytool -genkeypair -dname "cn=Solumati, ou=Tech, o=Solumati, c=DE" -alias android -keypass password -keystore ${KEYSTORE_PATH} -storepass password -keyalg RSA -keysize 2048 -validity 10000`,
             { stdio: 'inherit' }
@@ -127,43 +126,58 @@ if (!fs.existsSync(KEYSTORE_PATH)) {
     }
 }
 
-// Configure Bubblewrap
-console.log('Configuring Bubblewrap...');
-const configDir = path.join(os.homedir(), '.bubblewrap');
-if (!fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir, { recursive: true });
-}
-// In GitHub Actions:
-// JAVA_HOME is set by actions/setup-java
-// ANDROID_SDK_ROOT is set by android-actions/setup-android (or ANDROID_HOME)
-const jdkPath = process.env.JAVA_HOME;
-const androidSdkPath = process.env.ANDROID_SDK_ROOT || process.env.ANDROID_HOME;
+async function build() {
+    try {
+        console.log('Initializing TWA Manifest...');
+        const manifest = new TwaManifest(twaManifestConfig);
 
-if (!jdkPath || !androidSdkPath) {
-    console.error('Error: JAVA_HOME or ANDROID_SDK_ROOT/ANDROID_HOME not set.');
-    console.error('JAVA_HOME:', jdkPath);
-    console.error('ANDROID_SDK:', androidSdkPath);
-    process.exit(1);
+        console.log('Generating Android Project...');
+        const log = new ConsoleLog('BuildAPK'); // Simple logger
+        const generator = new TwaGenerator();
+
+        await generator.createTwaProject(ANDROID_OUTPUT_DIR, manifest, log);
+        console.log('Android Project Generated successfully.');
+
+        console.log('Building APK with Gradle...');
+        // Set up environment variables for Gradle if needed
+        const env = { ...process.env };
+        // Ensure signing config uses the keystore we generated
+        // Bubblewrap generates build.gradle that reads key info from gradle.properties or similar
+        // BUT standard bubblewrap/template build.gradle usually expects a signing config or manual properties.
+        // TwaGenerator *should* have set up the signing config based on 'signingKey' in manifest.
+
+        // Pass passwords via env vars as Bubblewrap's gradle template usually reads them or we pass them as params
+        // Checking bubblewrap template: it often uses `storeFile`, `storePassword`, `keyAlias`, `keyPassword` props.
+
+        const gradleArgs = [
+            'assembleRelease',
+            `-PstoreFile=${KEYSTORE_PATH}`,
+            `-PstorePassword=password`,
+            `-PkeyAlias=android`,
+            `-PkeyPassword=password`
+        ];
+
+        // On Windows we need gradlew.bat, on Linux ./gradlew
+        const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
+        const gradlewPath = path.join(ANDROID_OUTPUT_DIR, gradlew);
+
+        // Ensure executable
+        if (process.platform !== 'win32') {
+            fs.chmodSync(gradlewPath, '755');
+        }
+
+        execSync(`${gradlewPath} ${gradleArgs.join(' ')}`, {
+            cwd: ANDROID_OUTPUT_DIR,
+            stdio: 'inherit',
+            env: env
+        });
+
+        console.log('APK Build completed successfully!');
+
+    } catch (e) {
+        console.error('Build failed:', e);
+        process.exit(1);
+    }
 }
 
-const bubblewrapConfig = {
-    jdkPath: jdkPath,
-    androidSdkPath: androidSdkPath
-};
-fs.writeFileSync(path.join(configDir, 'config.json'), JSON.stringify(bubblewrapConfig, null, 2));
-
-// Run Bubblewrap Build
-console.log('Running Bubblewrap Build...');
-try {
-    // We expect @bubblewrap/cli to be available in the environment/path
-    // using '--skipPwaValidation' to avoid failures if the specific icon sizes/manifest fields aren't perfect per Lighthouse
-    // using '--manifest' pointing to our generated config
-    execSync(
-        `printf "y\\n${pkgJson.version}\\n${versionCode}\\n" | bubblewrap build --manifest=${TWA_MANIFEST_PATH} --signingKeyPath=${KEYSTORE_PATH} --signingKeyAlias=android --signingKeyPassword=password --signingStorePassword=password --skipPwaValidation`,
-        { stdio: 'inherit' }
-    );
-    console.log('Build completed successfully!');
-} catch (e) {
-    console.error('Bubblewrap build failed:', e);
-    process.exit(1);
-}
+build();

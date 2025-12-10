@@ -1148,7 +1148,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 <option value="user">User</option>
                                 <option value="moderator">Moderator</option>
                                 <option value="admin">Admin</option>
-                                <option value="test">Test User</option>
+                                <option value="test">{t('role.test', 'Test')}</option>
                             </select>
                         </div>
                         <div className="flex justify-end gap-2">
@@ -1194,7 +1194,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 <option value="moderator">Moderator</option>
                                 <option value="admin">Admin</option>
                                 <option value="guest">Guest</option>
-                                <option value="test">Test User</option>
+                                <option value="test">{t('role.test', 'Test')}</option>
                             </select>
                             {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
                             <label className="flex items-center gap-2 mt-2">

@@ -57,6 +57,7 @@
     "role.user.desc": "Standardbenutzer mit Zugriff auf Matching und Profilfunktionen.",
     "role.guest.desc": "Eingeschränkter Lesezugriff (unscharfe Bilder, kein Chat).",
     "role.test.desc": "Technischer Test-User. Kann alles wie 'User', darf aber keine Sicherheitsdaten (E-Mail/Passwort) ändern.",
+    "role.test": "Test",
     "admin.table.id": "ID",
     "admin.table.user": "Benutzer",
     "admin.table.status": "Status",

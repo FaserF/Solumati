@@ -56,6 +56,7 @@
     "role.moderator.desc": "Can moderate users and content, but cannot change system settings.",
     "role.user.desc": "Standard user with access to matching and profile functions.",
     "role.guest.desc": "Restricted read access (blurred images, no chat).",
+    "role.test": "Test",
     "role.test.desc": "Technical test user. Full 'User' capabilities but restricted from changing security data (Email/Password).",
     "admin.table.id": "ID",
     "admin.table.user": "User",

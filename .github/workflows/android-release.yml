@@ -36,6 +36,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          npm install @bubblewrap/core
           npm install -g @bubblewrap/cli
 
       - name: Generate APK
