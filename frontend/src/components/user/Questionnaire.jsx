@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { API_URL } from '../../config';
 import { ChevronRight, ChevronLeft, CheckCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,9 @@ const Questionnaire = ({ onComplete, onClose }) => {
                 setQuestions(data);
                 // Also try to load existing answers
                 if (user.answers && typeof user.answers === 'string') {
-                    try { setAnswers(JSON.parse(user.answers)); } catch (e) { }
+                    try { setAnswers(JSON.parse(user.answers)); } catch (e) {
+                        // Failed to parse answers
+                    }
                 } else if (user.answers && typeof user.answers === 'object') {
                     setAnswers(user.answers);
                 }

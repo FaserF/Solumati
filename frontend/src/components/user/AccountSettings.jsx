@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../../config';
 import { startRegistration } from '@simplewebauthn/browser';
@@ -18,7 +18,6 @@ const AccountSettings = () => {
     const onLogout = logout;
     const onResetPassword = () => { logout(); navigate('/forgot-password'); };
 
-    if (!user) return null;
     // --- Tabs ---
     const [activeTab, setActiveTab] = useState('app');
 
@@ -39,6 +38,8 @@ const AccountSettings = () => {
         has_totp: false,
         has_passkeys: false
     });
+
+    if (!user) return null;
 
     // Use Global Theme Context
     // Theme is handled by useAuth now

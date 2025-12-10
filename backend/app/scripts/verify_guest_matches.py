@@ -2,11 +2,11 @@ import sys
 import os
 
 # Ensure we can import from backend root
-sys.path.append(os.getcwd())
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from database import SessionLocal
-import models
-from routers.users import get_matches
+from app.core.database import SessionLocal
+from app.db import models
+from app.api.routers.users import get_matches
 from sqlalchemy import or_
 
 def verify_guest_matches():

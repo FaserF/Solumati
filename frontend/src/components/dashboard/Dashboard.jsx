@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, Activity, Shield, EyeOff, LifeBuoy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PublicProfile from '../user/PublicProfile';
@@ -23,9 +23,9 @@ const Dashboard = () => {
     const [matches, setMatches] = useState([]);
 
     // State for viewing public profiles
-    const [selectedUser, setSelectedUser] = React.useState(null);
+    const [selectedUser, setSelectedUser] = useState(null);
     // State for active chat
-    const [activeChatUser, setActiveChatUser] = React.useState(null);
+    const [activeChatUser, setActiveChatUser] = useState(null);
 
     // Fetch Matches
     useEffect(() => {
@@ -47,9 +47,9 @@ const Dashboard = () => {
     const isVisible = user?.is_visible_in_matches !== false;
 
     // 2FA Onboarding Prompt
-    const [show2FAPrompt, setShow2FAPrompt] = React.useState(false);
+    const [show2FAPrompt, setShow2FAPrompt] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (user && user.two_factor_method === 'none') {
             const hasDismissed = localStorage.getItem('dismissed_2fa_prompt');
             if (!hasDismissed) {
@@ -74,19 +74,19 @@ const Dashboard = () => {
     };
 
     // Inbox State
-    const [activeTab, setActiveTab] = React.useState('matches');
-    const [inboxConversations, setInboxConversations] = React.useState([]);
+    const [activeTab, setActiveTab] = useState('matches');
+    const [inboxConversations, setInboxConversations] = useState([]);
 
     // APK Update Check State
-    const [updateAvailable, setUpdateAvailable] = React.useState(null);
+    const [updateAvailable, setUpdateAvailable] = useState(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (activeTab === 'inbox') {
             fetchInbox();
         }
     }, [activeTab]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         // APK Update Check
         const checkUpdate = async () => {
             try {
@@ -106,7 +106,9 @@ const Dashboard = () => {
                         }
                     }
                 }
-            } catch (e) { }
+            } catch (e) {
+                // Check failed silently
+            }
         };
         checkUpdate();
     }, []);

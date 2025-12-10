@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Flag, User as UserIcon, MessageCircle } from 'lucide-react';
 import { API_URL } from '../../config';
 import ReportModal from '../social/ReportModal';
@@ -78,7 +78,9 @@ const PublicProfile = ({ userId, onClose, onChat, t }) => {
     const getAnswerLabel = (qid) => {
         if (!user.answers) return null;
         let ansObj = {};
-        try { ansObj = typeof user.answers === 'string' ? JSON.parse(user.answers) : user.answers; } catch (e) { }
+        try { ansObj = typeof user.answers === 'string' ? JSON.parse(user.answers) : user.answers; } catch (e) {
+            // Failed to parse
+        }
 
         const ansIdx = ansObj[qid];
         const q = questions.find(x => x.id === parseInt(qid));

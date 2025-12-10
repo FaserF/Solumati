@@ -1,8 +1,8 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
-from utils import get_setting
-from database import SessionLocal
-import schemas
+from app.services.utils import get_setting
+from app.core.database import SessionLocal
+from app.db import schemas
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class MaintenanceMiddleware(BaseHTTPMiddleware):
                     if user_id:
                         try:
                             # Verify user is actually an admin in DB
-                            from models import User
+                            from app.db.models import User
                             user = db.query(User).filter(User.id == int(user_id)).first()
                             if user and user.role == "admin":
                                 is_admin = True

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { API_URL } from '../../config';
 import { Shield, Smartphone, Mail, Fingerprint, HelpCircle, ArrowLeft } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
@@ -11,6 +11,25 @@ const TwoFactorAuth = () => {
     const { t } = useI18n();
     const navigate = useNavigate();
 
+    // 1. Declare all hooks first (Rules of Hooks)
+    const [view, setView] = useState('verify'); // Default, will update in effect
+    const [code, setCode] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    // 2. Handle missing auth (redirect)
+    useEffect(() => {
+        if (!tempAuth) {
+            navigate('/login');
+        } else if (tempAuth.available_methods && tempAuth.available_methods.length > 1) {
+            setView('select_method');
+        }
+    }, [tempAuth, navigate]);
+
+    // 3. Early return for rendering only (after hooks)
+    if (!tempAuth) return null;
+
     const onVerified = (data) => {
         finalizeLogin(data);
         navigate('/dashboard');
@@ -19,23 +38,6 @@ const TwoFactorAuth = () => {
         logout();
         navigate('/login');
     };
-
-    if (!tempAuth) {
-        // Redirect if accessed directly without auth flow
-        useEffect(() => { navigate('/login'); }, []);
-        return null;
-    }
-    const [view, setView] = useState(() => {
-        // Init state: if multiple methods available, show selector
-        if (tempAuth.available_methods && tempAuth.available_methods.length > 1) {
-            return 'select_method';
-        }
-        return 'verify';
-    });
-    const [code, setCode] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
 
     // Auto-trigger passkey if method matches (only in verify view)
     useEffect(() => {

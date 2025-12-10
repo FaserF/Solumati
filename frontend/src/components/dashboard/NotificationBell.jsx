@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, Smartphone } from 'lucide-react';
 import { API_URL } from '../../config';
 
@@ -58,7 +58,9 @@ const NotificationBell = ({ user, t }) => {
             // Optimistic update
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (e) { }
+        } catch (e) {
+            // Optimistic update, ignore error
+        }
     };
 
     const clearAll = async () => {
@@ -70,7 +72,9 @@ const NotificationBell = ({ user, t }) => {
             });
             setNotifications([]);
             setUnreadCount(0);
-        } catch (e) { }
+        } catch (e) {
+            // Error clearing
+        }
     };
 
     // --- PUSH LOGIC ---

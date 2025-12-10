@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from routers.chat import encrypt_message, decrypt_message
+from app.api.routers.chat import encrypt_message, decrypt_message
 
 def test_encryption_correctness():
     original = "Hello World! Secret Message"

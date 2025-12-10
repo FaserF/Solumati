@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 const CACHE_NAME = 'solumati-v1';
 
 self.addEventListener('install', (event) => {
