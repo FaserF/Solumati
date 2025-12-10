@@ -130,6 +130,19 @@ class Message(Base):
     is_read = Column(Boolean, default=False)
 
 
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    title = Column(String)
+    message = Column(Text)
+    type = Column(String) # 'system', 'match', 'update', 'security'
+    link = Column(String, nullable=True) # Optional action link
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class SystemSetting(Base):
     __tablename__ = "system_settings"
     key = Column(String, primary_key=True, index=True)

@@ -133,9 +133,26 @@ class MailConfig(BaseModel):
     smtp_user: Optional[str] = None
     smtp_password: Optional[str] = None
     smtp_ssl: bool = False
-    smtp_tls: bool = True
-    sender_name: Optional[str] = "Solumati"
-    from_email: Optional[str] = None
+class NotificationBase(BaseModel):
+    title: str
+    message: str
+    type: str = "system"
+    link: Optional[str] = None
+
+class NotificationCreate(NotificationBase):
+    user_id: int
+
+class NotificationDisplay(NotificationBase):
+    id: int
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class PushSubscription(BaseModel):
+    endpoint: str
+    keys: Dict[str, str]
 
 class RegistrationConfig(BaseModel):
     enabled: bool = True

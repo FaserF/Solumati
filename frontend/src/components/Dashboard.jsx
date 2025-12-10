@@ -4,6 +4,7 @@ import PublicProfile from './PublicProfile';
 import DashboardNavbar from './dashboard/DashboardNavbar';
 import MatchCard from './dashboard/MatchCard';
 import ChatWindow from './ChatWindow';
+import { APP_VERSION, API_URL } from '../config';
 
 const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminClick, onProfileClick, onSwipeClick, onQuestionnaireClick, onImprintClick, onPrivacyClick, t, testMode, maintenanceMode, supportChatEnabled }) => {
 
@@ -52,17 +53,45 @@ const Dashboard = ({ user, matches, isGuest, onLogout, onRegisterClick, onAdminC
     const [activeTab, setActiveTab] = React.useState('matches');
     const [inboxConversations, setInboxConversations] = React.useState([]);
 
+    // APK Update Check State
+    const [updateAvailable, setUpdateAvailable] = React.useState(null);
+
     React.useEffect(() => {
         if (activeTab === 'inbox') {
             fetchInbox();
         }
     }, [activeTab]);
 
+    React.useEffect(() => {
+        // APK Update Check
+        const checkUpdate = async () => {
+            try {
+                const res = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
+                if (res.ok) {
+                    const data = await res.json();
+                    const latest = data.tag_name.replace('v', '');
+                    const current = APP_VERSION.replace('v', '');
+                    if (latest !== current) {
+                        setUpdateAvailable(data);
+                        // Local Notification
+                        if (window.Notification && Notification.permission === 'granted') {
+                            new Notification(t('update.available_title', "Update Available"), {
+                                body: t('update.available_msg', `New version ${data.tag_name} is available!`),
+                                icon: '/pwa-192x192.png'
+                            });
+                        }
+                    }
+                }
+            } catch (e) { }
+        };
+        checkUpdate();
+    }, []);
+
     const fetchInbox = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:8000/chat/conversations', {
-                headers: { 'X-User-Id': token }
+            const res = await fetch(`${API_URL}/chat/conversations`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'X-User-Id': token }
             });
             if (res.ok) {
                 const data = await res.json();

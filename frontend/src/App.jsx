@@ -186,6 +186,29 @@ function App() {
                     }
                 });
         }
+        // 3. Session Restoration
+        const storedToken = localStorage.getItem('token');
+        if (storedToken && !user) {
+            console.log("[App] Attempting to restore session for:", storedToken);
+            fetch(`${API_URL}/users/${storedToken}`, {
+                headers: {
+                    'Authorization': `Bearer ${storedToken}`,
+                    'X-User-Id': storedToken
+                }
+            })
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error("Session invalid");
+                })
+                .then(userData => {
+                    console.log("[App] Session restored:", userData);
+                    finishLogin({ ...userData, user_id: userData.id }); // Normalize structure if needed
+                })
+                .catch(e => {
+                    console.warn("[App] Session restore failed:", e);
+                    localStorage.removeItem('token');
+                });
+        }
     }, []);
 
 
