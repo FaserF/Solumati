@@ -159,7 +159,7 @@ try {
     // using '--skipPwaValidation' to avoid failures if the specific icon sizes/manifest fields aren't perfect per Lighthouse
     // using '--manifest' pointing to our generated config
     execSync(
-        `bubblewrap build --manifest=${TWA_MANIFEST_PATH} --signingKeyPath=${KEYSTORE_PATH} --signingKeyAlias=android --signingKeyPassword=password --signingStorePassword=password --skipPwaValidation`,
+        `printf "y\\n${pkgJson.version}\\n${versionCode}\\n" | bubblewrap build --manifest=${TWA_MANIFEST_PATH} --signingKeyPath=${KEYSTORE_PATH} --signingKeyAlias=android --signingKeyPassword=password --signingStorePassword=password --skipPwaValidation`,
         { stdio: 'inherit' }
     );
     console.log('Build completed successfully!');
