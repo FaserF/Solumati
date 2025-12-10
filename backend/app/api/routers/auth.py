@@ -149,7 +149,7 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
     ip = request.client.host if request.client else "Unknown"
     ua = request.headers.get("user-agent", "Unknown")
     try:
-        background_tasks.add_task(send_login_notification, user.email, ip, ua)
+        background_tasks.add_task(send_login_notification, user.email, ip, ua, user)
     except Exception as e:
         logger.error(f"Failed to queue login email: {e}")
 

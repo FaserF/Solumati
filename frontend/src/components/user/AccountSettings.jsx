@@ -30,6 +30,12 @@ const AccountSettings = () => {
 
     // --- App Settings State ---
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [emailNotifications, setEmailNotifications] = useState({
+        login_alerts: true,
+        security_alerts: true,
+        new_matches: true,
+        new_messages: false
+    });
     const [connectedAccounts, setConnectedAccounts] = useState([]);
 
     // --- 2FA State ---
@@ -66,6 +72,10 @@ const AccountSettings = () => {
                             const s = typeof userData.app_settings === 'string' ? JSON.parse(userData.app_settings) : userData.app_settings;
                             setNotificationsEnabled(s.notifications_enabled || false);
                             if (s.theme) applyTheme(s.theme);
+                            // Load email notification preferences
+                            if (s.email_notifications) {
+                                setEmailNotifications(prev => ({ ...prev, ...s.email_notifications }));
+                            }
                         } catch (e) { console.error("Error parsing settings", e); }
                     }
 
@@ -95,6 +105,9 @@ const AccountSettings = () => {
             // Update State
             if (newPrefs.notifications_enabled !== undefined) setNotificationsEnabled(newPrefs.notifications_enabled);
             if (newPrefs.theme !== undefined) applyTheme(newPrefs.theme);
+            if (newPrefs.email_notifications !== undefined) {
+                setEmailNotifications(prev => ({ ...prev, ...newPrefs.email_notifications }));
+            }
 
             const payload = { ...newPrefs };
 
@@ -124,6 +137,11 @@ const AccountSettings = () => {
             });
 
         } catch (e) { console.error("Failed to save prefs", e); }
+    };
+
+    // Update individual email notification preference
+    const updateEmailNotification = (key, value) => {
+        saveAppPrefs({ email_notifications: { [key]: value } });
     };
 
     // --- Account Handlers ---
@@ -315,42 +333,27 @@ const AccountSettings = () => {
                         onClick={() => setActiveTab('app')}
                         className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'app' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
                     >
-                        {t('settings.tab_app', 'App Settings')}
+                        {t('settings.tab_app', 'App')}
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('notifications')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'notifications' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
+                    >
+                        {t('settings.tab_notifications', 'Notifications')}
                     </button>
 
                     <button
                         onClick={() => setActiveTab('account')}
                         className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'account' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
                     >
-                        {t('settings.tab_account', 'Account & Security')}
+                        {t('settings.tab_account', 'Account')}
                     </button>
                 </div>
 
                 {/* === APP SETTINGS TAB === */}
                 {activeTab === 'app' && (
                     <div className="space-y-6">
-                        {/* Push Notifications */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
-                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
-                                <Bell className="text-pink-600" /> {t('settings.push_title', 'Benachrichtigungen')}
-                            </h2>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.push_label', 'Push-Benachrichtigungen')}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-300">{t('settings.push_desc', 'Erhalte Updates zu neuen Matches und Nachrichten.')}</div>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={notificationsEnabled}
-                                        onChange={(e) => saveAppPrefs({ notifications_enabled: e.target.checked })}
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
-                                </label>
-                            </div>
-                        </div>
-
                         {/* Theme Settings */}
                         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
                             <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
@@ -378,6 +381,109 @@ const AccountSettings = () => {
                                     <Smartphone size={20} />
                                     <span className="text-xs font-bold">Auto</span>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* === NOTIFICATIONS TAB === */}
+                {activeTab === 'notifications' && (
+                    <div className="space-y-6">
+                        {/* Push Notifications (moved from App tab) */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
+                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
+                                <Bell className="text-pink-600" /> {t('settings.push_title', 'Push Notifications')}
+                            </h2>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.push_label', 'Push Notifications')}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-300">{t('settings.push_desc', 'Receive updates about new matches and messages.')}</div>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={notificationsEnabled}
+                                        onChange={(e) => saveAppPrefs({ notifications_enabled: e.target.checked })}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Email Notifications */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
+                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
+                                <Mail className="text-blue-600" /> {t('settings.email_notif_title', 'Email Notifications')}
+                            </h2>
+                            <div className="space-y-4">
+                                {/* Login Alerts */}
+                                <div className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                                    <div>
+                                        <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_notif_login', 'Login Alerts')}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('settings.email_notif_login_desc', 'Email when a new device logs into your account')}</div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={emailNotifications.login_alerts}
+                                            onChange={(e) => updateEmailNotification('login_alerts', e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* Security Alerts */}
+                                <div className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                                    <div>
+                                        <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_notif_security', 'Security Alerts')}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('settings.email_notif_security_desc', 'Email when your password or account is changed')}</div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={emailNotifications.security_alerts}
+                                            onChange={(e) => updateEmailNotification('security_alerts', e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* New Matches */}
+                                <div className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                                    <div>
+                                        <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_notif_matches', 'New Matches')}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('settings.email_notif_matches_desc', 'Email when you get a new compatible match')}</div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={emailNotifications.new_matches}
+                                            onChange={(e) => updateEmailNotification('new_matches', e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* New Messages */}
+                                <div className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                                    <div>
+                                        <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_notif_messages', 'New Messages')}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('settings.email_notif_messages_desc', 'Email for unread messages (daily digest)')}</div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={emailNotifications.new_messages}
+                                            onChange={(e) => updateEmailNotification('new_messages', e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>

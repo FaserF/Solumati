@@ -89,6 +89,7 @@ class UserSettingsUpdate(BaseModel):
     notifications_enabled: Optional[bool] = None
     theme: Optional[str] = None
     push_subscription: Optional[Dict[str, Any]] = None
+    email_notifications: Optional[Dict[str, bool]] = None  # e.g., {"login_alerts": true, "security_alerts": true}
 
 class MatchResult(BaseModel):
     user_id: int

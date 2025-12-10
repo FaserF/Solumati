@@ -11,7 +11,7 @@ from typing import List
 from app.core.database import get_db
 from app.db import models, schemas
 from app.core.security import hash_password
-from app.services.utils import get_setting, create_html_email, send_mail_sync, generate_unique_username, calculate_compatibility, send_registration_notification
+from app.services.utils import get_setting, create_html_email, send_mail_sync, generate_unique_username, calculate_compatibility, send_registration_notification, send_password_changed_notification, send_email_changed_notification
 from app.api.dependencies import get_current_user_from_header
 
 import logging
@@ -285,7 +285,7 @@ def upload_image(user_id: int, file: UploadFile = File(...), db: Session = Depen
     return {"image_url": user.image_url}
 
 @router.put("/users/{user_id}/account")
-def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, background_tasks: BackgroundTasks, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
     """Self-service account update for normal users (Email/Password)."""
     if user.id != user_id:
         raise HTTPException(403, "Forbidden")
@@ -294,20 +294,33 @@ def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, user:
     if user.role == 'test':
         raise HTTPException(403, "Test users cannot change sensitive account settings (Email/Password).")
 
+    old_email = user.email
+    email_changed = False
+    password_changed = False
+
     if update.email and update.email != user.email:
         if db.query(models.User).filter(models.User.email == update.email).first():
             raise HTTPException(400, "Email already in use")
         user.email = update.email
         user.is_verified = False # Require re-verification
-        # Logic to send verification mail again could go here
+        email_changed = True
 
     if update.password:
         user.hashed_password = hash_password(update.password)
+        password_changed = True
 
     if update.is_visible_in_matches is not None:
         user.is_visible_in_matches = update.is_visible_in_matches
 
     db.commit()
+
+    # Send notification emails (background tasks)
+    if email_changed:
+        background_tasks.add_task(send_email_changed_notification, old_email, user.email)
+
+    if password_changed:
+        background_tasks.add_task(send_password_changed_notification, user)
+
     return {"status": "updated", "reverify_needed": not user.is_verified}
 
 @router.put("/users/{user_id}/preferences")
@@ -328,6 +341,15 @@ def update_user_preferences(user_id: int, settings: schemas.UserSettingsUpdate, 
 
     if settings.theme is not None:
         current_settings["theme"] = settings.theme
+
+    # Handle email_notifications settings
+    if settings.email_notifications is not None:
+        # Merge with existing email_notifications (don't overwrite completely)
+        existing_email_prefs = current_settings.get("email_notifications", {})
+        for key, value in settings.email_notifications.items():
+            if value is not None:
+                existing_email_prefs[key] = value
+        current_settings["email_notifications"] = existing_email_prefs
 
     # Store Push Subscription separately (could be large)
     if settings.push_subscription is not None:

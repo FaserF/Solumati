@@ -268,16 +268,24 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
         "details": list(set(details)) # Unique categories matched
     }
 
-def send_login_notification(email: str, ip: str, user_agent: str):
+def send_login_notification(email: str, ip: str, user_agent: str, user=None):
     """
     Sends a notification email upon login.
     This function is intended to be run as a background task.
+    If user object is provided, respects user's email notification preferences.
     """
     # Create a new database session for this task since it runs in the background
     # and the original dependency session might be closed.
     from app.core.database import SessionLocal
     db = SessionLocal()
     try:
+        # Check user preference if user object is provided
+        if user:
+            prefs = get_user_email_preferences(user)
+            if not prefs.get('login_alerts', True):
+                logger.info(f"Login notification skipped for {email} - disabled by user preference")
+                return
+
         title = "New Login Detected"
         content = f"""
         We detected a new login to your {PROJECT_NAME} account.<br><br>
@@ -290,6 +298,8 @@ def send_login_notification(email: str, ip: str, user_agent: str):
         send_mail_sync(email, title, html, db)
     except Exception as e:
         logger.error(f"Error in send_login_notification: {e}")
+    finally:
+        db.close()
 
 def send_registration_notification(new_user, db_session=None):
     """
@@ -354,6 +364,126 @@ def send_registration_notification(new_user, db_session=None):
         logger.info(f"Registration notification sent to {target_email} for user {new_user.username}")
     except Exception as e:
         logger.error(f"Error in send_registration_notification: {e}")
+    finally:
+        if not db_session:
+            db.close()
+
+
+def get_user_email_preferences(user) -> dict:
+    """
+    Get user's email notification preferences from their app_settings.
+    Returns default preferences if not configured.
+    """
+    import json
+    try:
+        # Parse app_settings JSON string
+        settings = {}
+        if hasattr(user, 'app_settings') and user.app_settings:
+            settings = json.loads(user.app_settings) if isinstance(user.app_settings, str) else user.app_settings
+        email_prefs = settings.get('email_notifications', {})
+        return {
+            'login_alerts': email_prefs.get('login_alerts', True),
+            'security_alerts': email_prefs.get('security_alerts', True),
+            'new_matches': email_prefs.get('new_matches', True),
+            'new_messages': email_prefs.get('new_messages', False)
+        }
+    except:
+        return {'login_alerts': True, 'security_alerts': True, 'new_matches': True, 'new_messages': False}
+
+
+def send_password_changed_notification(user, db_session=None):
+    """
+    Sends a notification email when user changes their password.
+    This function is intended to be run as a background task.
+    """
+    from app.core.database import SessionLocal
+    db = db_session if db_session else SessionLocal()
+    try:
+        # Check user preference
+        prefs = get_user_email_preferences(user)
+        if not prefs.get('security_alerts', True):
+            return
+
+        title = "Password Changed"
+        content = f"""
+        Your {PROJECT_NAME} password was just changed.<br><br>
+        <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
+        If you made this change, you can ignore this email.<br>
+        If you did not change your password, please reset it immediately and contact support.
+        """
+
+        reg_config = get_setting(db, "registration", {})
+        server_domain = reg_config.get("server_domain", "")
+        reset_url = f"{server_domain}/forgot-password" if server_domain else None
+
+        html = create_html_email(
+            title,
+            content,
+            action_url=reset_url,
+            action_text="Reset Password" if reset_url else None,
+            server_domain=server_domain,
+            db=db
+        )
+        send_mail_sync(user.email, f"[{PROJECT_NAME}] {title}", html, db)
+        logger.info(f"Password changed notification sent to {user.email}")
+    except Exception as e:
+        logger.error(f"Error in send_password_changed_notification: {e}")
+    finally:
+        if not db_session:
+            db.close()
+
+
+def send_email_changed_notification(old_email: str, new_email: str, db_session=None):
+    """
+    Sends a notification to the OLD email address when email is changed.
+    This is a security measure and always sends regardless of preferences.
+    This function is intended to be run as a background task.
+    """
+    from app.core.database import SessionLocal
+    db = db_session if db_session else SessionLocal()
+    try:
+        title = "Email Address Changed"
+        content = f"""
+        The email address for your {PROJECT_NAME} account was just changed.<br><br>
+        <b>Old Email:</b> {old_email}<br>
+        <b>New Email:</b> {new_email}<br>
+        <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
+        If you made this change, you can ignore this email.<br>
+        If you did not authorize this change, please contact support immediately.
+        """
+
+        html = create_html_email(title, content, server_domain="", db=db)
+        send_mail_sync(old_email, f"[{PROJECT_NAME}] {title}", html, db)
+        logger.info(f"Email changed notification sent to {old_email}")
+    except Exception as e:
+        logger.error(f"Error in send_email_changed_notification: {e}")
+    finally:
+        if not db_session:
+            db.close()
+
+
+def send_account_deactivated_notification(user, reason: str = None, db_session=None):
+    """
+    Sends a notification when user account is deactivated/banned.
+    This function is intended to be run as a background task.
+    """
+    from app.core.database import SessionLocal
+    db = db_session if db_session else SessionLocal()
+    try:
+        title = "Account Suspended"
+        reason_text = f"<b>Reason:</b> {reason}<br>" if reason else ""
+        content = f"""
+        Your {PROJECT_NAME} account has been suspended.<br><br>
+        {reason_text}
+        <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
+        If you believe this was a mistake, please contact support.
+        """
+
+        html = create_html_email(title, content, server_domain="", db=db)
+        send_mail_sync(user.email, f"[{PROJECT_NAME}] {title}", html, db)
+        logger.info(f"Account deactivation notification sent to {user.email}")
+    except Exception as e:
+        logger.error(f"Error in send_account_deactivated_notification: {e}")
     finally:
         if not db_session:
             db.close()

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from typing import List
@@ -14,7 +14,7 @@ from app.core.database import get_db
 from app.db import models, schemas
 from app.core.security import hash_password
 from app.api.dependencies import require_admin, require_moderator_or_admin
-from app.services.utils import get_setting, save_setting
+from app.services.utils import get_setting, save_setting, send_account_deactivated_notification
 from app.core.config import CURRENT_VERSION
 
 logger = logging.getLogger(__name__)
@@ -80,11 +80,14 @@ def admin_create_user(new_user: schemas.UserCreateAdmin, db: Session = Depends(g
     return {"status": "success"}
 
 @router.put("/users/{user_id}/punish")
-def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user: raise HTTPException(404, "User not found")
 
     logger.info(f"Admin {current_admin.username} executing action {action.action} on user {user_id}")
+
+    send_deactivation_email = False
+    deactivation_reason = None
 
     if action.action == "delete": db.delete(user)
     elif action.action == "reactivate":
@@ -95,6 +98,8 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
         user.is_active = False
         user.deactivation_reason = action.reason_type
         user.ban_reason_text = action.custom_reason
+        deactivation_reason = action.custom_reason or action.reason_type
+        send_deactivation_email = True
         if action.reason_type.startswith("TempBan"):
             user.banned_until = datetime.utcnow() + timedelta(hours=action.duration_hours or 24)
     elif action.action == "promote_moderator":
@@ -111,6 +116,11 @@ def admin_punish_user(user_id: int, action: schemas.AdminPunishAction, db: Sessi
     elif action.action == "verify": user.is_verified = True
 
     db.commit()
+
+    # Send deactivation notification email
+    if send_deactivation_email and action.action != "delete":
+        background_tasks.add_task(send_account_deactivated_notification, user, deactivation_reason)
+
     return {"status": "success"}
 
 @router.post("/users/{user_id}/reset-2fa")
@@ -201,7 +211,7 @@ def send_test_mail(req: TestMailRequest, db: Session = Depends(get_db), current_
         This is a test email triggered by {current_admin.username} from the Solumati Admin Console.<br><br>
         If you see this, your SMTP configuration is correct!
         """
-        html = create_html_email("Test Mail", content, server_domain="")
+        html = create_html_email("Test Mail", content, server_domain="", db=db)
         send_mail_sync(req.target_email, "Solumati Test Mail", html, db)
         return {"status": "sent"}
     except Exception as e:
