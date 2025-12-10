@@ -17,8 +17,6 @@ def bump_version(current_version, release_type="stable"):
     calver = get_calver()
 
     # Regex to match YYYY.MM.N[.suffixM]
-    # Normalize input separators (. or -) to dots for parsing if needed,
-    # but let's assume we want to output standard dots.
     # Parts:
     #   Group 1: YYYY
     #   Group 2: MM
