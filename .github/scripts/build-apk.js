@@ -203,7 +203,13 @@ function build() {
             process.exit(1);
         } finally {
             console.log('Stopping local asset server...');
-            server.close();
+            server.close(() => {
+                process.exit(0);
+            });
+            // Force exit if close takes too long
+            setTimeout(() => {
+                process.exit(0);
+            }, 1000).unref();
         }
     });
 }
