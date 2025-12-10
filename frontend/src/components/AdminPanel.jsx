@@ -335,17 +335,21 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
 
         if (APP_RELEASE_TYPE === 'beta') {
             return (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wider">
-                    <Info size={14} /> Beta
-                </div>
+                <a href="https://github.com/FaserF/Solumati" target="_blank" rel="noopener noreferrer" className="no-underline hover:opacity-80 transition-opacity">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wider">
+                        <Info size={14} /> Beta
+                    </div>
+                </a>
             );
         }
 
         // Nightly / Development
         return (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold uppercase tracking-wider">
-                <Beaker size={14} /> Nightly
-            </div>
+            <a href="https://github.com/FaserF/Solumati" target="_blank" rel="noopener noreferrer" className="no-underline hover:opacity-80 transition-opacity">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold uppercase tracking-wider">
+                    <Beaker size={14} /> Nightly
+                </div>
+            </a>
         );
     };
 
@@ -363,7 +367,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                             {renderReleaseBadge()}
                         </h1>
                         <p className="text-xs text-gray-500 dark:text-gray-400 font-mono tracking-wider uppercase">
-                            System v{APP_VERSION} <span className="opacity-50">({APP_RELEASE_TYPE})</span>
+                            <a href={`https://github.com/FaserF/Solumati/releases/tag/v${APP_VERSION}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                System v{APP_VERSION}
+                            </a>
+                            <span className="opacity-50 ml-1">({APP_RELEASE_TYPE})</span>
                         </p>
                     </div>
                 </div>
