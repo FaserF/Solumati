@@ -1,13 +1,13 @@
 # Solumati - Find Your Match ❤️
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/FaserF/Solumati?color=pink&label=Latest%20Release)
-![GitHub License](https://img.shields.io/github/license/FaserF/Solumati?color=blue)
-![Docker Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/docker-publish.yml?label=Docker%20Build)
-![Android Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/android-release.yml?label=Android%20Build)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/FaserF/Solumati?color=pink&label=Latest%20Release)](https://github.com/FaserF/Solumati/releases/latest)
+[![GitHub License](https://img.shields.io/github/license/FaserF/Solumati?color=blue)](LICENSE.md)
+[![Docker Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/docker-publish.yml?label=Docker%20Build)](https://github.com/FaserF/Solumati/actions/workflows/docker-publish.yml)
+[![Android Build](https://img.shields.io/github/actions/workflow/status/FaserF/Solumati/android-release.yml?label=Android%20Build)](https://github.com/FaserF/Solumati/actions/workflows/android-release.yml)
 
 **Solumati** is a modern, open-source dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby in a transparent and secure environment.
 
-![Solumati Preview](https://github.com/FaserF/Solumati/raw/main/frontend/public/logo/Solumati.png)
+<img src="https://github.com/FaserF/Solumati/raw/main/frontend/public/logo/Solumati.png" alt="Solumati Preview" width="200" />
 
 ---
 
