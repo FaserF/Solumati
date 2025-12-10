@@ -80,55 +80,37 @@ fs.writeFileSync(MANIFEST_PATH, manifest);
 console.log('Updated Package.appxmanifest');
 
 // 4. Generate/Copy Icons
-const publicDir = path.join(FRONTEND_DIR, 'public');
-const iconCandidates = ['icon-512x512.png', 'pwa-512x512.png', 'android-chrome-512x512.png', 'icon.png'];
-let sourceIcon = null;
-for (const cand of iconCandidates) {
-    if (fs.existsSync(path.join(publicDir, cand))) {
-        sourceIcon = path.join(publicDir, cand);
-        break;
+// 4. Generate/Copy Icons
+const windowsLogoDir = path.join(FRONTEND_DIR, 'public', 'logo', 'windows11');
+if (!fs.existsSync(windowsLogoDir)) {
+    console.error(`Error: Windows logo directory not found at ${windowsLogoDir}`);
+    process.exit(1);
+}
+
+console.log(`Using Windows assets from: ${windowsLogoDir}`);
+
+// Map source filename (scale-100) to target filename (base)
+// We use scale-100 as the base asset required by the manifest defaults
+const assetMappings = [
+    { src: 'StoreLogo.scale-100.png', dest: 'StoreLogo.png' },
+    { src: 'Square150x150Logo.scale-100.png', dest: 'Square150x150Logo.png' },
+    { src: 'Square44x44Logo.scale-100.png', dest: 'Square44x44Logo.png' },
+    { src: 'Wide310x150Logo.scale-100.png', dest: 'Wide310x150Logo.png' },
+    { src: 'SplashScreen.scale-100.png', dest: 'SplashScreen.png' },
+];
+
+assetMappings.forEach(mapping => {
+    const srcPath = path.join(windowsLogoDir, mapping.src);
+    const destPath = path.join(ASSETS_DIR, mapping.dest);
+
+    if (fs.existsSync(srcPath)) {
+        fs.copyFileSync(srcPath, destPath);
+        console.log(`Copied ${mapping.src} to ${mapping.dest}`);
+    } else {
+        console.error(`Error: Missing required asset ${mapping.src}`);
+        process.exit(1);
     }
-}
-
-if (sourceIcon) {
-    console.log(`Using source icon: ${sourceIcon}`);
-
-    // We need to resize this using PowerShell since we don't have sharp/jimp installed
-    const resizeImage = (src, dest, width, height) => {
-        const psCommand = `
-Add-Type -AssemblyName System.Drawing
-$image = [System.Drawing.Image]::FromFile('${src}')
-$thumb = $image.GetThumbnailImage(${width}, ${height}, $null, [IntPtr]::Zero)
-$thumb.Save('${dest}')
-$image.Dispose()
-$thumb.Dispose()
-        `;
-        // Remove newlines to avoid exec issues or use a temp file?
-        // Using -Command allows multiline usually.
-        try {
-            execSync(`powershell -Command "${psCommand.replace(/"/g, '\\"')}"`, { stdio: 'inherit' });
-        } catch (e) {
-            console.error(`Failed to resize to ${width}x${height}:`, e.message);
-            // Fallback: Copy original
-            fs.copyFileSync(src, dest);
-        }
-    };
-
-    // Target sizes based on manifest
-    const mappings = [
-        { name: 'StoreLogo.png', w: 50, h: 50 },
-        { name: 'Square150x150Logo.png', w: 150, h: 150 },
-        { name: 'Square44x44Logo.png', w: 44, h: 44 },
-        { name: 'Wide310x150Logo.png', w: 310, h: 150 },
-        { name: 'SplashScreen.png', w: 620, h: 300 }, // Approximate splash
-    ];
-
-    mappings.forEach(m => {
-        resizeImage(sourceIcon, path.join(ASSETS_DIR, m.name), m.w, m.h);
-    });
-} else {
-    console.warn('No icon found. Build might fail if Assets missing.');
-}
+});
 
 // 5. Generate Certificate if missing
 const pfxPath = path.join(PROJECT_DIR, 'Solumati_TemporaryKey.pfx');

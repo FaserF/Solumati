@@ -300,6 +300,22 @@ function build() {
                     // Also save it to a file
                     fs.writeFileSync(path.join(ANDROID_OUTPUT_DIR, 'assetlinks.json'), JSON.stringify(assetLinksJson, null, 2));
                     console.log(`Saved assetlinks.json to ${path.join(ANDROID_OUTPUT_DIR, 'assetlinks.json')}`);
+
+                    // Automatically copy to backend/static for hosting
+                    try {
+                        const backendStaticDir = path.join(__dirname, '../../backend/static');
+                        if (fs.existsSync(backendStaticDir)) {
+                            fs.copyFileSync(
+                                path.join(ANDROID_OUTPUT_DIR, 'assetlinks.json'),
+                                path.join(backendStaticDir, 'assetlinks.json')
+                            );
+                            console.log(`[SUCCESS] Automatically copied assetlinks.json to ${backendStaticDir}`);
+                        } else {
+                            console.warn(`[WARNING] Backend static dir not found at ${backendStaticDir}, could not auto-deploy assetlinks.json`);
+                        }
+                    } catch (err) {
+                        console.warn(`[WARNING] Failed to copy assetlinks.json to backend: ${err.message}`);
+                    }
                 } else {
                     console.warn('Could not extract SHA256 fingerprint from keytool output.');
                 }

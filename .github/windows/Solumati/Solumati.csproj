@@ -16,9 +16,12 @@
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm64</AppxBundlePlatforms>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
   </PropertyGroup>
   <ItemGroup>
-    <!-- Explicit Compile/Page removed to avoid NETSDK1022 duplicate items error -->
+    <Compile Include="**\*.cs" Exclude="**\obj\**;**\bin\**" />
+    <Page Include="**\*.xaml" Exclude="**\obj\**;**\bin\**" SubType="Designer" Generator="MSBuild:Compile" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

@@ -22,6 +22,7 @@ import MaintenancePage from './components/MaintenancePage';
 import VerificationBanner from './components/common/VerificationBanner';
 import ConsentBanner from './components/ConsentBanner';
 import AuthLayout from './components/layout/AuthLayout';
+import NotificationPermission from './components/NotificationPermission';
 
 function App() {
     // --- Global State ---
@@ -390,6 +391,7 @@ function App() {
                     />
 
                     <ConsentBanner t={t} onNavigate={(v) => setView(v)} />
+                    <NotificationPermission t={t} />
 
                     <div className="w-full h-full min-h-screen">
 
