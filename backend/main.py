@@ -55,7 +55,7 @@ async def startup_event():
 
         if TEST_MODE:
             logger.warning(f"TEST MODE ACTIVE: Generating Dummy Data...")
-            generate_dummy_data(db=db)
+            await generate_dummy_data(db=db)
 
     finally:
         db.close()

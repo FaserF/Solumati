@@ -40,10 +40,8 @@ jobs:
     - name: Get Current Backend Version
       id: version
       run: |
-        # Get current version from config or tag
-        # For robustness, we try to get the latest tag. If no tag, fallback to config.
-        # But user script relied on config parsing. Let's stick to that for argument "current".
-        current=$(grep 'BACKEND_VERSION' backend/config.py | cut -d '"' -f 2 || echo "2024.1.0")
+        # Get current version from frontend/package.json (Source of Truth)
+        current=$(jq -r .version frontend/package.json)
 
         # Flags
         RELEASE_TYPE="stable"

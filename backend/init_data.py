@@ -2,6 +2,9 @@ import logging
 import secrets
 import random
 import json
+import os
+import asyncio
+import httpx
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -10,6 +13,32 @@ from security import hash_password
 from config import TEST_MODE
 
 logger = logging.getLogger(__name__)
+
+async def fetch_dummy_image(client: httpx.AsyncClient, username: str) -> str:
+    """
+    Fetches a random AI person image from thispersondoesnotexist.com
+    and saves it to static/images/dummies/{username}.jpg
+    Returns the relative path for the DB.
+    """
+    url = "https://thispersondoesnotexist.com/"
+    save_dir = "static/images/dummies"
+    os.makedirs(save_dir, exist_ok=True)
+    filename = f"{username}.jpg"
+    file_path = os.path.join(save_dir, filename)
+
+    try:
+        resp = await client.get(url, follow_redirects=True, timeout=10.0)
+        if resp.status_code == 200:
+            with open(file_path, "wb") as f:
+                f.write(resp.content)
+            logger.info(f"Downloaded AI profile pic for {username}")
+            return f"/static/images/dummies/{filename}"
+        else:
+            logger.warning(f"Failed to fetch image for {username}: Status {resp.status_code}")
+    except Exception as e:
+        logger.error(f"Error fetching image for {username}: {e}")
+
+    return None
 
 def check_schema(db: Session):
     """Checks and migrates the database schema for missing columns."""
@@ -214,7 +243,7 @@ def check_emergency_reset(db: Session):
         db.rollback()
 
 
-def generate_dummy_data(db: Session):
+async def generate_dummy_data(db: Session):
     """Generates 20 random dummy users if TEST_MODE is active and database is nearly empty."""
     if not TEST_MODE:
         return
@@ -250,59 +279,83 @@ def generate_dummy_data(db: Session):
         ]
 
         created_dummies = []
+        user_objects = []
 
-        for i in range(20):
-            # Select Random Archetype for this user
-            arch = random.choice(archetypes)
+        # Prepare HTTP Client for parallel fetching
+        async with httpx.AsyncClient() as client:
+            tasks = []
 
-            # Name & Auth
-            fname = random.choice(first_names)
-            # Ensure unique username
-            username = f"{fname}_{secrets.token_hex(2)}"
-            email = f"{username.lower()}@solumati.local"
+            for i in range(20):
+                # Select Random Archetype for this user
+                arch = random.choice(archetypes)
 
-            raw_pw = secrets.token_urlsafe(8)
-            hashed = hash_password(raw_pw)
+                # Name & Auth
+                fname = random.choice(first_names)
+                # Ensure unique username
+                username = f"{fname}_{secrets.token_hex(2)}"
+                email = f"{username.lower()}@solumati.local"
 
-            # Generate Answers based on Archetype
-            user_answers = {}
-            for q in QUESTIONS_SKELETON:
-                qid = str(q["id"])
-                opt_count = q.get("option_count", 4)
-                guest_ans = guest_answers.get(qid, 1)
+                raw_pw = secrets.token_urlsafe(8)
+                hashed = hash_password(raw_pw)
 
-                if arch["base_diff"] == -1:
-                    # Random
-                    ans = random.randint(0, opt_count - 1)
-                else:
-                    # Calculate based on difficulty/diff
-                    if random.random() > arch["base_diff"]:
-                        ans = guest_ans # Match Guest
+                # Generate Answers based on Archetype
+                user_answers = {}
+                for q in QUESTIONS_SKELETON:
+                    qid = str(q["id"])
+                    opt_count = q.get("option_count", 4)
+                    guest_ans = guest_answers.get(qid, 1)
+
+                    if arch["base_diff"] == -1:
+                        # Random
+                        ans = random.randint(0, opt_count - 1)
                     else:
-                        # Pick different option
-                        options = [x for x in range(opt_count) if x != guest_ans]
-                        ans = random.choice(options) if options else guest_ans
+                        # Calculate based on difficulty/diff
+                        if random.random() > arch["base_diff"]:
+                            ans = guest_ans # Match Guest
+                        else:
+                            # Pick different option
+                            options = [x for x in range(opt_count) if x != guest_ans]
+                            ans = random.choice(options) if options else guest_ans
 
-                user_answers[qid] = ans
+                    user_answers[qid] = ans
 
-            # Create User
-            user = models.User(
-                email=email,
-                hashed_password=hashed,
-                real_name=f"{fname} Dummy",
-                username=username,
-                about_me=f"I am a generated '{arch['name']}' type ({i+1}). I like {random.choice(['Pizza', 'Travel', 'Music', 'Coding'])}. What do you think about {random.choice(['Traveling', 'Arts', 'Modern Music', 'AI'])}.",
-                is_active=True,
-                is_verified=True,
-                is_guest=False,
-                role="user",
-                intent=arch["intent"],
-                answers=json.dumps(user_answers),
-                created_at=datetime.utcnow(),
-                is_visible_in_matches=True
-            )
-            db.add(user)
-            created_dummies.append(f"{username} ({arch['name']}) -> {raw_pw}")
+                # Create User Object (but don't add to session yet to avoid long transaction blocks if async fails??
+                # Actually we need them for tasks. Let's just create metadata dicts first)
+
+                user_data = {
+                    "email": email,
+                    "hashed_password": hashed,
+                    "real_name": f"{fname} Dummy",
+                    "username": username,
+                    "about_me": f"I am a generated '{arch['name']}' type ({i+1}). I like {random.choice(['Pizza', 'Travel', 'Music', 'Coding'])}. What do you think about {random.choice(['Traveling', 'Arts', 'Modern Music', 'AI'])}.",
+                    "is_active": True,
+                    "is_verified": True,
+                    "is_guest": False,
+                    "role": "user",
+                    "intent": arch["intent"],
+                    "answers": json.dumps(user_answers),
+                    "created_at": datetime.utcnow(),
+                    "is_visible_in_matches": True
+                }
+
+                user_objects.append(user_data)
+                created_dummies.append(f"{username} ({arch['name']}) -> {raw_pw}")
+
+                # Schedule Image Fetch
+                tasks.append(fetch_dummy_image(client, username))
+
+            # Execute all image fetches in parallel
+            logger.info("Fetching AI profile pictures...")
+            image_paths = await asyncio.gather(*tasks)
+
+            # Now insert into DB
+            for idx, udata in enumerate(user_objects):
+                # Assign image path if download was successful
+                if image_paths[idx]:
+                    udata["image_url"] = image_paths[idx]
+
+                user = models.User(**udata)
+                db.add(user)
 
         db.commit()
 

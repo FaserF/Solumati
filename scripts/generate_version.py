@@ -11,7 +11,7 @@ def get_calver():
 def bump_version(current_version, release_type="stable"):
     # Desired Format:
     # Stable: YYYY.MM.N (e.g., 2025.12.1)
-    # Beta:   YYYY.MM.N-bM (e.g., 2025.12.1-b1)
+    # Beta:   YYYY.MM.N-bM (e.g., 2025.12.1-b2)
     # Nightly: YYYY.MM.N-nM (e.g., 2025.12.1-n1)
 
     calver = get_calver()
@@ -25,7 +25,7 @@ def bump_version(current_version, release_type="stable"):
     #   Group 5: suffix letter (b or n)
     #   Group 6: suffix number
 
-    # Accept inputs like 2025-12.1, 2025.12.1, 2025.12.1.b1, 2025.12.1-b1
+    # Accept inputs like 2025-12.1, 2025.12.1, 2025.12.1.b1, 2025.12.1-b2
     match = re.match(r"^(\d{4})[-\.](\d{2})[-\.](\d+)([-\.]?([bn])(\d+))?$", current_version)
 
     if match:
@@ -57,7 +57,7 @@ def bump_version(current_version, release_type="stable"):
                 if has_suffix:
                     if current_suffix_type == target_suffix_char:
                         # Same suffix type, bump suffix number
-                        # 2025.12.1-b1 (beta) -> 2025.12.1-b2
+                        # 2025.12.1-b2 (beta) -> 2025.12.1-b2
                         return f"{calver}.{current_n}-{target_suffix_char}{current_suffix_num + 1}"
                     else:
                         # Different suffix type.
