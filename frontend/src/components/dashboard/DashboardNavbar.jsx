@@ -1,6 +1,6 @@
 import React from 'react';
 import { Settings, User } from 'lucide-react';
-import NotificationBell from '../NotificationBell';
+import NotificationBell from './NotificationBell';
 import { APP_NAME } from '../../config';
 
 const DashboardNavbar = ({

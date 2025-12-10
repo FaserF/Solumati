@@ -1,5 +1,5 @@
-from database import SessionLocal
-from models import Message, User
+from app.core.database import SessionLocal
+from app.db.models import Message, User
 
 db = SessionLocal()
 try:

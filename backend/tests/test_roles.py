@@ -6,9 +6,9 @@ import os
 # Ensure backend path is in sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-from dependencies import require_admin, require_moderator_or_admin, get_current_user_from_header
-import models
+from app.main import app
+from app.api.dependencies import require_admin, require_moderator_or_admin, get_current_user_from_header
+from app.db import models
 
 # client = TestClient(app)
 

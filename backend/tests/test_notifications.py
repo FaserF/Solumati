@@ -7,9 +7,10 @@ from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-from dependencies import get_current_user_from_header, get_db
-import models
+from app.main import app
+from app.api.dependencies import get_current_user_from_header
+from app.core.database import get_db
+from app.db import models
 
 # client = TestClient(app)
 

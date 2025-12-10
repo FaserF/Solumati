@@ -8,9 +8,10 @@ from datetime import datetime
 # Ensure backend path is in sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-from dependencies import require_admin, get_current_user_from_header, get_db
-import models
+from app.main import app
+from app.api.dependencies import require_admin, get_current_user_from_header
+from app.core.database import get_db
+from app.db import models
 
 # client = TestClient(app)
 
@@ -24,8 +25,8 @@ def test_admin_send_test_mail(client):
     # Setup Admin Mock
     app.dependency_overrides[require_admin] = mock_user_dep(role="admin")
 
-    with patch("utils.send_mail_sync") as mock_send_mail, \
-         patch("utils.create_html_email", return_value="<html>Test</html>") as mock_create_html:
+    with patch("app.services.utils.send_mail_sync") as mock_send_mail, \
+         patch("app.services.utils.create_html_email", return_value="<html>Test</html>") as mock_create_html:
 
         payload = {"target_email": "test@example.com"}
         response = client.post("/admin/settings/test-mail", json=payload)
@@ -85,7 +86,7 @@ def test_get_conversations_mock_db(client):
     mock_db.query.side_effect = query_side_effect
 
     # Also need to patch `decrypt_message` since we don't have the real key setup in tests possibly
-    with patch("routers.chat.decrypt_message", return_value="Hello World"):
+    with patch("app.api.routers.chat.decrypt_message", return_value="Hello World"):
         response = client.get("/chat/conversations", headers={"X-User-ID": "1"})
 
     assert response.status_code == 200

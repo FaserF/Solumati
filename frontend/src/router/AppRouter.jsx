@@ -5,23 +5,24 @@ import { useConfig } from '../context/ConfigContext';
 import { useI18n } from '../context/I18nContext';
 
 // Components
-import Landing from '../components/Landing';
-import Login from '../components/Login';
-import Register from '../components/Register';
-import Dashboard from '../components/Dashboard';
-import AdminPanel from '../components/AdminPanel';
-import UserProfile from '../components/UserProfile';
-import AccountSettings from '../components/AccountSettings';
-import Legal from '../components/Legal';
-import ForgotPassword from '../components/ForgotPassword';
-import ResetPassword from '../components/ResetPassword';
-import TwoFactorAuth from '../components/TwoFactorAuth';
-import Discover from '../components/Discover';
-import Questionnaire from '../components/Questionnaire';
-import MaintenancePage from '../components/MaintenancePage';
+// Components
+import Landing from '../pages/Landing';
+import Login from '../components/auth/Login';
+import Register from '../components/auth/Register';
+import Dashboard from '../components/dashboard/Dashboard';
+import AdminPanel from '../components/admin/AdminPanel';
+import UserProfile from '../components/user/UserProfile';
+import AccountSettings from '../components/user/AccountSettings';
+import Legal from '../pages/Legal';
+import ForgotPassword from '../components/auth/ForgotPassword';
+import ResetPassword from '../components/auth/ResetPassword';
+import TwoFactorAuth from '../components/auth/TwoFactorAuth';
+import Discover from '../components/social/Discover';
+import Questionnaire from '../components/user/Questionnaire';
+import MaintenancePage from '../pages/MaintenancePage';
 import VerificationBanner from '../components/common/VerificationBanner';
-import ConsentBanner from '../components/ConsentBanner';
-import NotificationPermission from '../components/NotificationPermission';
+import ConsentBanner from '../components/common/ConsentBanner';
+import NotificationPermission from '../components/common/NotificationPermission';
 import AuthLayout from '../components/layout/AuthLayout';
 import { API_URL } from '../config';
 

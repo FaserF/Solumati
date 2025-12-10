@@ -7,9 +7,9 @@ from datetime import datetime
 # Ensure backend path is in sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-import models
-from database import get_db
+from app.main import app
+from app.db import models
+from app.core.database import get_db
 
 # client = TestClient(app)  <-- Removed global client
 

@@ -7,9 +7,9 @@ from datetime import datetime
 # Ensure backend path is in sys.path if running from root or backend/tests
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-from dependencies import require_admin
-import models
+from app.main import app
+from app.api.dependencies import require_admin
+from app.db import models
 
 # client = TestClient(app)
 

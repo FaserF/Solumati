@@ -8,8 +8,11 @@ from sqlalchemy.orm import sessionmaker
 # Add backend to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-from database import Base, get_db
+from app.main import app
+from app.core.database import Base, get_db
+from app.api.dependencies import get_current_user_from_header
+from app.db import models
+from app.core.config import TEST_MODE
 
 @pytest.fixture(scope="module")
 def test_db():
