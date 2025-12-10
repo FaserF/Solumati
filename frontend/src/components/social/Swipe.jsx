@@ -67,7 +67,7 @@ const Swipe = ({ user, onBack, t }) => {
                 {!loading && !currentCard && (
                     <div className="text-center p-8 bg-white rounded-2xl shadow-sm">
                         <User size={48} className="mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-lg font-bold text-gray-700">That's everyone!</h3>
+                        <h3 className="text-lg font-bold text-gray-700">That&apos;s everyone!</h3>
                         <p className="text-gray-500 mb-4">Check back later for more people.</p>
                         <button onClick={onBack} className="text-pink-600 font-bold hover:underline">Back to Dashboard</button>
                     </div>

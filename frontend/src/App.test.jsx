@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* eslint-env jest, node */
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import App from './App';

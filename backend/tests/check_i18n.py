@@ -29,7 +29,7 @@ def load_keys(file_path):
     return keys
 
 def main():
-    i18n_dir = os.path.join(os.path.dirname(__file__), '../i18n')
+    i18n_dir = os.path.join(os.path.dirname(__file__), '../app/services/i18n')
     files = [f for f in os.listdir(i18n_dir) if f.endswith('.json')]
 
     if not files:
