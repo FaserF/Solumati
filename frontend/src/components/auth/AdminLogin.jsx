@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Shield } from 'lucide-react';
 
 const AdminLogin = ({ adminPass, setAdminPass, onLogin, onBack, t }) => (

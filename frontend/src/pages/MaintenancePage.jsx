@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Loader2, Server } from 'lucide-react';
 
 const MaintenancePage = ({ type = 'startup', onAdminLogin }) => {

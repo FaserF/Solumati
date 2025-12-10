@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Cookie, Shield, X } from 'lucide-react';
 
 const ConsentBanner = ({ t, onNavigate }) => {

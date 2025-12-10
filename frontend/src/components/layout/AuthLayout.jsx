@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { APP_NAME } from '../../config';
 
 const AuthLayout = ({ children, t, title = APP_NAME, subtitle = "" }) => {

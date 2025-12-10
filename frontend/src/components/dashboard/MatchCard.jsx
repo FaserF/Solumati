@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { User, CheckCircle, EyeOff } from 'lucide-react';
 
 const MatchCard = ({ match, isGuest, onClick, t }) => {

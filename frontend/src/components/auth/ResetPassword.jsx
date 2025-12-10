@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { API_URL } from '../../config';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useI18n } from '../../context/I18nContext';
