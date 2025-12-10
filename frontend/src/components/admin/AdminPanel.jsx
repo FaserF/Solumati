@@ -4,11 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
 import ChatWindow from '../social/ChatWindow';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, Crown, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, HardDrive, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone } from 'lucide-react';
-import { API_URL, APP_VERSION, APP_NAME, APP_RELEASE_TYPE } from '../../config';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone } from 'lucide-react';
+import { API_URL, APP_VERSION, APP_RELEASE_TYPE } from '../../config';
 
 const AdminPanel = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const { globalConfig, maintenanceMode } = useConfig();
     const { t } = useI18n();
     const navigate = useNavigate();
@@ -86,6 +86,7 @@ const AdminPanel = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const loadData = () => {
@@ -1039,6 +1040,47 @@ const AdminPanel = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* REGISTRATION NOTIFICATIONS - Only show if mail is configured */}
+                        {isMailConfigured() && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                    <Mail className="text-pink-500" />
+                                    {t('admin.settings.reg_notification_title', 'Registration Notifications')}
+                                </h2>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_enabled', 'Email Notifications')}</label>
+                                            <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={settings.registration_notification?.enabled || false}
+                                                    onChange={(e) => updateSetting('registration_notification', 'enabled', e.target.checked)}
+                                                    className="w-5 h-5 text-pink-600 rounded focus:ring-pink-500"
+                                                />
+                                                <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.reg_notification_label', 'Receive email on new registrations')}</span>
+                                            </label>
+                                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_hint', 'Get notified whenever a new user registers on your instance.')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className={!settings.registration_notification?.enabled ? 'opacity-50' : ''}>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_email', 'Notification Email')}</label>
+                                            <input
+                                                type="email"
+                                                value={settings.registration_notification?.email_target || ''}
+                                                onChange={(e) => updateSetting('registration_notification', 'email_target', e.target.value)}
+                                                disabled={!settings.registration_notification?.enabled}
+                                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
+                                                placeholder="admin@example.com"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_email_hint', 'The email address where registration notifications will be sent.')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* ASSET LINKS SETTINGS */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">

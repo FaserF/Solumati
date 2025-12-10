@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, Mail, Phone, MapPin, Scale, Shield } from 'lucide-react';
+import { ChevronLeft, Mail, Phone, Scale, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from '../context/ConfigContext';
 import { useI18n } from '../context/I18nContext';

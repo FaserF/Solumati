@@ -170,7 +170,7 @@ const UserProfile = ({ initialMode = 'view' }) => {
                                 <div>
                                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t('profile.details', 'Details')}</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {Object.entries(userAnswers).map(([qid, ansIdx]) => {
+                                        {Object.entries(userAnswers).map(([qid]) => {
                                             const label = getAnswerLabel(qid);
                                             const q = questions.find(x => x.id === parseInt(qid));
                                             if (!label || !q) return null;

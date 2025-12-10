@@ -142,6 +142,12 @@
     "admin.settings.support_readonly_hint": "If disabled, the chat will be read-only for users.",
     "admin.settings.support_email": "Forwarding Email",
     "admin.settings.support_email_hint": "Messages sent to Support will be forwarded here.",
+    "admin.settings.reg_notification_title": "Registration Notifications",
+    "admin.settings.reg_notification_enabled": "Email Notifications",
+    "admin.settings.reg_notification_label": "Receive email on new registrations",
+    "admin.settings.reg_notification_hint": "Get notified whenever a new user registers on your instance.",
+    "admin.settings.reg_notification_email": "Notification Email",
+    "admin.settings.reg_notification_email_hint": "The email address where registration notifications will be sent.",
     "admin.modal.punish_title": "Block User",
     "admin.modal.edit_title": "Edit User",
     "admin.modal.reason": "Reason for blocking",
@@ -735,7 +741,5 @@
     "btn.enabled": "Enabled",
     "btn.not_configured": "Not configured",
     "btn.available": "Available",
-    "btn.use_this": "Use This",
-    "settings.connected_as": "Connected as {user}",
-    "settings.not_connected": "Not connected"
+    "btn.use_this": "Use This"
 }

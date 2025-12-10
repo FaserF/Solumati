@@ -39,13 +39,34 @@ def save_setting(db: Session, key: str, value: dict):
         db.rollback()
 
 # --- HTML Email Helper ---
-def create_html_email(title: str, content: str, action_url: str = None, action_text: str = None, server_domain: str = ""):
+def create_html_email(title: str, content: str, action_url: str = None, action_text: str = None, server_domain: str = "", db: Session = None):
     if server_domain.endswith("/"): server_domain = server_domain[:-1]
 
-    # Logo URL (GitHub Raw for reliability)
-    logo_url = "https://raw.githubusercontent.com/FaserF/Solumati/main/frontend/public/logo/windows11/Square150x150Logo.png"
-    host_url = "https://solumati.fabiseitz.de"
+    # Determine host URL with fallback chain
+    host_url = server_domain if server_domain else None
+    if not host_url and db:
+        try:
+            reg_config = get_setting(db, "registration", {})
+            host_url = reg_config.get("server_domain", "")
+            if host_url and host_url.endswith("/"): host_url = host_url[:-1]
+        except:
+            pass
+    if not host_url:
+        host_url = "http://solumati.local"
+
     github_url = "https://github.com/FaserF/Solumati"
+
+    # Inline SVG logo - works reliably in all email clients
+    logo_svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80" style="border-radius: 16px; background: white; padding: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#grad1)"/>
+        <text x="50" y="65" font-size="40" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif">S</text>
+    </svg>'''
 
     html = f"""
     <!DOCTYPE html>
@@ -63,11 +84,10 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
                 padding: 40px 20px;
                 text-align: center;
             }}
-            .logo {{
-                width: 80px;
-                height: 80px;
-                border-radius: 16px;
+            .logo-container {{
+                display: inline-block;
                 background-color: white;
+                border-radius: 16px;
                 padding: 2px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             }}
@@ -113,7 +133,9 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
         <div class="email-wrapper">
             <div class="email-container">
                 <div class="header">
-                    <img src="{logo_url}" alt="Solumati Logo" class="logo">
+                    <div class="logo-container">
+                        {logo_svg}
+                    </div>
                     <p class="app-name">{PROJECT_NAME}</p>
                 </div>
 
@@ -140,6 +162,7 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
     </html>
     """
     return html
+
 
 def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
     try:
@@ -263,10 +286,78 @@ def send_login_notification(email: str, ip: str, user_agent: str):
         <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
         If this was you, you can ignore this email. If you did not authorize this login, please contact support immediately.
         """
-        html = create_html_email(title, content, server_domain="") # Domain not critical here
+        html = create_html_email(title, content, server_domain="", db=db)
         send_mail_sync(email, title, html, db)
     except Exception as e:
         logger.error(f"Error in send_login_notification: {e}")
+
+def send_registration_notification(new_user, db_session=None):
+    """
+    Sends a notification email to the admin when a new user registers.
+    This function is intended to be run as a background task.
+    """
+    from app.core.database import SessionLocal
+    db = db_session if db_session else SessionLocal()
+    try:
+        # Check if registration notifications are enabled
+        reg_notif_config = get_setting(db, "registration_notification", {"enabled": False, "email_target": ""})
+        if not reg_notif_config.get("enabled", False):
+            return
+
+        target_email = reg_notif_config.get("email_target", "")
+        if not target_email:
+            return
+
+        title = "New User Registration"
+        content = f"""
+        A new user has registered on your {PROJECT_NAME} instance.<br><br>
+        <table style="border-collapse: collapse; width: 100%; max-width: 400px;">
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px 0; font-weight: bold; color: #374151;">User ID</td>
+                <td style="padding: 12px 0; color: #6b7280;">#{new_user.id}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px 0; font-weight: bold; color: #374151;">Username</td>
+                <td style="padding: 12px 0; color: #6b7280;">{new_user.username}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px 0; font-weight: bold; color: #374151;">Email</td>
+                <td style="padding: 12px 0; color: #6b7280;">{new_user.email}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px 0; font-weight: bold; color: #374151;">Name</td>
+                <td style="padding: 12px 0; color: #6b7280;">{new_user.real_name or 'Not provided'}</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px 0; font-weight: bold; color: #374151;">Registered</td>
+                <td style="padding: 12px 0; color: #6b7280;">{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</td>
+            </tr>
+        </table>
+        <br>
+        <p style="color: #9ca3af; font-size: 14px;">You can manage this user in the Admin Panel.</p>
+        """
+
+        # Get server domain for the "Open Solumati" link
+        reg_config = get_setting(db, "registration", {})
+        server_domain = reg_config.get("server_domain", "")
+        admin_url = f"{server_domain}/admin" if server_domain else None
+
+        html = create_html_email(
+            title,
+            content,
+            action_url=admin_url,
+            action_text="Open Admin Panel" if admin_url else None,
+            server_domain=server_domain,
+            db=db
+        )
+        send_mail_sync(target_email, f"[{PROJECT_NAME}] New User: {new_user.username}", html, db)
+        logger.info(f"Registration notification sent to {target_email} for user {new_user.username}")
+    except Exception as e:
+        logger.error(f"Error in send_registration_notification: {e}")
+    finally:
+        if not db_session:
+            db.close()
+
 
 def is_profile_complete(user: models.User) -> bool:
     """

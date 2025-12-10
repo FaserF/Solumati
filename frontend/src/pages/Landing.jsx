@@ -1,4 +1,4 @@
-import { Lock, Github, Heart, Scale, AlertTriangle, Beaker, Info, Smartphone, Monitor } from 'lucide-react';
+import { Github, Scale, AlertTriangle, Info, Smartphone, Monitor } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';

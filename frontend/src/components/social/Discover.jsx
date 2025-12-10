@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Heart, ChevronLeft, MapPin, CheckCircle, Quote } from 'lucide-react';
+import { X, Heart, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
@@ -30,7 +30,7 @@ const Discover = () => {
         setLoading(false);
     };
 
-    const handleAction = (type) => {
+    const handleAction = () => {
         setCurrentIndex(prev => prev + 1);
     };
 

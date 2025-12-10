@@ -38,7 +38,7 @@ export const ThemeProvider = ({ children }) => {
         // Listener for system changes
         if (theme === 'system') {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            const handleChange = (e) => {
+            const handleChange = () => {
                 applyTheme('system');
             };
             mediaQuery.addEventListener('change', handleChange);

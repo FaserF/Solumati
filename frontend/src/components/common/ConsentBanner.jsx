@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cookie, Shield, X } from 'lucide-react';
+import { Cookie } from 'lucide-react';
 
 const ConsentBanner = ({ t, onNavigate }) => {
     // const { t } = useTranslation(); // Removed dependency

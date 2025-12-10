@@ -200,6 +200,10 @@ class SupportChatConfig(BaseModel):
     enabled: bool = False
     email_target: Optional[str] = ""
 
+class RegistrationNotificationConfig(BaseModel):
+    enabled: bool = False
+    email_target: Optional[str] = ""
+
 class PublicConfig(BaseModel):
     registration_enabled: bool
     email_2fa_enabled: bool
@@ -217,6 +221,7 @@ class SystemSettings(BaseModel):
     legal: LegalConfig
     oauth: OAuthConfig = OAuthConfig()
     support_chat: SupportChatConfig = SupportChatConfig()
+    registration_notification: RegistrationNotificationConfig = RegistrationNotificationConfig()
     assetlinks: List[Dict[str, Any]] = []
 
 class SystemDiagnostics(BaseModel):

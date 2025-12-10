@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Check, Trash2, Smartphone } from 'lucide-react';
+import { Bell, Trash2, Smartphone } from 'lucide-react';
 import { API_URL } from '../../config';
 
 // Helper to convert VAPID key

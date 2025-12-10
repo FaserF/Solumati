@@ -11,7 +11,7 @@ from typing import List
 from app.core.database import get_db
 from app.db import models, schemas
 from app.core.security import hash_password
-from app.services.utils import get_setting, create_html_email, send_mail_sync, generate_unique_username, calculate_compatibility
+from app.services.utils import get_setting, create_html_email, send_mail_sync, generate_unique_username, calculate_compatibility, send_registration_notification
 from app.api.dependencies import get_current_user_from_header
 
 import logging
@@ -51,8 +51,11 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db:
     if reg_config.require_verification and not new_user.is_verified:
         server_url = reg_config.server_domain.rstrip('/')
         link = f"{server_url}/verify?id={new_user.id}&code={secure_code}"
-        html = create_html_email("Verify your Account", "Welcome to Solumati!", link, "Verify Email", server_url)
+        html = create_html_email("Verify your Account", "Welcome to Solumati!", link, "Verify Email", server_url, db)
         background_tasks.add_task(send_mail_sync, user.email, "Verify your Solumati Account", html, db)
+
+    # Send registration notification to admin (if enabled)
+    background_tasks.add_task(send_registration_notification, new_user)
 
     return new_user
 

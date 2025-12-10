@@ -24,7 +24,7 @@ import VerificationBanner from '../components/common/VerificationBanner';
 import ConsentBanner from '../components/common/ConsentBanner';
 import NotificationPermission from '../components/common/NotificationPermission';
 import AuthLayout from '../components/layout/AuthLayout';
-import { API_URL } from '../config';
+
 
 // Wrapper to handle URL params like ?reset_token=... and redirect
 const UrlParamHandler = () => {
