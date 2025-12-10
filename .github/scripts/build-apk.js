@@ -1,18 +1,25 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { execSync } = require('child_process');
 
 // Configuration
-const REQUIRED_ENV_VARS = ['PWA_URL'];
+const REQUIRE_ENV_VARS = ['PWA_URL'];
 const PWA_MANIFEST_PATH = path.join(__dirname, '../../frontend/manifest.json');
 const PACKAGE_JSON_PATH = path.join(__dirname, '../../frontend/package.json');
-const TWA_MANIFEST_PATH = path.join(process.cwd(), 'twa-manifest.json');
+// Use temp dir for TWA manifest to avoid "existing project" detection and "Regenerate?" prompts in CWD
+const TWA_MANIFEST_PATH = path.join(os.tmpdir(), `twa-manifest-${Date.now()}.json`);
+const LOCAL_TWA_MANIFEST_PATH = path.join(process.cwd(), 'twa-manifest.json');
 const TWA_CHECKSUM_PATH = path.join(process.cwd(), '.twa-manifest.json.checksum');
 const ANDROID_OUTPUT_DIR = path.join(process.cwd(), 'android'); // Default output is usually root, but let's be careful.
 const KEYSTORE_PATH = path.join(process.cwd(), 'android-keystore.jks');
 
-// Clean up stale artifacts to prevent "Missing Checksum" prompts if possible
+// Clean up stale artifacts to prevent "Missing Checksum" prompts
 if (fs.existsSync(TWA_CHECKSUM_PATH)) fs.unlinkSync(TWA_CHECKSUM_PATH);
+if (fs.existsSync(LOCAL_TWA_MANIFEST_PATH)) {
+    console.log('Removing stale local twa-manifest.json...');
+    fs.unlinkSync(LOCAL_TWA_MANIFEST_PATH);
+}
 // Force clean build to avoid "Regenerate?" prompts
 if (fs.existsSync(ANDROID_OUTPUT_DIR)) {
     console.log('Cleaning existing android output directory...');
@@ -122,7 +129,6 @@ if (!fs.existsSync(KEYSTORE_PATH)) {
 
 // Configure Bubblewrap
 console.log('Configuring Bubblewrap...');
-const os = require('os');
 const configDir = path.join(os.homedir(), '.bubblewrap');
 if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
@@ -154,7 +160,7 @@ try {
     // using '--manifest' pointing to our generated config
     execSync(
         `bubblewrap build --manifest=${TWA_MANIFEST_PATH} --signingKeyPath=${KEYSTORE_PATH} --signingKeyAlias=android --signingKeyPassword=password --signingStorePassword=password --skipPwaValidation`,
-        { input: `y\n${pkgJson.version}\n${versionCode}\n`, stdio: ['pipe', 'inherit', 'inherit'] }
+        { stdio: 'inherit' }
     );
     console.log('Build completed successfully!');
 } catch (e) {
