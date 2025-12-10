@@ -23,6 +23,7 @@ const PWA_MANIFEST_PATH = path.join(PUBLIC_DIR, 'manifest.json');
 const PACKAGE_JSON_PATH = path.join(FRONTEND_DIR, 'package.json');
 const ANDROID_OUTPUT_DIR = path.join(process.cwd(), 'android');
 const KEYSTORE_PATH = path.join(process.cwd(), 'android-keystore.jks');
+const KEYSTORE_PWD_PATH = path.join(process.cwd(), 'keystore.pwd');
 
 // Clean up previous build
 if (fs.existsSync(ANDROID_OUTPUT_DIR)) {
@@ -39,6 +40,37 @@ if (!pwaUrl) {
 
 const baseUrl = pwaUrl.replace(/\/$/, '');
 const host = new URL(baseUrl).hostname;
+
+// Signing Configuration
+const keystoreBase64 = process.env.ANDROID_KEYSTORE_BASE64;
+let storePassword = process.env.ANDROID_KEYSTORE_PASSWORD;
+let keyAlias = process.env.ANDROID_KEY_ALIAS || 'android';
+let keyPassword = process.env.ANDROID_KEY_PASSWORD;
+
+// Default Password Logic
+// If passwords are not in env, check if we have a cached password file or generate one
+if (!storePassword) {
+    if (fs.existsSync(KEYSTORE_PWD_PATH)) {
+        console.log('Reading keystore password from cached file...');
+        storePassword = fs.readFileSync(KEYSTORE_PWD_PATH, 'utf8').trim();
+    } else {
+        console.log('Generating new default keystore password...');
+        // Format: RepoName + 15 random chars
+        const repoNameFull = process.env.GITHUB_REPOSITORY || 'Solumati';
+        const repoName = repoNameFull.split('/')[1] || repoNameFull; // Get 'Solumati' from 'FaserF/Solumati'
+        const randomSuffix = require('crypto').randomBytes(8).toString('hex').slice(0, 15);
+        storePassword = `${repoName}${randomSuffix}`;
+
+        // Save for caching
+        fs.writeFileSync(KEYSTORE_PWD_PATH, storePassword);
+        console.log(`Generated and saved password to ${KEYSTORE_PWD_PATH} for caching.`);
+    }
+}
+
+// Fallback for key password if not set (same as store password)
+if (!keyPassword) {
+    keyPassword = storePassword;
+}
 
 // Read Source Files
 console.log('Reading frontend/manifest.json...');
@@ -134,7 +166,7 @@ function build() {
                 splashScreenFadeOutDuration: 300,
                 signingKey: {
                     path: KEYSTORE_PATH,
-                    alias: 'android',
+                    alias: keyAlias,
                 },
                 appVersion: pkgJson.version,
                 appVersionCode: versionCode,
@@ -154,10 +186,14 @@ function build() {
             };
 
             // Generate Keystore if missing
-            if (!fs.existsSync(KEYSTORE_PATH)) {
+            // Handle Keystore
+            if (keystoreBase64) {
+                console.log('Decoding keystore from secret...');
+                fs.writeFileSync(KEYSTORE_PATH, Buffer.from(keystoreBase64, 'base64'));
+            } else if (!fs.existsSync(KEYSTORE_PATH)) {
                 console.log('Generating temporary keystore for signing...');
                 execSync(
-                    `keytool -genkeypair -dname "cn=Solumati, ou=Tech, o=Solumati, c=DE" -alias android -keypass password -keystore ${KEYSTORE_PATH} -storepass password -keyalg RSA -keysize 2048 -validity 10000`,
+                    `keytool -genkeypair -dname "cn=Solumati, ou=Tech, o=Solumati, c=DE" -alias "${keyAlias}" -keypass "${keyPassword}" -keystore ${KEYSTORE_PATH} -storepass "${storePassword}" -keyalg RSA -keysize 2048 -validity 10000`,
                     { stdio: 'inherit' }
                 );
             }
@@ -172,15 +208,59 @@ function build() {
             await generator.createTwaProject(ANDROID_OUTPUT_DIR, manifest, log);
             console.log('Android Project Generated successfully.');
 
+            // Inject Signing Config into build.gradle
+            const buildGradlePath = path.join(ANDROID_OUTPUT_DIR, 'app', 'build.gradle');
+            if (fs.existsSync(buildGradlePath)) {
+                console.log('Injecting signing configuration into build.gradle...');
+                let buildGradle = fs.readFileSync(buildGradlePath, 'utf8');
+
+                // 1. Add signingConfigs block to android {}
+                const signingConfigBlock = `
+    signingConfigs {
+        release {
+            storeFile file(project.findProperty("storeFile"))
+            storePassword project.findProperty("storePassword")
+            keyAlias project.findProperty("keyAlias")
+            keyPassword project.findProperty("keyPassword")
+        }
+    }`;
+                // Insert after "android {"
+                buildGradle = buildGradle.replace('android {', 'android {' + signingConfigBlock);
+
+                // 2. Apply signingConfig to release build type
+                // We look for 'buildTypes {' then 'release {' inside it.
+                // A safe heuristic is to replace 'release {' with 'release { signingConfig signingConfigs.release'
+                // verifying we are inside buildTypes is harder with simple replace, but 'release {' is standard.
+                // However, to be safer vs debug builds, we can try to find the release block specifically.
+                // Most bubblewrap templates look like:
+                // buildTypes {
+                //     release {
+                //         minifyEnabled true
+                //         ...
+                //     }
+                // }
+                // We'll just replace "release {" with "release {\n            signingConfig signingConfigs.release"
+                buildGradle = buildGradle.replace('release {', 'release {\n            signingConfig signingConfigs.release');
+
+                fs.writeFileSync(buildGradlePath, buildGradle);
+                console.log('build.gradle updated with signing config.');
+            } else {
+                console.warn('Warning: Could not find android/app/build.gradle to inject signing config.');
+            }
+
             console.log('Building APK with Gradle...');
             const env = { ...process.env };
+
+            // Normalize path for Gradle (force forward slashes even on Windows) to avoid escape issues
+            const keystorePathForGradle = KEYSTORE_PATH.replace(/\\/g, '/');
+
             // Pass keystore info to Gradle
             const gradleArgs = [
                 'assembleRelease',
-                `-PstoreFile=${KEYSTORE_PATH}`,
-                `-PstorePassword=password`,
-                `-PkeyAlias=android`,
-                `-PkeyPassword=password`
+                `-PstoreFile=${keystorePathForGradle}`,
+                `-PstorePassword=${storePassword}`,
+                `-PkeyAlias=${keyAlias}`,
+                `-PkeyPassword=${keyPassword}`
             ];
 
             const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';

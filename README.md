@@ -86,6 +86,19 @@ To enable login via GitHub, Google, or Microsoft, set the following environment 
 *   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
 *   `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`
 
+#### Android Release Signing & Configuration
+To enable secure and persistent signing for Android releases, you can set the following secrets in your GitHub repository (**Settings** -> **Secrets and variables** -> **Actions**).
+
+| Secret Name | Description | Default (if not set) |
+| :--- | :--- | :--- |
+| `ANDROID_KEYSTORE_BASE64` | Base64 encoded content of your `.jks` or `.keystore` file. | A new keystore is generated |
+| `ANDROID_KEYSTORE_PASSWORD` | Password for the keystore. | `RepoName` + 15 random chars (Cached) |
+| `ANDROID_KEY_ALIAS` | Alias of the signing key. | `android` |
+| `ANDROID_KEY_PASSWORD` | Password for the signing key. | Same as `ANDROID_KEYSTORE_PASSWORD` |
+
+**Note on Defaults:**
+If you do not provide these secrets, the workflow will automatically generate a secure random password and a new keystore for you. These are **cached** (`android-keystore.jks` and `keystore.pwd`) by GitHub Actions so that future builds use the same signing key, allowing app updates to work. However, if the cache is cleared, you will lose the ability to update existing installations of your app. For production apps, setting the secrets manually is highly recommended.
+
 #### Testing
 *   **Test Mode:** Set `TEST_MODE=true` in backend environment variables to enable debug features.
 

@@ -17,6 +17,18 @@ class Report(Base):
     reporter = relationship("User", foreign_keys=[reporter_id])
     reported = relationship("User", foreign_keys=[reported_id])
 
+class LinkedAccount(Base):
+    __tablename__ = "linked_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    provider = Column(String)  # 'github', 'google', 'microsoft'
+    provider_user_id = Column(String)
+    email = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="linked_accounts")
+
 class User(Base):
     __tablename__ = "users"
 
@@ -81,6 +93,8 @@ class User(Base):
 
     # Stores the raw Web Push Subscription object (JSON)
     push_subscription = Column(Text, nullable=True)
+
+    linked_accounts = relationship("LinkedAccount", back_populates="user", cascade="all, delete-orphan")
 
     @property
     def is_admin(self):

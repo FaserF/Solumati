@@ -65,10 +65,24 @@ jobs:
           npm install @bubblewrap/core
           npm install -g @bubblewrap/cli
 
+      - name: Restore Keystore from Cache
+        id: cache-keystore
+        uses: actions/cache@v4
+        with:
+          path: |
+            android-keystore.jks
+            keystore.pwd
+          key: keystore-${{ runner.os }}-release-v1
+
       - name: Generate APK
         env:
           # Use input if dispatch, otherwise try secret, fallback to hardcoded default
           PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://solumati.fabiseitz.de' }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           node .github/scripts/build-apk.js
 

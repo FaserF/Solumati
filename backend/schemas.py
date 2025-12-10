@@ -64,12 +64,20 @@ class UserUpdate(BaseModel):
 
 class UserAdminUpdate(BaseModel):
     username: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     password: Optional[str] = None
     is_verified: Optional[bool] = None
     is_visible_in_matches: Optional[bool] = None
     two_factor_method: Optional[str] = None
     role: Optional[str] = None
+
+class LinkedAccountDisplay(BaseModel):
+    provider: str
+    email: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class UserCreateAdmin(BaseModel):
     username: str

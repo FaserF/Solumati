@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle } from 'lucide-react';
+import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../config';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useTheme } from './ThemeContext';
@@ -18,6 +18,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
 
     // --- App Settings State ---
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [connectedAccounts, setConnectedAccounts] = useState([]);
 
     // --- 2FA State ---
     const [securityState, setSecurityState] = useState({
@@ -64,6 +65,12 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                         has_totp: userData.has_totp || false,
                         has_passkeys: userData.has_passkeys || false
                     });
+                }
+
+                // Fetch Connected Accounts
+                const connRes = await fetch(`${API_URL}/auth/oauth/connections`, { headers });
+                if (connRes.ok) {
+                    setConnectedAccounts(await connRes.json());
                 }
             } catch (e) { console.error("Failed to load user profile", e); }
         };
@@ -246,6 +253,33 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
             }
         } catch (e) { console.error(e); alert("Network Error"); }
     };
+
+    // --- OAuth Handlers ---
+    const handleConnect = (provider) => {
+        // Redirect to OAuth login with state param to indicate linking
+        const state = `link:${user.user_id}`;
+        window.location.href = `${API_URL}/auth/oauth/${provider}/login?state=${state}`;
+    };
+
+    const handleDisconnect = async (provider) => {
+        if (!window.confirm(t('settings.disconnect_confirm', 'Disconnect this account?'))) return;
+        try {
+            const res = await fetch(`${API_URL}/auth/oauth/connections/${provider}`, {
+                method: 'DELETE',
+                headers
+            });
+            if (res.ok) {
+                setConnectedAccounts(prev => prev.filter(a => a.provider !== provider));
+            } else {
+                const err = await res.json();
+                alert("Error: " + err.detail);
+            }
+        } catch (e) { alert("Network Error"); }
+    };
+
+    const isConnected = (provider) => {
+        return connectedAccounts.some(a => a.provider === provider);
+    }
 
     // --- Permissions Checks ---
     const canDeleteAccount = user.role !== 'guest' && user.role !== 'admin';
@@ -605,6 +639,51 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                             </div>
                         </div>
 
+                        {/* Connected Accounts */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
+                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
+                                <LinkIcon className="text-blue-500" /> {t('settings.connected_accounts', 'Connected Accounts')}
+                            </h2>
+                            <div className="space-y-3">
+                                {/* GitHub */}
+                                <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
+                                    <div className="flex items-center gap-3">
+                                        <Github size={20} className="text-gray-700 dark:text-gray-300" />
+                                        <span className="font-bold dark:text-white">GitHub</span>
+                                    </div>
+                                    {isConnected('github') ? (
+                                        <button onClick={() => handleDisconnect('github')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
+                                    ) : (
+                                        <button onClick={() => handleConnect('github')} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
+                                    )}
+                                </div>
+                                {/* Google */}
+                                <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
+                                    <div className="flex items-center gap-3">
+                                        <Chrome size={20} className="text-red-500" />
+                                        <span className="font-bold dark:text-white">Google</span>
+                                    </div>
+                                    {isConnected('google') ? (
+                                        <button onClick={() => handleDisconnect('google')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
+                                    ) : (
+                                        <button onClick={() => handleConnect('google')} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
+                                    )}
+                                </div>
+                                {/* Microsoft */}
+                                <div className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-700">
+                                    <div className="flex items-center gap-3">
+                                        <Globe size={20} className="text-blue-500" />
+                                        <span className="font-bold dark:text-white">Microsoft</span>
+                                    </div>
+                                    {isConnected('microsoft') ? (
+                                        <button onClick={() => handleDisconnect('microsoft')} className="text-sm text-red-500 hover:underline">{t('btn.disconnect', 'Disconnect')}</button>
+                                    ) : (
+                                        <button onClick={() => handleConnect('microsoft')} className="text-sm text-blue-600 hover:underline font-bold">{t('btn.connect', 'Connect')}</button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Delete Account */}
                         {canDeleteAccount && (
                             <button onClick={handleDelete} className="w-full text-red-600 border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 py-3 rounded-lg font-bold hover:bg-red-100 dark:hover:bg-red-900/40 flex justify-center items-center gap-2 transition">
@@ -626,7 +705,7 @@ const AccountSettings = ({ user, onBack, onLogout, onResetPassword, t, globalCon
                     <p>All rights reserved.</p>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

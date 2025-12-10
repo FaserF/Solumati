@@ -675,8 +675,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                         <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.smtp_server')}</label>
                                         <input
                                             type="text"
-                                            value={settings.mail.smtp_server}
-                                            onChange={(e) => updateSetting('mail', 'smtp_server', e.target.value)}
+                                            value={settings.mail.smtp_host || ''}
+                                            onChange={(e) => updateSetting('mail', 'smtp_host', e.target.value)}
                                             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                             placeholder="smtp.example.com"
                                         />
@@ -736,10 +736,20 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.sender_address')}</label>
                                     <input
                                         type="email"
-                                        value={settings.mail.sender_email}
+                                        value={settings.mail.sender_email || ''}
                                         onChange={(e) => updateSetting('mail', 'sender_email', e.target.value)}
                                         className="w-full p-2 border rounded-lg"
                                         placeholder="noreply@example.com"
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-[200px]">
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.sender_name')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.mail.sender_name || ''}
+                                        onChange={(e) => updateSetting('mail', 'sender_name', e.target.value)}
+                                        className="w-full p-2 border rounded-lg"
+                                        placeholder="Solumati"
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2 w-full md:w-auto">
@@ -776,29 +786,53 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                     />
                                     <span className="font-medium text-gray-700">{t('admin.settings.reg_enabled')}</span>
                                 </label>
-                                <label className="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition">
+                                <label className={`flex items-center gap-3 p-3 rounded-lg border transition ${!isMailConfigured() ? 'bg-gray-100 opacity-60 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'}`}>
                                     <input
                                         type="checkbox"
                                         checked={settings.registration.require_verification}
                                         onChange={(e) => updateSetting('registration', 'require_verification', e.target.checked)}
-                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                                        disabled={!isMailConfigured()}
+                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500 disabled:opacity-50"
                                     />
-                                    <span className="font-medium text-gray-700">{t('admin.settings.reg_verify')}</span>
+                                    <div>
+                                        <span className="font-medium text-gray-700 block">{t('admin.settings.reg_verify')}</span>
+                                        {!isMailConfigured() && <span className="text-xs text-red-500 font-bold">Requires configured Mail Server</span>}
+                                    </div>
                                 </label>
 
-                                <div className="mt-2">
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.server_domain')}</label>
-                                    <div className="flex gap-2">
-                                        <span className="bg-gray-100 border p-2 rounded-l-lg text-gray-500 flex items-center"><Globe size={16} /></span>
-                                        <input
-                                            type="text"
-                                            value={settings.registration.server_domain}
-                                            onChange={(e) => updateSetting('registration', 'server_domain', e.target.value)}
-                                            className="w-full p-2 border-y border-r rounded-r-lg"
-                                            placeholder="https://solumati.com"
+                                <div className="mt-2 grid md:grid-cols-2 gap-4">
+                                    <div className="col-span-full">
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.server_domain')}</label>
+                                        <div className="flex gap-2">
+                                            <span className="bg-gray-100 border p-2 rounded-l-lg text-gray-500 flex items-center"><Globe size={16} /></span>
+                                            <input
+                                                type="text"
+                                                value={settings.registration.server_domain || ''}
+                                                onChange={(e) => updateSetting('registration', 'server_domain', e.target.value)}
+                                                className="w-full p-2 border-y border-r rounded-r-lg"
+                                                placeholder="https://solumati.com"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">Used for generating verification links.</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
+                                        <textarea
+                                            value={settings.registration.allowed_domains || ''}
+                                            onChange={(e) => updateSetting('registration', 'allowed_domains', e.target.value)}
+                                            className="w-full p-2 border rounded-lg h-24 text-sm font-mono"
+                                            placeholder="example.com, gmail.com"
                                         />
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1">Used for generating verification links.</p>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.blocked_domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
+                                        <textarea
+                                            value={settings.registration.blocked_domains || ''}
+                                            onChange={(e) => updateSetting('registration', 'blocked_domains', e.target.value)}
+                                            className="w-full p-2 border rounded-lg h-24 text-sm font-mono"
+                                            placeholder="spam.com, trash-mail.com"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
