@@ -20,9 +20,11 @@
 
 ## ✨ Features
 
-*   **❤️ Smart Matching:** Algorithms that connect you with people who truly fit your vibe.
-*   **🔭 Discover Mode:** Swipe through profiles to find your next match.
-*   **📱 Native Apps:** Enhanced experience with native Android (APK), iOS (IPA), and Windows (UWP) apps.
+*   🤖 **Unique Matching Algorithm:** Connects users based on deep compatibility calculations using weighted questions.
+*   💬 **Encrypted Chat:** End-to-end encrypted messaging with support for transient (guest) and persistent conversations.
+*   🎫 **Support Integration:** Direct chat with support staff, including **email forwarding** for offline notifications.
+*   🛡️ **Comprehensive Admin Panel:** Modern, responsive interface (Dark Mode supported!) for user management, reports, and system configuration.
+*   📲 **Native App Support:** Optimized for Android (TWA) with PWA capabilities.
 *   **🛡️ Security First:** Two-Factor Authentication (2FA) and Passkey support.
 *   **🎨 Modern UI:** Sleek, responsive design with Dark Mode support.
 *   **👀 Guest Access:** Try out limited features without creating an account.

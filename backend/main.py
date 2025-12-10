@@ -51,12 +51,12 @@ async def startup_event():
         ensure_admin_user(db)
         ensure_guest_user(db)
         ensure_support_user(db)
-        fix_dummy_user_roles(db)
         check_emergency_reset(db)
-
         if TEST_MODE:
             logger.warning(f"TEST MODE ACTIVE: Generating Dummy Data...")
             await generate_dummy_data(db=db)
+
+        fix_dummy_user_roles(db)
 
     finally:
         db.close()

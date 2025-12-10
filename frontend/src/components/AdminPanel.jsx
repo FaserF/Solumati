@@ -352,7 +352,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
     return (
         <div className="w-full text-gray-900 dark:text-gray-100 font-sans">
             {/* Admin Header / Navbar - Glass Effect */}
-            <div className="glass flex items-center justify-between p-4 md:p-6 mb-8 rounded-3xl">
+            <div className="glass flex items-center justify-between p-4 md:p-6 mb-8 rounded-3xl animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl shadow-lg shadow-red-500/20">
                         <Shield className="h-6 w-6 text-white" />
@@ -368,7 +368,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-all">
+                    <button onClick={onBack} className="bg-gray-200 dark:bg-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-all">
                         <ArrowLeft size={18} /> {t('btn.back')}
                     </button>
                 </div>
@@ -431,25 +431,25 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             {/* Tab Navigation */}
             <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
                 {canManageUsers && (
-                    <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'users' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                    <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'users' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Users size={18} /> {t('admin.tab.users')}
                     </button>
                 )}
-                <button onClick={() => setActiveTab('inbox')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'inbox' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                <button onClick={() => setActiveTab('inbox')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'inbox' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                     <MessageSquare size={18} /> Inbox
                 </button>
                 {canViewReports && (
-                    <button onClick={() => setActiveTab('reports')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'reports' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                    <button onClick={() => setActiveTab('reports')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'reports' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <AlertTriangle size={18} /> {t('admin.tab.reports')} ({reports.length})
                     </button>
                 )}
                 {canManageSettings && (
-                    <button onClick={() => setActiveTab('settings')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'settings' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                    <button onClick={() => setActiveTab('settings')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'settings' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Settings size={18} /> {t('admin.tab.settings')}
                     </button>
                 )}
                 {canViewDiagnostics && (
-                    <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white' : 'bg-white hover:bg-gray-50 text-gray-600'}`}>
+                    <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Activity size={18} /> {t('admin.tab.diagnostics')}
                     </button>
                 )}
@@ -460,12 +460,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             {/* 0. INBOX TAB */}
             {
                 activeTab === 'inbox' && (
-                    <div className="bg-white rounded-xl shadow overflow-hidden min-h-[400px]">
-                        <div className="p-4 border-b flex justify-between bg-gray-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden min-h-[400px] animate-in fade-in duration-300">
+                        <div className="p-4 border-b dark:border-gray-700 flex justify-between bg-gray-50 dark:bg-white/5">
                             <h3 className="font-bold flex items-center gap-2">
                                 <MessageSquare className="text-blue-500" /> Inbox
                             </h3>
-                            <button onClick={fetchConversations} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium items-center">
+                            <button onClick={fetchConversations} className="text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white flex gap-2 font-medium items-center">
                                 <RefreshCw size={14} /> Refresh
                             </button>
                         </div>
@@ -480,7 +480,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                     <button
                                         key={c.partner_id}
                                         onClick={() => setActiveChatUser({ id: c.partner_id, username: c.partner_username, image_url: c.partner_image_url })}
-                                        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
+                                        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition text-left"
                                     >
                                         <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0">
                                             {c.partner_image_url ?
@@ -492,7 +492,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-center mb-1">
-                                                <h4 className="font-bold text-gray-900 truncate">{c.partner_real_name || c.partner_username}</h4>
+                                                <h4 className="font-bold text-gray-900 dark:text-white truncate">{c.partner_real_name || c.partner_username}</h4>
                                                 <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
                                                     {new Date(c.timestamp).toLocaleString()}
                                                 </span>
@@ -517,30 +517,30 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             {/* 1. USERS TAB */}
             {
                 activeTab === 'users' && canManageUsers && (
-                    <div className="bg-white rounded-xl shadow overflow-hidden">
-                        <div className="p-4 border-b flex justify-between bg-gray-50">
-                            <button onClick={openRolesModal} className="text-sm text-blue-600 hover:text-blue-800 flex gap-2 font-bold items-center border border-blue-200 px-3 py-1 rounded bg-blue-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden animate-in fade-in duration-300">
+                        <div className="p-4 border-b dark:border-gray-700 flex justify-between bg-gray-50 dark:bg-white/5">
+                            <button onClick={openRolesModal} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex gap-2 font-bold items-center border border-blue-200 dark:border-blue-800 px-3 py-1 rounded bg-blue-50 dark:bg-blue-900/30">
                                 <Info size={14} /> {t('admin.btn.roles', 'Role Info')}
                             </button>
-                            <button onClick={() => setCreateUserModal(true)} className="text-sm text-green-600 hover:text-green-800 flex gap-2 font-bold items-center border border-green-200 px-3 py-1 rounded bg-green-50">
+                            <button onClick={() => setCreateUserModal(true)} className="text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 flex gap-2 font-bold items-center border border-green-200 dark:border-green-800 px-3 py-1 rounded bg-green-50 dark:bg-green-900/30">
                                 <UserPlus size={14} /> New User
                             </button>
-                            <button onClick={fetchUsers} className="text-sm text-gray-500 hover:text-black flex gap-2 font-medium items-center">
+                            <button onClick={fetchUsers} className="text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white flex gap-2 font-medium items-center">
                                 <RefreshCw size={14} /> {t('admin.btn.refresh')}
                             </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                                <thead className="bg-gray-50 dark:bg-white/5 border-b dark:border-gray-700">
                                     <tr>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-16">{t('admin.table.id')}</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">{t('admin.table.user')}</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">{t('admin.table.role')}</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase hidden md:table-cell">Registered</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase hidden md:table-cell">Last Login</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Visibility</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">{t('admin.table.status')}</th>
-                                        <th className="p-4 text-xs font-bold text-gray-500 uppercase text-right">{t('admin.table.actions')}</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase w-16">{t('admin.table.id')}</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t('admin.table.user')}</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t('admin.table.role')}</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Registered</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Last Login</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Visibility</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t('admin.table.status')}</th>
+                                        <th className="p-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-right">{t('admin.table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -578,28 +578,28 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                                 <td className="p-4 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         {u.id !== user?.user_id && (
-                                                            <button onClick={() => setActiveChatUser(u)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Chat">
+                                                            <button onClick={() => setActiveChatUser(u)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors" title="Chat">
                                                                 <MessageSquare size={16} />
                                                             </button>
                                                         )}
-                                                        <button onClick={() => openEditModal(u)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                                        <button onClick={() => openEditModal(u)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors" title="Edit">
                                                             <Edit2 size={16} />
                                                         </button>
                                                         {u.is_active ? (
                                                             (u.id !== 1) && (
-                                                                <button onClick={() => setPunishModal({ show: true, userId: u.id })} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Ban/Punish">
+                                                                <button onClick={() => setPunishModal({ show: true, userId: u.id })} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors" title="Ban/Punish">
                                                                     <Ban size={16} />
                                                                 </button>
                                                             )
                                                         ) : (
                                                             (u.id !== 1) && (
-                                                                <button onClick={() => handleAction(u.id, 'reactivate')} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Reactivate">
+                                                                <button onClick={() => handleAction(u.id, 'reactivate')} className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/50 rounded-lg transition-colors" title="Reactivate">
                                                                     <Check size={16} />
                                                                 </button>
                                                             )
                                                         )}
                                                         {![0, 1, 3].includes(u.id) && (
-                                                            <button onClick={() => handleDelete(u.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                                            <button onClick={() => handleDelete(u.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors" title="Delete">
                                                                 <UserX size={16} />
                                                             </button>
                                                         )}
@@ -623,8 +623,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             {/* 2. REPORTS TAB */}
             {
                 activeTab === 'reports' && canViewReports && (
-                    <div className="bg-white rounded-xl shadow overflow-hidden">
-                        <div className="p-4 border-b flex justify-between bg-gray-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden animate-in fade-in duration-300">
+                        <div className="p-4 border-b dark:border-gray-700 flex justify-between bg-gray-50 dark:bg-white/5">
                             <h3 className="font-bold flex items-center gap-2">
                                 <AlertTriangle className="text-red-500" /> User Reports
                             </h3>
@@ -648,10 +648,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                         <tr><td colSpan="5" className="p-8 text-center text-gray-400">No reports found.</td></tr>
                                     ) : (
                                         reports.map(r => (
-                                            <tr key={r.id} className="border-b hover:bg-gray-50">
-                                                <td className="p-4 text-sm font-medium">{r.reporter_username}</td>
+                                            <tr key={r.id} className="border-b hover:bg-gray-50 dark:hover:bg-white/5 dark:border-gray-700">
+                                                <td className="p-4 text-sm font-medium dark:text-gray-300">{r.reporter_username}</td>
                                                 <td className="p-4 text-sm font-bold text-red-600">{r.reported_username}</td>
-                                                <td className="p-4 text-sm text-gray-600 max-w-xs truncate" title={r.reason}>{r.reason}</td>
+                                                <td className="p-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate" title={r.reason}>{r.reason}</td>
                                                 <td className="p-4 text-xs text-gray-500">{formatDate(r.created_at)}</td>
                                                 <td className="p-4 text-right">
                                                     <button onClick={() => handleDeleteReport(r.id)} className="text-gray-400 hover:text-red-600 p-2 hover:bg-red-50 rounded">
@@ -671,11 +671,11 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             {/* 3. SETTINGS TAB */}
             {
                 activeTab === 'settings' && canManageSettings && settings && (
-                    <div className="grid gap-6">
+                    <div className="grid gap-6 animate-in slide-in-from-bottom-8 duration-500">
                         {/* MAIL SETTINGS - REDESIGNED */}
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                                <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <div className="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+                                <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800 dark:text-white">
                                     <Mail className="text-blue-500" />
                                     {t('admin.settings.mail', 'Mail Settings')}
                                 </h2>
@@ -695,12 +695,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                             <div className={`grid md:grid-cols-2 gap-6 transition-opacity ${!settings.mail.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.smtp_server')}</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.smtp_server')}</label>
                                         <input
                                             type="text"
                                             value={settings.mail.smtp_host || ''}
                                             onChange={(e) => updateSetting('mail', 'smtp_host', e.target.value)}
-                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                             placeholder="smtp.example.com"
                                         />
                                     </div>
@@ -794,13 +794,13 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         </div>
 
                         {/* REGISTRATION SETTINGS */}
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 border-b pb-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
                                 <UserPlus className="text-green-500" />
                                 {t('admin.settings.registration', 'Registration')}
                             </h2>
                             <div className="flex flex-col gap-4">
-                                <label className="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition">
+                                <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
                                     <input
                                         type="checkbox"
                                         checked={settings.registration.enabled}
@@ -818,41 +818,41 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                         className="w-5 h-5 text-green-600 rounded focus:ring-green-500 disabled:opacity-50"
                                     />
                                     <div>
-                                        <span className="font-medium text-gray-700 block">{t('admin.settings.reg_verify')}</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 block">{t('admin.settings.reg_verify')}</span>
                                         {!isMailConfigured() && <span className="text-xs text-red-500 font-bold">Requires configured Mail Server</span>}
                                     </div>
                                 </label>
 
                                 <div className="mt-2 grid md:grid-cols-2 gap-4">
                                     <div className="col-span-full">
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.server_domain')}</label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.server_domain')}</label>
                                         <div className="flex gap-2">
-                                            <span className="bg-gray-100 border p-2 rounded-l-lg text-gray-500 flex items-center"><Globe size={16} /></span>
+                                            <span className="bg-gray-100 dark:bg-gray-700 border dark:border-gray-600 p-2 rounded-l-lg text-gray-500 dark:text-gray-400 flex items-center"><Globe size={16} /></span>
                                             <input
                                                 type="text"
                                                 value={settings.registration.server_domain || ''}
                                                 onChange={(e) => updateSetting('registration', 'server_domain', e.target.value)}
-                                                className="w-full p-2 border-y border-r rounded-r-lg"
+                                                className="w-full p-2 border-y border-r dark:border-gray-600 rounded-r-lg dark:bg-gray-700 dark:text-white"
                                                 placeholder="https://solumati.com"
                                             />
                                         </div>
                                         <p className="text-xs text-gray-400 mt-1">Used for generating verification links.</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
                                         <textarea
                                             value={settings.registration.allowed_domains || ''}
                                             onChange={(e) => updateSetting('registration', 'allowed_domains', e.target.value)}
-                                            className="w-full p-2 border rounded-lg h-24 text-sm font-mono"
+                                            className="w-full p-2 border dark:border-gray-600 rounded-lg h-24 text-sm font-mono dark:bg-gray-700 dark:text-white"
                                             placeholder="example.com, gmail.com"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.blocked_domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.blocked_domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
                                         <textarea
                                             value={settings.registration.blocked_domains || ''}
                                             onChange={(e) => updateSetting('registration', 'blocked_domains', e.target.value)}
-                                            className="w-full p-2 border rounded-lg h-24 text-sm font-mono"
+                                            className="w-full p-2 border dark:border-gray-600 rounded-lg h-24 text-sm font-mono dark:bg-gray-700 dark:text-white"
                                             placeholder="spam.com, trash-mail.com"
                                         />
                                     </div>
@@ -861,15 +861,15 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         </div>
 
                         {/* OAUTH SETTINGS */}
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 border-b pb-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
                                 <Github className="text-purple-500" />
                                 {t('admin.settings.oauth_title', 'OAuth Providers')}
                             </h2>
 
                             <div className="grid md:grid-cols-3 gap-6">
                                 {/* Github */}
-                                <div className="border rounded-xl p-4 bg-gray-50">
+                                <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
                                     <h3 className="font-bold mb-4 flex items-center gap-2"><Github size={18} /> GitHub</h3>
                                     <div className="space-y-3">
 
@@ -981,23 +981,23 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         </div>
 
                         {/* SUPPORT CHAT SETTINGS */}
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 border-b pb-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
                                 <LifeBuoy className="text-blue-500" />
                                 {t('admin.settings.support_title', 'Support Chat')}
                             </h2>
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.support_permissions', 'Chat Permissions')}</label>
-                                        <label className="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition">
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_permissions', 'Chat Permissions')}</label>
+                                        <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
                                             <input
                                                 type="checkbox"
                                                 checked={settings.support_chat?.enabled || false}
                                                 onChange={(e) => updateSetting('support_chat', 'enabled', e.target.checked)}
                                                 className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                                             />
-                                            <span className="font-medium text-gray-700">{t('admin.settings.support_writable', 'Allow users to write messages')}</span>
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.support_writable', 'Allow users to write messages')}</span>
                                         </label>
                                         <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_readonly_hint', 'If disabled, the chat will be read-only for users.')}</p>
                                     </div>
@@ -1005,12 +1005,12 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 <div className="space-y-4">
                                     {isMailConfigured() && (
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
                                             <input
                                                 type="email"
                                                 value={settings.support_chat?.email_target || ''}
                                                 onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
-                                                className="w-full p-2 border rounded-lg"
+                                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                                 placeholder="support@solumati.com"
                                             />
                                             <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
@@ -1021,8 +1021,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         </div>
 
                         {/* ASSET LINKS SETTINGS */}
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 border-b pb-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
                                 <Smartphone className="text-green-500" />
                                 App Integrity (TWA Asset Links)
                             </h2>
@@ -1156,16 +1156,16 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
 
             {/* Modals */}
             {punishModal.show && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-transparent dark:border-white/10">
                         <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
                             <Ban /> Punish User
                         </h3>
                         <div className="space-y-3 mb-6">
                             <label className="block">
-                                <span className="text-sm font-bold text-gray-700">Type</span>
+                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Type</span>
                                 <select
-                                    className="w-full p-2 border rounded mt-1"
+                                    className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                     value={punishReason}
                                     onChange={e => setPunishReason(e.target.value)}
                                 >
@@ -1176,10 +1176,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
 
                             {punishReason === 'TempBan' && (
                                 <label className="block">
-                                    <span className="text-sm font-bold text-gray-700">Duration (Hours)</span>
+                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Duration (Hours)</span>
                                     <input
                                         type="number"
-                                        className="w-full p-2 border rounded mt-1"
+                                        className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         value={banHours}
                                         onChange={e => setBanHours(e.target.value)}
                                     />
@@ -1187,10 +1187,10 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                             )}
 
                             <label className="block">
-                                <span className="text-sm font-bold text-gray-700">Reason (Show to user)</span>
+                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Reason (Show to user)</span>
                                 <input
                                     type="text"
-                                    className="w-full p-2 border rounded mt-1"
+                                    className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                     placeholder="Violating Terms..."
                                     value={customReason}
                                     onChange={e => setCustomReason(e.target.value)}
@@ -1215,30 +1215,30 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
 
             {createUserModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
-                        <h3 className="text-xl font-bold mb-4">Create New User</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                        <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
                         <div className="space-y-3 mb-4">
                             <input
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="Username"
                                 value={createUserForm.username}
                                 onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
                             />
                             <input
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="Email"
                                 value={createUserForm.email}
                                 onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
                             />
                             <input
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="Password"
                                 type="password"
                                 value={createUserForm.password}
                                 onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
                             />
                             <select
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 value={createUserForm.role}
                                 onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
                             >
@@ -1249,8 +1249,8 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                             </select>
                         </div>
                         <div className="flex justify-end gap-2">
-                            <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                            <button onClick={handleCreateUser} className="px-4 py-2 bg-black text-white font-bold rounded-lg">Create</button>
+                            <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                            <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
                         </div>
                     </div>
                 </div>
@@ -1258,31 +1258,31 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
 
             {editModal.show && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
-                        <h3 className="text-xl font-bold mb-4">Edit User</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                        <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
                         <div className="space-y-3 mb-4">
-                            <label className="block text-sm font-bold">Username</label>
+                            <label className="block text-sm font-bold dark:text-gray-300">Username</label>
                             <input
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 value={editForm.username}
                                 onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                             />
-                            <label className="block text-sm font-bold">Email</label>
+                            <label className="block text-sm font-bold dark:text-gray-300">Email</label>
                             <input
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 value={editForm.email}
                                 onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                             />
                             <input
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 type="password"
                                 value={editForm.password}
                                 onChange={e => setEditForm({ ...editForm, password: e.target.value })}
                             />
 
-                            <label className="block text-sm font-bold">Role</label>
+                            <label className="block text-sm font-bold dark:text-gray-300">Role</label>
                             <select
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 value={editForm.role}
                                 onChange={e => setEditForm({ ...editForm, role: e.target.value })}
                                 disabled={[0, 1, 3].includes(editModal.user.id)}
@@ -1294,7 +1294,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                                 <option value="test">{t('role.test', 'Test')}</option>
                             </select>
                             {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                            <label className="flex items-center gap-2 mt-2">
+                            <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
                                 <input
                                     type="checkbox"
                                     checked={editForm.is_visible_in_matches}
@@ -1305,7 +1305,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                             </label>
                         </div>
                         <div className="flex justify-end gap-2">
-                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
                             <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
                         </div>
                     </div>
@@ -1315,28 +1315,28 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
             {/* Roles Info Modal */}
             {rolesModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
                             <Info size={20} className="text-blue-600" /> System Roles
                         </h3>
-                        <p className="text-sm text-gray-600 mb-4">These are the defined roles in the system and their capabilities.</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
 
                         <div className="space-y-4">
-                            {systemRoles.length === 0 ? <p>No roles loaded.</p> : systemRoles.map((role, idx) => (
-                                <div key={idx} className="border p-4 rounded-xl bg-gray-50">
+                            {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
+                                <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
                                     <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-bold text-lg text-gray-800 capitalize flex items-center gap-2">
+                                        <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
                                             {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
                                             {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
                                             {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
                                             {role.name}
                                         </h4>
-                                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Rank: {role.rank || idx}</span>
+                                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
                                     </div>
-                                    <div className="text-sm text-gray-600 mb-2 font-medium">{role.description}</div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
                                     <div className="flex flex-wrap gap-1">
                                         {role.permissions && role.permissions.map(p => (
-                                            <span key={p} className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200">
+                                            <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
                                                 {p}
                                             </span>
                                         ))}
@@ -1346,7 +1346,7 @@ const AdminPanel = ({ user, onLogout, onBack, t, testMode, maintenanceMode }) =>
                         </div>
 
                         <div className="flex justify-end mt-6">
-                            <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 text-white font-bold rounded-lg hover:bg-black">Close</button>
+                            <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
                         </div>
                     </div>
                 </div>

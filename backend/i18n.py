@@ -17,7 +17,6 @@ DEFAULT_LANG = 'en'
 
 logger.info(f"I18N Directory resolved to: {I18N_DIR}")
 
-@lru_cache(maxsize=4)
 def load_translations(lang_code):
     """Load translation dictionary for given lang_code from JSON file."""
     # Try exact match first (e.g., 'de.json')

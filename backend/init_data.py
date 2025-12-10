@@ -7,7 +7,7 @@ import asyncio
 import httpx
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, or_
 import models
 from security import hash_password
 from config import TEST_MODE
@@ -251,23 +251,28 @@ def fix_dummy_user_roles(db: Session):
     """
     try:
         # Find users ending with ' Dummy' who do not have role 'test'
+        # Also check for NULL roles just in case
         dummies = db.query(models.User).filter(
             models.User.real_name.like("% Dummy"),
-            models.User.role != "test"
+            or_(models.User.role != "test", models.User.role == None)
         ).all()
 
         count = 0
+        fixed_names = []
         for u in dummies:
             # Safety check: skip system users if they somehow match
             if u.id in [0, 1, 3]:
                 continue
 
             u.role = "test"
+            fixed_names.append(u.username)
             count += 1
 
         if count > 0:
             db.commit()
-            logger.info(f"Fixed role for {count} dummy users -> Set to 'test'.")
+            logger.info(f"Fixed role for {count} dummy users: {', '.join(fixed_names)} -> Set to 'test'.")
+        else:
+            logger.debug("No dummy users needed role fixing.")
 
     except Exception as e:
         logger.error(f"Failed to fix dummy user roles: {e}")
