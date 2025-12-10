@@ -68,10 +68,23 @@ jobs:
           AAB_NAME="solumati-${VERSION}-${RELEASE_TYPE}.aab"
 
           # Move and Rename
-          # Gradle output is typically in android/app/build/outputs/apk/release/app-release.apk
-          mv android/app/build/outputs/apk/release/app-release.apk $APK_NAME || echo "APK not found at Expected Path"
-          # Bundle output
-          # mv android/app/build/outputs/bundle/release/app-release.aab $AAB_NAME || echo "AAB not found"
+          # Find APK (recursive search in android/)
+          APK_PATH=$(find android -name "*.apk" -type f | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "Error: No APK found in android/ directory"
+            exit 1
+          fi
+          echo "Found APK at: $APK_PATH"
+          mv "$APK_PATH" "$APK_NAME"
+
+          # Find AAB
+          AAB_PATH=$(find android -name "*.aab" -type f | head -n 1)
+          if [ -n "$AAB_PATH" ]; then
+             echo "Found AAB at: $AAB_PATH"
+             mv "$AAB_PATH" "$AAB_NAME"
+          else
+             echo "Warning: No AAB found"
+          fi
 
           # Set outputs for next steps
           echo "apk_path=$APK_NAME" >> $GITHUB_OUTPUT
