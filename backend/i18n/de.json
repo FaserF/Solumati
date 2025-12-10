@@ -721,5 +721,19 @@
     "btn.setup": "Einrichten",
     "btn.add": "Hinzufügen",
     "profile.upper_about": "ÜBER MICH",
-    "profile.upper_details": "DETAILS"
+    "profile.upper_details": "DETAILS",
+    "landing.get_android": "Holen Sie sich die Android App",
+    "landing.download_apk": "APK herunterladen",
+    "admin.tooltip.visible": "In Matches sichtbar",
+    "admin.tooltip.hidden": "In Matches versteckt",
+    "btn.enabled": "Aktiviert",
+    "btn.not_configured": "Nicht konfiguriert",
+    "btn.available": "Verfügbar",
+    "btn.use_this": "Dies verwenden",
+    "settings.btn_enabled": "Aktiviert",
+    "settings.btn_not_configured": "Nicht konfiguriert",
+    "settings.btn_available": "Verfügbar",
+    "settings.btn_use_this": "Dies verwenden",
+    "settings.connected_as": "Verbunden als {user}",
+    "settings.not_connected": "Nicht verbunden"
 }

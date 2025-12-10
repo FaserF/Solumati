@@ -97,6 +97,7 @@
     "admin.settings.registration_title": "General & Access",
     "admin.settings.reg_enabled": "Allow Registration",
     "admin.settings.reg_verify": "Force Email Verification",
+    "admin.settings.email_2fa_enabled": "Allow Email 2FA Method",
     "admin.settings.allow_guest": "Allow Guest Mode",
     "admin.settings.domains": "Allowed Domains (Whitelist)",
     "admin.settings.blocked_domains": "Blocked Domains (Blacklist)",
