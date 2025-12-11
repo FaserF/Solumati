@@ -24,7 +24,7 @@
 *   💬 **Encrypted Chat:** End-to-end encrypted messaging with support for transient (guest) and persistent conversations.
 *   🎫 **Support Integration:** Direct chat with support staff, including **email forwarding** for offline notifications.
 *   🛡️ **Comprehensive Admin Panel:** Modern, responsive interface (Dark Mode supported!) for user management, reports, and system configuration.
-*   📲 **Native App Support:** Optimized for Android (TWA) with PWA capabilities.
+*   📲 **Native App Support:** Optimized for Android (TWA) with PWA capabilities and other platforms.
 *   **🛡️ Security First:** Two-Factor Authentication (2FA) and Passkey support.
 *   **🎨 Modern UI:** Sleek, responsive design with Dark Mode support.
 *   **👀 Guest Access:** Try out limited features without creating an account.

@@ -17,9 +17,6 @@
 /static/images/dummies
 
 ## Block test files
-ref_test_auth.txt
-ref_test_mail.txt
-role_debug.txt
-refactor_debug.txt
-error_log.txt
-/*.txt
+*debug*.txt
+*error*.txt
+*test*.txt

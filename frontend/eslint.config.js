@@ -32,7 +32,7 @@ export default [
             'no-unused-vars': 'warn',
             'react-refresh/only-export-components': [
                 'warn',
-                { allowConstantExport: true },
+                { allowConstantExport: true, allowExportNames: ['useTheme'] },
             ],
         },
     },
@@ -47,6 +47,7 @@ export default [
         languageOptions: {
             globals: {
                 ...globals.jest,
+                ...globals.node,
                 vi: 'readonly',
             }
         },

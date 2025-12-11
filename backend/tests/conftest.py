@@ -64,3 +64,30 @@ import string
 def test_password():
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
     return ''.join(secrets.choice(alphabet) for i in range(15))
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_txt_files():
+    yield
+    # Cleanup .txt files in backend directory
+    # Get backend dir relative to this conftest file (backend/tests/conftest.py)
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    target_pattern = os.path.join(backend_dir, "*.txt")
+
+    import glob
+    print(f"DEBUG: Conftest file: {os.path.abspath(__file__)}")
+    print(f"DEBUG: Backend dir: {backend_dir}")
+    print(f"DEBUG: Pattern: {target_pattern}")
+
+    files = glob.glob(target_pattern)
+    print(f"DEBUG: Found files: {files}")
+
+    for f in files:
+        # Check filename only to exclude requirements.txt
+        if os.path.basename(f) == "requirements.txt":
+            print(f"DEBUG: Skipping {f}")
+            continue
+        try:
+            os.remove(f)
+            print(f"Cleaned up test file: {f}")
+        except Exception as e:
+            print(f"Failed to cleanup {f}: {e}")
