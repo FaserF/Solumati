@@ -172,6 +172,11 @@ def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
             logger.info(f"Mail sending disabled. To: {to_email}")
             return
 
+        # Safety Block: Never send to solumati.local (Dummy Users)
+        if to_email.endswith("@solumati.local"):
+            logger.info(f"Mail sending blocked for local/dummy domain: {to_email}")
+            return
+
         msg = MIMEMultipart('alternative')
         msg['From'] = formataddr((config.sender_name, config.from_email))
         msg['To'] = to_email

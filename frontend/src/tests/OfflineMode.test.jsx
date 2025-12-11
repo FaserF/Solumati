@@ -1,7 +1,7 @@
 
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import AppRouter from '../router/AppRouter';
 
@@ -114,26 +114,6 @@ describe('Offline UI Integration', () => {
         // No cache
         localStorage.setItem('token', '1'); // Trigger sync
         fetch.mockRejectedValue(new TypeError("Failed to fetch"));
-
-        render(
-            <AuthProvider> // this will set serverStatus='offline' eventually
-                <MemoryRouter>
-                    {/* Access internal AppRouter logic by rendering it inside?
-                        AppRouter has its own Providers. We shouldn't wrap with AuthProvider again if using AppRouter.
-                        But AppRouter DOES wrap with Providers.
-                        We need to test `AppRouter` component but we want to fail the fetch.
-                     */}
-                    <AppRouter />
-                    {/* Wait, AppRouter defines its own Providers. We can't inject mock fetch inside?
-                        Yes we can, fetch is global.
-                     */}
-                </MemoryRouter>
-            </AuthProvider>
-        );
-        // AppRouter wraps AuthProvider too. So we have nested AuthProviders?
-        // Check AppRouter: It wraps <AuthProvider>.
-        // So rendering <AppRouter /> is enough.
-        // We just need to mock fetch before rendering.
 
         render(<AppRouter />);
 

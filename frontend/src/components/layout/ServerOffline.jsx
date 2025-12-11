@@ -25,12 +25,23 @@ const ServerOffline = ({ status = 'offline', onContinue }) => {
                     }
                 </p>
 
-                <button
-                    onClick={() => window.location.reload()}
-                    className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
-                >
-                    <RefreshCw size={20} /> Try Again
-                </button>
+                <div className="space-y-3">
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
+                    >
+                        <RefreshCw size={20} /> Try Again
+                    </button>
+
+                    {onContinue && status !== 'maintenance' && (
+                        <button
+                            onClick={onContinue}
+                            className="w-full bg-white border-2 border-gray-200 text-gray-600 py-4 rounded-xl font-bold hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                        >
+                            Continue Offline
+                        </button>
+                    )}
+                </div>
 
                 <p className="mt-6 text-xs text-gray-400">
                     If this persists, please contact support.

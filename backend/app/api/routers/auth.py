@@ -171,8 +171,16 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
     # BUT, we want to allow selection. So:
     # If email 2FA is globally enabled, always offer it as an option (if they have email, which they do)
     if reg_config.email_2fa_enabled:
-        available_methods.append("email")
+        if "email" not in available_methods:
+            available_methods.append("email")
 
+        # Auto-Enable Email 2FA for Verified Users if no method selected
+        if user.is_verified and (not user.two_factor_method or user.two_factor_method == 'none'):
+             # Safety: Don't enable for Guest/Dummy
+             if user.id != 0 and user.email and not user.email.endswith("@solumati.local"):
+                  logger.info(f"Auto-Enabling Email 2FA for user {user.id}")
+                  user.two_factor_method = 'email'
+                  db.commit()
     # Profile Completion Check
     # Considered complete if they have an image and a custom about_me (not default)
     is_profile_complete = (user.image_url is not None) and (user.about_me != "Ich bin neu hier!")

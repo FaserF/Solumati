@@ -88,7 +88,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
 const MainLayout = () => {
     const { maintenanceMode, maintenanceReason } = useConfig();
-    const { user, finalizeLogin } = useAuth();
+    const { user, finalizeLogin, serverStatus } = useAuth();
     const { t } = useI18n();
     const navigate = useNavigate();
 
