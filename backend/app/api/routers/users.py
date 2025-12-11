@@ -446,17 +446,33 @@ def delete_own_account(user_id: int, user: models.User = Depends(get_current_use
 from datetime import timedelta
 @router.post("/auth/password-reset/request")
 def request_password_reset(body: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    email = body.get("email")
-    user = db.query(models.User).filter(models.User.email == email).first()
+    identifier = body.get("email") # Can be email or username now
+    if not identifier:
+        # If user/email not provided from frontend
+        return {"status": "ok", "message": "If the account exists, a reset link has been sent."}
+
+    # Try matching email first, then username
+    user = db.query(models.User).filter(models.User.email == identifier).first()
+    if not user:
+        user = db.query(models.User).filter(models.User.username == identifier).first()
 
     if user:
         # RESTRICTION FOR TEST USERS
         if user.role == 'test':
-            logger.warning(f"Password reset blocked for test user: {email}")
-            # We return success to prevent enumeration, but do NOT send email
-            return {"status": "ok", "message": "If the email exists, a reset link has been sent."}
+            logger.warning(f"Password reset blocked for test user: {identifier}")
+            return {"status": "ok", "message": "If the account exists, a reset link has been sent."}
 
-        logger.info(f"Password reset requested for: {email}")
+        # RESTRICTION FOR ADMIN USERS
+        if user.role == 'admin':
+             logger.warning(f"Password reset via mail blocked for admin: {identifier} (Use CLI tool)")
+             return {"status": "ok", "message": "If the account exists, a reset link has been sent."}
+
+        # Ensure email exists (if found by username but no email?) - Should verify
+        if not user.email:
+             logger.warning(f"Password reset blocked (no email) for user: {user.username}")
+             return {"status": "ok", "message": "If the account exists, a reset link has been sent."}
+
+        logger.info(f"Password reset requested for: {user.email}")
         token = secrets.token_urlsafe(32)
         user.reset_token = token
         user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
@@ -467,12 +483,12 @@ def request_password_reset(body: dict, background_tasks: BackgroundTasks, db: Se
         link = f"{server_url}?reset_token={token}"
 
         html = create_html_email("Reset Password", "Click the button below to reset your password.", link, "Reset Password", server_url)
-        background_tasks.add_task(send_mail_sync, email, "Solumati Password Reset", html, db)
+        background_tasks.add_task(send_mail_sync, user.email, "Solumati Password Reset", html, db)
     else:
-        logger.info(f"Password reset requested for unknown email: {email}")
+        logger.info(f"Password reset requested for unknown identifier: {identifier}")
 
     # Always return success to prevent enumeration
-    return {"status": "ok", "message": "If the email exists, a reset link has been sent."}
+    return {"status": "ok", "message": "If the account exists, a reset link has been sent."}
 
 @router.post("/auth/password-reset/confirm")
 def confirm_password_reset(body: dict, db: Session = Depends(get_db)):

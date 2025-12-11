@@ -40,7 +40,8 @@ def get_public_config(db: Session = Depends(get_db)):
         "support_chat_enabled": support_conf.get("enabled", False),
         "support_email": support_conf.get("email_target") if support_conf.get("enabled", False) else None,
         "captcha": captcha_config,
-        "marketing_enabled": ENABLE_MARKETING_PAGE
+        "marketing_enabled": ENABLE_MARKETING_PAGE,
+        "mail_enabled": bool(get_setting(db, "mail", {}).get("enabled", False))
     }
 
 @router.get("/public/legal", response_model=schemas.LegalConfig)

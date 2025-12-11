@@ -8,14 +8,14 @@ logger = logging.getLogger(__name__)
 def validate_password_complexity(password: str) -> None:
     """
     Validates password complexity rules:
-    - Minimum 12 characters
+    - Minimum 8 characters
     - At least one uppercase letter
     - At least one lowercase letter
     - At least one digit
     - At least one special character (!@#$%^&*)
     """
-    if len(password) < 12:
-        raise ValueError("Password must be at least 12 characters long.")
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters long.")
 
     if not re.search(r"[A-Z]", password):
         raise ValueError("Password must contain at least one uppercase letter.")

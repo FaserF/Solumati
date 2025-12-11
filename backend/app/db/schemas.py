@@ -212,6 +212,7 @@ class PublicConfig(BaseModel):
     support_chat_enabled: bool = False
     support_email: Optional[str] = None
     marketing_enabled: bool = False
+    mail_enabled: bool = False
     captcha: CaptchaPublicConfig = CaptchaPublicConfig()
 
 class SystemSettings(BaseModel):
