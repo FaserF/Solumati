@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Github, Fingerprint } from 'lucide-react';
+import { Github, Fingerprint, AlertCircle } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useNavigate } from 'react-router-dom';
 import { API_URL, APP_NAME } from '../../config';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
+import CaptchaWidget from '../common/CaptchaWidget';
 
 const Login = () => {
     const { t } = useI18n();
@@ -15,23 +16,43 @@ const Login = () => {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [captchaToken, setCaptchaToken] = useState(null);
+    const [showCaptcha, setShowCaptcha] = useState(false);
+    const [lockoutSeconds, setLockoutSeconds] = useState(0);
+    const [error, setError] = useState(null);
 
     // Config fallback
     const oauth = globalConfig?.oauth_providers || {};
+    const captchaEnabled = globalConfig?.captcha?.enabled;
 
     const handleOAuth = (provider) => {
         window.location.href = `${API_URL}/auth/oauth/${provider}/login`;
     };
 
     const handleLogin = async () => {
-        const result = await login(email, password);
+        setError(null);
+        const result = await login(email, password, captchaToken);
         if (result.status === 'success') {
             navigate('/dashboard');
         } else if (result.status === '2fa') {
             navigate('/verify-2fa');
         } else {
-            const errVal = result.error?.detail || JSON.stringify(result.error);
-            alert(t('alert.login_failed', "Login failed: ") + errVal);
+            // Handle CAPTCHA and rate limiting errors
+            const detail = result.error?.detail;
+            if (typeof detail === 'object') {
+                if (detail.locked) {
+                    setLockoutSeconds(detail.seconds_remaining || 600);
+                    setError(t('error.too_many_attempts', 'Too many failed attempts. Please wait.'));
+                } else if (detail.captcha_required) {
+                    setShowCaptcha(true);
+                    setCaptchaToken(null);
+                    setError(detail.message || t('error.captcha_required', 'CAPTCHA required'));
+                } else {
+                    setError(detail.message || t('alert.login_failed', 'Login failed'));
+                }
+            } else {
+                setError(detail || t('alert.login_failed', 'Login failed'));
+            }
         }
     };
 

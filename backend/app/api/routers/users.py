@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, UploadFile, File, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from datetime import datetime
@@ -12,6 +12,7 @@ from app.core.database import get_db
 from app.db import models, schemas
 from app.core.security import hash_password
 from app.services.utils import get_setting, create_html_email, send_mail_sync, generate_unique_username, calculate_compatibility, send_registration_notification, send_password_changed_notification, send_email_changed_notification
+from app.services.captcha import verify_captcha_sync
 from app.api.dependencies import get_current_user_from_header
 
 import logging
@@ -20,10 +21,19 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/users/", response_model=schemas.UserDisplay)
-def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, request: Request, db: Session = Depends(get_db)):
     logger.info(f"Attempting to register new user: {user.email}")
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", schemas.RegistrationConfig()))
     if not reg_config.enabled: raise HTTPException(403, "Registration disabled.")
+
+    # CAPTCHA verification
+    captcha_config = schemas.CaptchaConfig(**get_setting(db, "captcha", {}))
+    if captcha_config.enabled:
+        if not user.captcha_token:
+            raise HTTPException(428, {"message": "CAPTCHA required", "captcha_required": True})
+        client_ip = request.client.host if request.client else "unknown"
+        if not verify_captcha_sync(user.captcha_token, captcha_config.provider, captcha_config.secret_key, client_ip):
+            raise HTTPException(400, "CAPTCHA verification failed")
 
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(400, "Email already registered.")

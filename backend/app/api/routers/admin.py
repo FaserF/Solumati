@@ -147,6 +147,7 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
     oauth_conf = get_setting(db, "oauth", schemas.OAuthConfig().dict()) # Get Raw
     support_conf = get_setting(db, "support_chat", schemas.SupportChatConfig().dict())
+    captcha_conf = get_setting(db, "captcha", schemas.CaptchaConfig().dict())
     assetlinks = get_setting(db, "assetlinks", [])
 
     # Mask Secrets for UI
@@ -155,12 +156,16 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     if oauth_conf.get('google', {}).get('client_secret'): oauth_conf['google']['client_secret'] = "******"
     if oauth_conf.get('microsoft', {}).get('client_secret'): oauth_conf['microsoft']['client_secret'] = "******"
 
+    # Mask CAPTCHA secret
+    if captcha_conf.get('secret_key'): captcha_conf['secret_key'] = "******"
+
     return {
         "mail": mail_conf,
         "registration": reg_conf,
         "legal": legal_conf,
         "oauth": oauth_conf,
         "support_chat": support_conf,
+        "captcha": captcha_conf,
         "assetlinks": assetlinks
     }
 
@@ -169,33 +174,25 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     # Save Mail, Registration, Legal (Direct save)
     save_setting(db, "mail", settings.mail.dict())
     save_setting(db, "registration", settings.registration.dict())
-    # Duplicate removed
     save_setting(db, "legal", settings.legal.dict())
     save_setting(db, "support_chat", settings.support_chat.dict())
     save_setting(db, "assetlinks", settings.assetlinks)
 
     # Save OAuth (Handle Secrets)
-    # 1. Fetch existing secrets to keep them if not changed
     current_oauth = get_setting(db, "oauth", schemas.OAuthConfig().dict())
-
     new_oauth = settings.oauth.dict()
-
     for provider in ['github', 'google', 'microsoft']:
-        # If new secret is masked or empty, keep old secret?
-        # User requirement: "Secrets should after input not be readable, only overwritable"
-        # If user sends "******", we assume NO CHANGE.
-        # If user sends "", we might assume CLEARING the secret? Or NO CHANGE?
-        # Usually empty means "no change" in password fields or "clear".
-        # Let's assume: "******" = No Change. Anything else = Update.
-
         submitted_secret = new_oauth.get(provider, {}).get('client_secret', '')
         if submitted_secret == "******":
-            # Restore old secret
             new_oauth[provider]['client_secret'] = current_oauth.get(provider, {}).get('client_secret', '')
-
-        # If user actually cleared it (empty string), it will be saved as empty string (disabling it).
-
     save_setting(db, "oauth", new_oauth)
+
+    # Save CAPTCHA (Handle Secret)
+    current_captcha = get_setting(db, "captcha", schemas.CaptchaConfig().dict())
+    new_captcha = settings.captcha.dict()
+    if new_captcha.get('secret_key') == "******":
+        new_captcha['secret_key'] = current_captcha.get('secret_key', '')
+    save_setting(db, "captcha", new_captcha)
 
     logger.info(f"Admin {current_admin.username} updated system settings.")
     return {"status": "updated"}

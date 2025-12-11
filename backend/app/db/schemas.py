@@ -24,10 +24,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     answers: Optional[Union[Dict[str, int], List[int]]] = {}
+    captcha_token: Optional[str] = None
 
 class UserLogin(BaseModel):
     login: str
     password: str
+    captcha_token: Optional[str] = None
 
 class UserDisplay(UserBase):
     id: int
@@ -205,6 +207,19 @@ class RegistrationNotificationConfig(BaseModel):
     enabled: bool = False
     email_target: Optional[str] = ""
 
+class CaptchaConfig(BaseModel):
+    enabled: bool = False
+    provider: str = "cloudflare"  # cloudflare, google, hcaptcha
+    site_key: Optional[str] = None
+    secret_key: Optional[str] = None
+    failed_attempts_threshold: int = 5
+    lockout_minutes: int = 10
+
+class CaptchaPublicConfig(BaseModel):
+    enabled: bool = False
+    provider: str = "cloudflare"
+    site_key: Optional[str] = None
+
 class PublicConfig(BaseModel):
     registration_enabled: bool
     email_2fa_enabled: bool
@@ -215,6 +230,7 @@ class PublicConfig(BaseModel):
     oauth_providers: OAuthProviders
     allow_password_registration: Optional[bool] = True
     support_chat_enabled: bool = False
+    captcha: CaptchaPublicConfig = CaptchaPublicConfig()
 
 class SystemSettings(BaseModel):
     mail: MailConfig
@@ -223,6 +239,7 @@ class SystemSettings(BaseModel):
     oauth: OAuthConfig = OAuthConfig()
     support_chat: SupportChatConfig = SupportChatConfig()
     registration_notification: RegistrationNotificationConfig = RegistrationNotificationConfig()
+    captcha: CaptchaConfig = CaptchaConfig()
     assetlinks: List[Dict[str, Any]] = []
 
 class SystemDiagnostics(BaseModel):

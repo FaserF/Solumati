@@ -21,6 +21,14 @@ def get_public_config(db: Session = Depends(get_db)):
     maint_mode = get_setting(db, "maintenance_mode", False)
     support_conf = get_setting(db, "support_chat", {"enabled": False})
 
+    # CAPTCHA public config (site key only, no secret)
+    raw_captcha = get_setting(db, "captcha", {})
+    captcha_config = schemas.CaptchaPublicConfig(
+        enabled=raw_captcha.get('enabled', False),
+        provider=raw_captcha.get('provider', 'cloudflare'),
+        site_key=raw_captcha.get('site_key')
+    )
+
     return {
         "registration_enabled": reg_config.enabled,
         "email_2fa_enabled": reg_config.email_2fa_enabled,
@@ -29,7 +37,8 @@ def get_public_config(db: Session = Depends(get_db)):
         "backend_version": CURRENT_VERSION,
         "legal": legal_config,
         "oauth_providers": oauth_config,
-        "support_chat_enabled": support_conf.get("enabled", False)
+        "support_chat_enabled": support_conf.get("enabled", False),
+        "captcha": captcha_config
     }
 
 @router.get("/public/legal", response_model=schemas.LegalConfig)

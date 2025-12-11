@@ -13,6 +13,8 @@ from app.core.security import verify_password
 from app.core.config import APP_BASE_URL, PROJECT_NAME
 from app.api.dependencies import get_current_user_from_header
 from app.services.utils import get_setting, save_setting, send_mail_sync
+from app.services.rate_limiter import rate_limiter
+from app.services.captcha import verify_captcha_sync
 
 # 2FA Libraries
 import pyotp
@@ -66,12 +68,71 @@ from app.services.utils import send_login_notification
 @router.post("/login", response_model=schemas.TwoFactorLoginResponse)
 def login(creds: schemas.UserLogin, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info(f"Login attempt for: {creds.login}")
+
+    # Get client IP
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Load CAPTCHA config
+    captcha_config = schemas.CaptchaConfig(**get_setting(db, "captcha", {}))
+
+    # Check rate limit
+    is_blocked, attempt_count, seconds_remaining = rate_limiter.check_rate_limit(
+        client_ip,
+        threshold=captcha_config.failed_attempts_threshold,
+        lockout_minutes=captcha_config.lockout_minutes
+    )
+
+    # If blocked and CAPTCHA is disabled, reject immediately
+    if is_blocked and not captcha_config.enabled:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "message": "Too many failed attempts. Please try again later.",
+                "seconds_remaining": seconds_remaining,
+                "locked": True
+            }
+        )
+
+    # If at or past threshold and CAPTCHA is enabled, require CAPTCHA
+    if captcha_config.enabled and attempt_count >= captcha_config.failed_attempts_threshold:
+        if not creds.captcha_token:
+            raise HTTPException(
+                status_code=428,
+                detail={
+                    "message": "CAPTCHA required",
+                    "captcha_required": True,
+                    "attempt_count": attempt_count
+                }
+            )
+        # Verify CAPTCHA
+        if not verify_captcha_sync(
+            creds.captcha_token,
+            captcha_config.provider,
+            captcha_config.secret_key,
+            client_ip
+        ):
+            raise HTTPException(400, "CAPTCHA verification failed")
+
+    # Find user
     user = db.query(models.User).filter(
         or_(models.User.email == creds.login, models.User.username == creds.login)
     ).first()
 
+    # Verify credentials
     if not user or not verify_password(creds.password, user.hashed_password):
-        raise HTTPException(401, "Invalid credentials")
+        # Record failed attempt
+        new_count = rate_limiter.record_failed_attempt(client_ip)
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "message": "Invalid credentials",
+                "attempt_count": new_count,
+                "captcha_required": captcha_config.enabled and new_count >= captcha_config.failed_attempts_threshold
+            }
+        )
+
+    # Clear rate limit on successful credentials
+    rate_limiter.clear_attempts(client_ip)
 
     # Check Ban Status
     if not user.is_active:

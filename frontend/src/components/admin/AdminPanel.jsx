@@ -1082,6 +1082,88 @@ const AdminPanel = () => {
                             </div>
                         )}
 
+                        {/* CAPTCHA / BOT PROTECTION */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Shield className="text-purple-500" />
+                                {t('admin.settings.captcha_title', 'CAPTCHA / Bot Protection')}
+                            </h2>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_enabled', 'Enable CAPTCHA')}</label>
+                                        <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.captcha?.enabled || false}
+                                                onChange={(e) => updateSetting('captcha', 'enabled', e.target.checked)}
+                                                className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                            />
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.captcha_enabled_hint', 'Shows CAPTCHA on registration and after failed login attempts')}</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_provider', 'CAPTCHA Provider')}</label>
+                                        <select
+                                            value={settings.captcha?.provider || 'cloudflare'}
+                                            onChange={(e) => updateSetting('captcha', 'provider', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                            <option value="cloudflare">Cloudflare Turnstile</option>
+                                            <option value="google">Google reCAPTCHA</option>
+                                            <option value="hcaptcha">hCaptcha</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_site_key', 'Site Key')}</label>
+                                        <input
+                                            type="text"
+                                            value={settings.captcha?.site_key || ''}
+                                            onChange={(e) => updateSetting('captcha', 'site_key', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="0x..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_secret_key', 'Secret Key')}</label>
+                                        <input
+                                            type="password"
+                                            value={settings.captcha?.secret_key || ''}
+                                            onChange={(e) => updateSetting('captcha', 'secret_key', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="0x..."
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_threshold', 'Attempts until CAPTCHA')}</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="20"
+                                            value={settings.captcha?.failed_attempts_threshold || 5}
+                                            onChange={(e) => updateSetting('captcha', 'failed_attempts_threshold', parseInt(e.target.value) || 5)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.captcha_threshold_hint', 'Failed login attempts before CAPTCHA is required')}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_lockout', 'Lockout Duration (Minutes)')}</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="60"
+                                            value={settings.captcha?.lockout_minutes || 10}
+                                            onChange={(e) => updateSetting('captcha', 'lockout_minutes', parseInt(e.target.value) || 10)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.captcha_lockout_hint', 'Lockout duration when CAPTCHA is disabled')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* ASSET LINKS SETTINGS */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
