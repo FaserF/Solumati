@@ -49,6 +49,7 @@ export default defineConfig({
         environment: 'jsdom',
         globals: true,
         setupFiles: './src/tests/setup.js', // Optional, if needed later
+        exclude: ['**/node_modules/**', '**/e2e/**'], // Exclude Playwright tests
     },
     resolve: {
         alias: {

@@ -18,31 +18,47 @@ async def fetch_dummy_image(client: httpx.AsyncClient, username: str) -> str:
     """
     Fetches a random AI person image from thispersondoesnotexist.com
     and saves it to static/images/dummies/{username}.jpg
+    Falls back to UI Avatars if AI generation fails.
     Returns the relative path for the DB.
     """
-    url = "https://thispersondoesnotexist.com/"
     save_dir = "static/images/dummies"
     os.makedirs(save_dir, exist_ok=True)
     filename = f"{username}.jpg"
     file_path = os.path.join(save_dir, filename)
 
+    # Try AI-generated image first
+    url = "https://thispersondoesnotexist.com/"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+
     try:
         resp = await client.get(url, headers=headers, follow_redirects=True, timeout=15.0)
         if resp.status_code == 200:
             content_type = resp.headers.get("content-type", "")
-            if "image" not in content_type:
+            if "image" in content_type:
+                with open(file_path, "wb") as f:
+                    f.write(resp.content)
+                logger.info(f"Downloaded AI profile pic for {username}")
+                return f"/static/images/dummies/{filename}"
+            else:
                 logger.warning(f"Invalid content type for {username}: {content_type}")
-                return None
-
-            with open(file_path, "wb") as f:
-                f.write(resp.content)
-            logger.info(f"Downloaded AI profile pic for {username}")
-            return f"/static/images/dummies/{filename}"
         else:
-            logger.warning(f"Failed to fetch image for {username}: Status {resp.status_code}")
+            logger.warning(f"Failed to fetch AI image for {username}: Status {resp.status_code}")
     except Exception as e:
-        logger.error(f"Error fetching image for {username}: {e}")
+        logger.warning(f"Error fetching AI image for {username}: {e}")
+
+    # Fallback: Use UI Avatars API
+    try:
+        fallback_url = f"https://ui-avatars.com/api/?name={username}&size=256&background=random&color=fff&bold=true&format=png"
+        resp = await client.get(fallback_url, timeout=10.0)
+        if resp.status_code == 200:
+            png_filename = f"{username}.png"
+            png_path = os.path.join(save_dir, png_filename)
+            with open(png_path, "wb") as f:
+                f.write(resp.content)
+            logger.info(f"Downloaded fallback avatar for {username}")
+            return f"/static/images/dummies/{png_filename}"
+    except Exception as e:
+        logger.error(f"Fallback avatar failed for {username}: {e}")
 
     return None
 
@@ -285,13 +301,14 @@ def fix_dummy_user_roles(db: Session):
 
 
 async def generate_dummy_data(db: Session):
-    """Generates 20 random dummy users if TEST_MODE is active and database is nearly empty."""
+    """Generates 20 random dummy users if TEST_MODE is active and no test users exist."""
     if not TEST_MODE:
         return
 
-    # Check if we already have enough users (e.g. > 5) to skip
-    if db.query(models.User).count() > 5:
-        logger.info(f"TEST_MODE active but data exists, skipping dummy generation.")
+    # Check if we already have test users (dummy data was generated before)
+    existing_test_users = db.query(models.User).filter(models.User.role == 'test').count()
+    if existing_test_users > 0:
+        logger.info(f"TEST_MODE active but {existing_test_users} test users already exist, skipping dummy generation.")
         return
 
     logger.info("Generating 20 random dummy users for TEST_MODE with Archetypes...")

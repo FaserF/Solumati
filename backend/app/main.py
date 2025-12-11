@@ -30,6 +30,7 @@ app.add_middleware(
 
 # --- Static Files ---
 os.makedirs("static/images", exist_ok=True)
+os.makedirs("static/images/dummies", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- Startup Event ---

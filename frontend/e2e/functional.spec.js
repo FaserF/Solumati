@@ -14,14 +14,14 @@ test.describe('Solumati Functional Tests', () => {
     test('navigation to login page works', async ({ page }) => {
         await page.goto('/');
 
-        // Click the Log in button (using text selector which relies on fallback or translation)
-        await page.getByRole('link', { name: /Log in|Anmelden/i }).click();
+        // Click the Log in button (it's a button, not a link)
+        await page.getByRole('button', { name: /Log in|Anmelden/i }).click();
 
         // Verify URL
         await expect(page).toHaveURL(/\/login/);
 
         // Verify Login Inputs exist
         await expect(page.getByPlaceholder(/Email|Username/i)).toBeVisible();
-        await expect(page.getByPlaceholder(/Password/i)).toBeVisible();
+        await expect(page.getByPlaceholder(/Password|Passwort/i)).toBeVisible();
     });
 });
