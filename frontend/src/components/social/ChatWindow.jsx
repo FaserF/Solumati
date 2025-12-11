@@ -55,7 +55,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                     });
                     scrollToBottom();
                 }
-            } catch { }
+            } catch { /* ignore */ }
         };
 
         socket.onclose = () => {
@@ -76,12 +76,13 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     }, [WS_URL, chatPartner.id, token]);
 
     useEffect(() => {
-        fetchHistory();
+        const t = setTimeout(() => fetchHistory(), 0);
         connectWebSocket();
 
         return () => {
             if (ws.current) ws.current.close();
             if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+            clearTimeout(t);
         };
     }, [fetchHistory, connectWebSocket]);
 

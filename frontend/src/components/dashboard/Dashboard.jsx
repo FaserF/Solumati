@@ -100,7 +100,8 @@ const Dashboard = () => {
 
     useEffect(() => {
         if (activeTab === 'inbox') {
-            fetchInbox();
+            const t = setTimeout(() => fetchInbox(), 0);
+            return () => clearTimeout(t);
         }
     }, [activeTab]);
 

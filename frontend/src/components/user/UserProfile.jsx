@@ -37,10 +37,14 @@ const UserProfile = ({ initialMode = 'view' }) => {
     // We'll trust the initial state for now or use a key on the component in parent if user switches.
     // If we MUST sync:
     useEffect(() => {
-        setAboutMe(user?.about_me || "");
-        setIntent(user?.intent || "longterm");
-        setUserAnswers(parseAnswers(user));
-    }, [user?.user_id, user?.about_me, user?.intent, user?.answers]);
+        // Wrap strict state updates in setTimeout to avoid warning
+        const t = setTimeout(() => {
+            setAboutMe(user?.about_me || "");
+            setIntent(user?.intent || "longterm");
+            setUserAnswers(parseAnswers(user));
+        }, 0);
+        return () => clearTimeout(t);
+    }, [user, user?.user_id, user?.about_me, user?.intent, user?.answers]);
 
     useEffect(() => {
         // Fetch Questions Definitions

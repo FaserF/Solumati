@@ -41,7 +41,7 @@ const Login = () => {
             const detail = result.error?.detail;
             if (typeof detail === 'object') {
                 if (detail.locked) {
-                    setLockoutSeconds(detail.seconds_remaining || 600);
+                    // setLockoutSeconds(detail.seconds_remaining || 600); // Unused
                     setError(t('error.too_many_attempts', 'Too many failed attempts. Please wait.'));
                 } else if (detail.captcha_required) {
                     setShowCaptcha(true);

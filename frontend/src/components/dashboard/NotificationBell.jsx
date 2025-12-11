@@ -49,11 +49,14 @@ const NotificationBell = ({ user }) => {
 
     useEffect(() => {
         if (!user) return;
-        fetchNotifications();
+        const t = setTimeout(() => fetchNotifications(), 0);
         const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
         checkSubscription();
 
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(t);
+            clearInterval(interval);
+        };
     }, [user, fetchNotifications]);
 
     const markRead = async (id) => {

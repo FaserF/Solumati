@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../../config';
 import { startRegistration } from '@simplewebauthn/browser';
@@ -8,7 +8,7 @@ import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
 
 const AccountSettings = () => {
-    const { user, logout, updateUser, applyTheme, theme } = useAuth();
+    const { user, logout, applyTheme, theme } = useAuth(); // updateUser removed
     const { globalConfig } = useConfig();
     const { t } = useI18n();
     const navigate = useNavigate();
@@ -49,10 +49,11 @@ const AccountSettings = () => {
     const [totpSetup, setTotpSetup] = useState(null);
     const [totpCode, setTotpCode] = useState("");
 
-    const headers = user ? {
+    // Wrap headers in useMemo to fix useEffect dep warning
+    const headers = useMemo(() => (user ? {
         'Content-Type': 'application/json',
         'X-User-ID': user.user_id.toString()
-    } : {};
+    } : {}), [user]);
 
     // --- 1. Fetch User Data on Mount ---
     useEffect(() => {
@@ -305,7 +306,7 @@ const AccountSettings = () => {
                 const err = await res.json();
                 alert("Error: " + err.detail);
             }
-        } catch (e) { alert("Network Error"); }
+        } catch { alert("Network Error"); }
     };
 
     const isConnected = (provider) => {

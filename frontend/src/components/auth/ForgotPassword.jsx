@@ -14,14 +14,14 @@ const ForgotPassword = () => {
         if (!email) return alert("Bitte E-Mail eingeben.");
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/auth/password-reset/request`, {
+            await fetch(`${API_URL}/auth/password-reset/request`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
             });
             // We always show success for security reasons (user enumeration)
             setSent(true);
-        } catch (e) {
+        } catch {
             alert("Netzwerkfehler");
         }
         setLoading(false);
