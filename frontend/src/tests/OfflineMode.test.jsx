@@ -114,7 +114,11 @@ describe('Offline UI Integration', () => {
         localStorage.setItem('token', '1'); // Trigger sync
         fetch.mockRejectedValue(new TypeError("Failed to fetch"));
 
-        render(<AppRouter />);
+        render(
+            <AuthProvider>
+                <AppRouter />
+            </AuthProvider>
+        );
 
         await waitFor(() => {
             // Should see "Connection Lost"
@@ -133,7 +137,11 @@ describe('Offline UI Integration', () => {
 
         fetch.mockRejectedValue(new TypeError("Failed to fetch"));
 
-        render(<AppRouter />);
+        render(
+            <AuthProvider>
+                <AppRouter />
+            </AuthProvider>
+        );
 
         // Should see "Connection Lost" eventually
         await waitFor(() => {

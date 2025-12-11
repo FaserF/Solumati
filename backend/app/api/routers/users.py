@@ -255,14 +255,34 @@ def discover_users(user: models.User = Depends(get_current_user_from_header), db
     Returns a list of random users for the 'Swipe' / Discover feature.
     Excludes the current user and users already swiped (not implemented yet, just random for now).
     """
-    # Simple implementation: Random 10 users that are not me
     import random
-    candidates = db.query(models.User).filter(
+
+    # Base filters
+    base_filters = [
         models.User.id != user.id,
         models.User.is_active == True,
-        models.User.is_visible_in_matches == True,
-        models.User.role != 'admin'  # Hide admins from discover?
-    ).limit(50).all() # Fetch a pool
+        models.User.role != 'admin',  # Hide admins from discover
+        models.User.role != 'test'  # Hide test users from discover
+        models.User.id != 0  # Hide guest users from discover
+    ]
+
+    # Visibility logic: Guest (id=0) and Admins can see test users even if hidden
+    is_guest_or_admin = user.id == 0 or user.role == 'admin' or user.role == 'moderator'
+
+    if is_guest_or_admin:
+        # Can see visible users OR test users (even if hidden)
+        visibility_filter = or_(
+            models.User.is_visible_in_matches == True,
+            models.User.role == 'test'
+        )
+    else:
+        # Normal users only see visible users
+        visibility_filter = models.User.is_visible_in_matches == True
+
+    candidates = db.query(models.User).filter(
+        *base_filters,
+        visibility_filter
+    ).limit(50).all()
 
     if not candidates:
         return []
