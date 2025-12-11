@@ -76,7 +76,7 @@ const AccountSettings = () => {
                             if (s.email_notifications) {
                                 setEmailNotifications(prev => ({ ...prev, ...s.email_notifications }));
                             }
-                        } catch (e) { console.error("Error parsing settings", e); }
+                        } catch { console.error("Error parsing settings"); }
                     }
 
                     // Update Security State
@@ -224,7 +224,7 @@ const AccountSettings = () => {
                 const err = await res.json();
                 alert(t('alert.error', "Error: ") + err.detail);
             }
-        } catch (e) { alert(t('alert.network_error', "Network Error")); }
+        } catch { alert(t('alert.network_error', "Network Error")); }
     };
 
     const enablePasskey = async () => {
@@ -279,7 +279,7 @@ const AccountSettings = () => {
             } else {
                 alert("Error removing method.");
             }
-        } catch (e) { console.error(e); alert("Network Error"); }
+        } catch { alert("Network Error"); }
     };
 
     // --- OAuth Handlers ---

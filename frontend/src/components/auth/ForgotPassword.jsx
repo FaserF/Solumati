@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../../context/I18nContext';
 
 const ForgotPassword = () => {
-    const { t } = useI18n();
+    // const { t } = useI18n(); // t is unused
     const navigate = useNavigate();
     const onBack = () => navigate('/login');
     const [email, setEmail] = useState("");

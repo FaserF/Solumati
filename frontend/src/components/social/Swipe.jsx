@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Heart, ChevronLeft, MapPin, User, Info } from 'lucide-react';
 import { API_URL } from '../../config';
 
@@ -8,23 +8,12 @@ const Swipe = ({ user, onBack, t }) => {
     const [loading, setLoading] = useState(true);
     const [lastDirection, setLastDirection] = useState(null);
 
-    const fetchCandidates = async () => {
+    const fetchCandidates = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(`${API_URL}/users/discover`, {
                 headers: {
-                    'Authorization': user && user.token ? `Bearer ${user.token}` : undefined // If auth is needed, though currently it seems cookie based or implicit in checking header? App.jsx doesn't show explicit token handling in fetch usually unless included in credentials.
-                    // Checking App.jsx: it relies on cookies or just fetches.
-                    // Actually App.jsx fetches seem to not use 'credentials: include' explicitly in the snippets seen?
-                    // Wait, `fetchMatches` in App.jsx just calls fetch.
-                    // `get_current_user_from_header` determines user.
-                    // If the backend expects some header, I might be missing it.
-                    // But looking at App.jsx `handleLogin` it doesn't seem to set a global token variable.
-                    // Let's assume standard fetch for now, maybe the backend reads a header that is set globally or just relies on something else.
-                    // The backend `get_current_user_from_header` implies a header.
-                    // Let's check `dependencies.py` if I could? No, let's just assume it works like other components for now.
-                    // Wait, `UserProfile` update uses `user.user_id` in URL.
-                    // Let's just follow existing patterns.
+                    'Authorization': user && user.token ? `Bearer ${user.token}` : undefined
                 }
             });
             if (res.ok) {
@@ -35,11 +24,11 @@ const Swipe = ({ user, onBack, t }) => {
             // console.error("Failed to load candidates", e);
         }
         setLoading(false);
-    };
+    }, [user]);
 
     useEffect(() => {
         fetchCandidates();
-    }, []);
+    }, [fetchCandidates]);
 
     const handleSwipe = (direction) => {
         setLastDirection(direction);

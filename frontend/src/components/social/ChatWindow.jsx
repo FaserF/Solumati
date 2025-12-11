@@ -12,6 +12,10 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
     const WS_URL = API_URL.replace("http", "ws");
 
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     const fetchHistory = async () => {
         try {
             const res = await fetch(`${API_URL}/chat/history/${chatPartner.id}`, {
@@ -81,9 +85,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
         };
     }, [chatPartner.id]);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+
 
     const sendMessage = () => {
         if (!input.trim() || status !== "connected") return;

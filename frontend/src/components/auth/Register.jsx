@@ -18,21 +18,11 @@ const Register = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    // Config State
-    const [registrationEnabled, setRegistrationEnabled] = useState(true);
-    const [allowPassword, setAllowPassword] = useState(true);
-    const [oauthConfig, setOauthConfig] = useState({});
-    const [loadingConfig, setLoadingConfig] = useState(true);
-
-    // Sync with globalConfig
-    useEffect(() => {
-        if (globalConfig) {
-            if (globalConfig.registration_enabled !== registrationEnabled) setRegistrationEnabled(globalConfig.registration_enabled);
-            if ((globalConfig.allow_password_registration !== false) !== allowPassword) setAllowPassword(globalConfig.allow_password_registration !== false);
-            setOauthConfig(globalConfig.oauth_providers || {});
-            setLoadingConfig(false);
-        }
-    }, [globalConfig, registrationEnabled, allowPassword]);
+    // Config Derived State
+    const registrationEnabled = globalConfig ? globalConfig.registration_enabled !== false : true;
+    const allowPassword = globalConfig ? globalConfig.allow_password_registration !== false : true;
+    const oauthConfig = globalConfig ? (globalConfig.oauth_providers || {}) : {};
+    const loadingConfig = !globalConfig;
 
 
     const handleOAuth = (provider) => {

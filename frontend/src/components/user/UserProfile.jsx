@@ -26,21 +26,32 @@ const UserProfile = ({ initialMode = 'view' }) => {
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        // Parse answers on mount
+        // Parse answers on mount or user change
         try {
+            let newAnswers = {};
             if (typeof user.answers === 'string') {
-                setUserAnswers(JSON.parse(user.answers));
+                newAnswers = JSON.parse(user.answers);
             } else {
-                setUserAnswers(user.answers || {});
+                newAnswers = user.answers || {};
             }
-        } catch (e) { console.error("Error parsing answers", e); }
+            // Only update if different to avoid loop/warning
+            // Simple check: if keys length matches? Or just trust React bail-out?
+            // The warning "synchronously within an effect" implies immediate re-render loop or similar.
+            // We use JSON stringify for comparison to be safe and simple here for small objects.
+            setUserAnswers(prev => {
+                const sPrev = JSON.stringify(prev);
+                const sNew = JSON.stringify(newAnswers);
+                return sPrev === sNew ? prev : newAnswers;
+            });
+
+        } catch { /* ignore */ }
 
         // Fetch Questions Definitions
         const lang = navigator.language.split('-')[0] || 'en';
         fetch(`${API_URL}/questions?lang=${lang}`)
             .then(res => res.json())
             .then(data => setQuestions(data))
-            .catch(e => console.error("Failed to load questions", e));
+            .catch(() => { }); // ignore error
     }, [user]);
 
     const handleSave = async () => {

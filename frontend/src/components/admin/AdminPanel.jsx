@@ -81,7 +81,7 @@ const AdminPanel = () => {
                 const err = await res.json();
                 alert("Error: " + (err.detail || "Unknown"));
             }
-        } catch (e) { alert("Connection Error"); }
+        } catch { alert("Connection Error"); }
     };
 
     useEffect(() => {
@@ -114,7 +114,7 @@ const AdminPanel = () => {
             } else {
                 setError(`Error loading users: Status ${res.status}`);
             }
-        } catch (e) {
+        } catch {
             setError("Connection error. Please check server logs.");
         }
     };
@@ -123,7 +123,7 @@ const AdminPanel = () => {
         try {
             const res = await fetch(`${API_URL}/admin/reports`, { headers: authHeaders });
             if (res.ok) setReports(await res.json());
-        } catch (e) { setError("Konnte Berichte nicht laden."); }
+        } catch { setError("Konnte Berichte nicht laden."); }
     };
 
     const fetchSettings = async () => {
@@ -135,7 +135,7 @@ const AdminPanel = () => {
                 setAssetLinksText(JSON.stringify(data.assetlinks || [], null, 2));
                 setUnsavedChanges(false);
             }
-        } catch (e) { setError("Could not load settings."); }
+        } catch { setError("Could not load settings."); }
     };
 
     const fetchDiagnostics = async () => {
@@ -146,7 +146,7 @@ const AdminPanel = () => {
 
             const changeRes = await fetch(`${API_URL}/admin/changelog`, { headers: authHeaders });
             if (changeRes.ok) setChangelog(await changeRes.json());
-        } catch (e) { setError("Diagnostics failed."); }
+        } catch { setError("Diagnostics failed."); }
         setLoading(false);
     };
 
@@ -156,7 +156,7 @@ const AdminPanel = () => {
             if (res.ok) {
                 setConversations(await res.json());
             }
-        } catch (e) { setError("Could not load conversations."); }
+        } catch { setError("Could not load conversations."); }
     };
 
     // --- Roles Logic ---
@@ -169,7 +169,7 @@ const AdminPanel = () => {
             } else {
                 alert("Could not load roles.");
             }
-        } catch (e) { alert("Network Error"); }
+        } catch { alert("Network Error"); }
     };
 
     const handleAction = async (id, action) => {
@@ -186,7 +186,7 @@ const AdminPanel = () => {
                 const err = await res.json();
                 alert("Error: " + (err.detail || "Unknown"));
             }
-        } catch (e) {
+        } catch {
             alert("Network Error");
         }
     };
@@ -210,7 +210,7 @@ const AdminPanel = () => {
                 const err = await res.json();
                 alert("Error: " + (err.detail || "Unknown"));
             }
-        } catch (e) { alert("Network Error"); }
+        } catch { alert("Network Error"); }
     };
 
     const handleDeleteReport = async (reportId) => {
@@ -222,7 +222,7 @@ const AdminPanel = () => {
             });
             if (res.ok) fetchReports();
             else alert("Failed to delete report.");
-        } catch (e) { alert("Network Error"); }
+        } catch { alert("Network Error"); }
     };
 
     const openEditModal = (user) => {
@@ -251,7 +251,7 @@ const AdminPanel = () => {
                 const err = await res.json();
                 alert("Error: " + err.detail);
             }
-        } catch (e) { alert("Error saving user."); }
+        } catch { alert("Error saving user."); }
     };
 
     const saveSettings = async () => {
@@ -270,7 +270,7 @@ const AdminPanel = () => {
                 alert(t('admin.settings.save_error'));
                 return false;
             }
-        } catch (e) { alert("Network Error"); return false; }
+        } catch { alert("Network Error"); return false; }
     };
 
     const sendTestMail = async () => {
@@ -290,7 +290,7 @@ const AdminPanel = () => {
                 const err = await res.json();
                 alert("Error: " + err.detail);
             }
-        } catch (e) { alert("Network Error"); }
+        } catch { alert("Network Error"); }
     };
 
     const updateSetting = (section, key, value) => {

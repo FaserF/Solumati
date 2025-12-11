@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Clock } from 'lucide-react';
 import { API_URL } from '../../config';
 
@@ -6,7 +6,7 @@ const Inbox = ({ user, onSelectChat, t }) => {
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchConversations = async () => {
+    const fetchConversations = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/chat/conversations`, {
@@ -17,13 +17,13 @@ const Inbox = ({ user, onSelectChat, t }) => {
             }
         } catch { /* ignore */ }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         fetchConversations();
         const interval = setInterval(fetchConversations, 10000); // Poll every 10s
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchConversations]);
 
     if (loading) return <div className="p-8 text-center">Loading Inbox...</div>;
 

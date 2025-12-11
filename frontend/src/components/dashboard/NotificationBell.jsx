@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell, Trash2, Smartphone } from 'lucide-react';
 import { API_URL } from '../../config';
 
@@ -18,14 +18,14 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-const NotificationBell = ({ user, t }) => {
+const NotificationBell = ({ user }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
-    const [permission, setPermission] = useState(Notification.permission);
+    // const [permission, setPermission] = useState(Notification.permission); // Unused in render
     const [isSubscribed, setIsSubscribed] = useState(false);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/notifications`, {
@@ -37,7 +37,7 @@ const NotificationBell = ({ user, t }) => {
                 setUnreadCount(data.filter(n => !n.is_read).length);
             }
         } catch (e) { console.error("Notif fetch failed", e); }
-    };
+    }, []);
 
     // --- PUSH LOGIC ---
     const checkSubscription = async () => {
@@ -54,7 +54,7 @@ const NotificationBell = ({ user, t }) => {
         checkSubscription();
 
         return () => clearInterval(interval);
-    }, [user]);
+    }, [user, fetchNotifications]);
 
     const markRead = async (id) => {
         try {
@@ -105,7 +105,7 @@ const NotificationBell = ({ user, t }) => {
 
             // 2. Request Permission
             const perm = await Notification.requestPermission();
-            setPermission(perm);
+            // setPermission(perm); // Removed unused state
             if (perm !== 'granted') return;
 
             // 3. Subscribe via SW

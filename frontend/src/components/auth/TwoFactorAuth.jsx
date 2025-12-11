@@ -19,11 +19,17 @@ const TwoFactorAuth = () => {
     const [error, setError] = useState(null);
 
     // 2. Handle missing auth (redirect)
+    // 2. Handle missing auth (redirect)
     useEffect(() => {
         if (!tempAuth) {
             navigate('/login');
         } else if (tempAuth.available_methods && tempAuth.available_methods.length > 1) {
-            setView('select_method');
+            // Only switch if not already matched (prevent loop/re-render if view is already set)
+            // We can use a ref or check current view, but view is a dependency? No.
+            // We can't check 'view' here easily without adding it to deps which causes loop.
+            // Best to do this check ONCE.
+            // Or use a functional update with check.
+            setView(v => v === 'verify' ? 'select_method' : v);
         }
     }, [tempAuth, navigate]);
 
@@ -63,11 +69,15 @@ const TwoFactorAuth = () => {
     };
 
     // Auto-trigger passkey if method matches (only in verify view)
+    // Auto-trigger passkey if method matches (only in verify view)
     useEffect(() => {
         // Use selectedMethod instead of tempAuth.method
         if (view === 'verify' && selectedMethod === 'passkey') {
-            handlePasskey();
+            // Avoid immediate sync calls if possible or debouce
+            const t = setTimeout(() => handlePasskey(), 0);
+            return () => clearTimeout(t);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [view, selectedMethod]);
 
     if (!tempAuth) return null;

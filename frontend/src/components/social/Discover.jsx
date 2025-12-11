@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Heart, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -14,7 +14,7 @@ const Discover = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    const fetchCandidates = async () => {
+    const fetchCandidates = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(`${API_URL}/users/discover`);
@@ -24,11 +24,11 @@ const Discover = () => {
             }
         } catch { /* ignore */ }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         fetchCandidates();
-    }, []);
+    }, [fetchCandidates]);
 
     const handleAction = () => {
         setCurrentIndex(prev => prev + 1);

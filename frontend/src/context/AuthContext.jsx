@@ -8,10 +8,21 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isGuest, setIsGuest] = useState(false);
-    const [theme, setThemeState] = useState('system');
+    const [theme, setThemeState] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'system');
 
     // 2FA Intermediate State
     const [tempAuth, setTempAuth] = useState(null);
+
+    // Apply Theme Helper
+    const applyTheme = useCallback((themeName) => {
+        setThemeState(themeName);
+        const root = window.document.documentElement;
+        if (themeName === 'dark' || (themeName === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+    }, []);
 
     const finalizeLogin = useCallback((data) => {
         setUser(data);
@@ -30,9 +41,8 @@ export const AuthProvider = ({ children }) => {
 
     // Initial Session Restore
     useEffect(() => {
-        // Detect system theme initially
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) setThemeState('dark');
-
+        // Theme init is handled by initial state or separate effect if needed, but here we just leave it for now or move logic.
+        // Actually, let's just properly initialize state.
         const storedToken = localStorage.getItem('token');
         if (storedToken && !user) {
             console.log("[Auth] Attempting to restore session for:", storedToken);

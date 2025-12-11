@@ -155,6 +155,24 @@ const Login = () => {
             </div>
 
             <div className="space-y-4">
+                {/* Error Banner */}
+                {error && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-lg flex items-center gap-2 text-sm font-bold animate-in slide-in-from-top-2">
+                        <AlertCircle size={16} />
+                        {error}
+                    </div>
+                )}
+
+                {/* Captcha */}
+                {(showCaptcha || captchaEnabled) && (
+                    <div className="my-4 flex justify-center">
+                        <CaptchaWidget
+                            enabled={true}
+                            onVerify={setCaptchaToken}
+                        />
+                    </div>
+                )}
+
                 <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">{t('label.email_user', 'Email or Username')}</label>
                     <input

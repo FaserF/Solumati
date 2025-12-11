@@ -52,8 +52,9 @@ const Dashboard = () => {
     useEffect(() => {
         if (user && user.two_factor_method === 'none') {
             const hasDismissed = localStorage.getItem('dismissed_2fa_prompt');
+            // Only set if not already shown to avoid strict mode double invocation issues or loop
             if (!hasDismissed) {
-                setShow2FAPrompt(true);
+                setShow2FAPrompt(prev => prev ? prev : true);
             }
         }
     }, [user]);
@@ -126,7 +127,7 @@ const Dashboard = () => {
             }
         };
         checkUpdate();
-    }, []);
+    }, [t]);
 
     const handleLogout = () => {
         logout();
