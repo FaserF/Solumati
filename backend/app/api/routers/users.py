@@ -262,7 +262,7 @@ def discover_users(user: models.User = Depends(get_current_user_from_header), db
         models.User.id != user.id,
         models.User.is_active == True,
         models.User.role != 'admin',  # Hide admins from discover
-        models.User.role != 'test'  # Hide test users from discover
+        models.User.role != 'test',  # Hide test users from discover
         models.User.id != 0  # Hide guest users from discover
     ]
 
