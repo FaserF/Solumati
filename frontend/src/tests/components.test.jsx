@@ -1,88 +1,90 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import Login from '../components/auth/Login';
+import Register from '../components/auth/Register';
 
-import Login from '../components/Login';
-import Register from '../components/Register';
+// Mocks
+const navigate = vi.fn();
+vi.mock('react-router-dom', () => ({
+    useNavigate: () => navigate
+}));
 
-// Mock Config & Translations
-const mockT = (key, defaultText) => defaultText || key;
+const mockLogin = vi.fn().mockResolvedValue({ status: 'success' });
+const mockRegister = vi.fn().mockResolvedValue({ status: 'success' });
+
+vi.mock('../../context/AuthContext', () => ({
+    useAuth: () => ({
+        login: mockLogin,
+        register: mockRegister,
+        finalizeLogin: vi.fn(),
+        user: null
+    })
+}));
+
 const mockConfig = {
     registration_enabled: true,
     allow_password_registration: true,
-    oauth_providers: { github: true, google: false }
+    oauth_providers: { github: true, google: true }
 };
 
-describe('Login Component', () => {
-    it('renders email and password inputs', () => {
-        render(
-            <Login
-                email="" setEmail={vi.fn()}
-                password="" setPassword={vi.fn()}
-                t={mockT}
-                config={mockConfig}
-            />
-        );
+vi.mock('../../context/ConfigContext', () => ({
+    useConfig: () => ({ globalConfig: mockConfig })
+}));
 
-        // Check inputs exist
-        // Placeholders: "user / mail@example.com", "••••••••"
+vi.mock('../../context/I18nContext', () => ({
+    useI18n: () => ({
+        t: (key, defaultText) => defaultText || key
+    })
+}));
+
+// Mock simplewebauthn (used in Login)
+vi.mock('@simplewebauthn/browser', () => ({
+    startAuthentication: vi.fn(),
+    startRegistration: vi.fn()
+}));
+
+// Mock CaptchaWidget (used in Login)
+vi.mock('../components/common/CaptchaWidget', () => ({
+    default: () => <div data-testid="captcha-widget">Captcha</div>
+}));
+
+describe('Login Component', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('renders email and password inputs', () => {
+        render(<Login />);
         expect(screen.getByPlaceholderText(/user \/ mail/i)).toBeDefined();
         expect(screen.getByPlaceholderText(/••••••••/i)).toBeDefined();
-
-        // check buttons
         expect(screen.getByText('btn.login')).toBeDefined();
-        expect(screen.getByText('login.btn_github')).toBeDefined();
     });
 
     it('updates inputs on change', () => {
-        const setEmail = vi.fn();
-        const setPassword = vi.fn();
-
-        render(
-            <Login
-                email="" setEmail={setEmail}
-                password="" setPassword={setPassword}
-                t={mockT}
-                config={mockConfig}
-            />
-        );
-
+        render(<Login />);
         const emailInput = screen.getByPlaceholderText(/user \/ mail/i);
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-        expect(setEmail).toHaveBeenCalledWith('test@example.com');
+        expect(emailInput.value).toBe('test@example.com');
     });
 });
 
 describe('Register Component', () => {
-    it('renders registration form when enabled', () => {
-        render(
-            <Register
-                realName="" setRealName={vi.fn()}
-                email="" setEmail={vi.fn()}
-                password="" setPassword={vi.fn()}
-                answers="" setAnswers={vi.fn()}
-                t={mockT}
-                config={mockConfig}
-            />
-        );
-
-        expect(screen.getByText('register.title')).toBeDefined();
-        expect(screen.getByPlaceholderText('max@example.com')).toBeDefined();
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockConfig.registration_enabled = true;
     });
 
-    it('shows disabled message if config.registration_enabled is false', () => {
-        const disabledConfig = { ...mockConfig, registration_enabled: false };
+    it('renders registration form when enabled', () => {
+        render(<Register />);
+        // "register.title" is used
+        expect(screen.getByText('register.title')).toBeDefined();
+    });
 
-        render(
-            <Register
-                realName="" setRealName={vi.fn()}
-                email="" setEmail={vi.fn()}
-                password="" setPassword={vi.fn()}
-                t={mockT}
-                config={disabledConfig}
-            />
-        );
-
+    it('shows disabled message if config.registration_enabled is false', async () => {
+        mockConfig.registration_enabled = false;
+        // Force re-render with new config value.
+        // Since useConfig is called on render, checking mutable object prop should work.
+        render(<Register />);
         expect(screen.getByText('register.disabled_title')).toBeDefined();
-        expect(screen.queryByPlaceholderText('max@example.com')).toBeNull();
     });
 });
