@@ -4,14 +4,18 @@ services:
     image: postgres:18-alpine
     container_name: solumati_db
     restart: always
+    networks:
+      - solumati_net
     environment:
       - POSTGRES_USER=solumati
       - POSTGRES_PASSWORD=secure_dev_password
       - POSTGRES_DB=solumatidb
+      # Fix locale warning
+      - POSTGRES_INITDB_ARGS=--locale=C.UTF-8
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - solumati_net
+       - postgres_data:/var/lib/postgresql/data
     # Healthcheck to ensure DB is ready before backend starts
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U solumati -d solumatidb"]
