@@ -664,7 +664,7 @@ const AdminPanel = () => {
                                             <tr key={u.id} className="border-b hover:bg-gray-50">
                                                 <td className="p-4 text-gray-500">#{u.id}</td>
                                                 <td className="p-4 font-medium">
-                                                    <div className="font-bold text-gray-800">{u.username}</div>
+                                                    <div className="font-bold text-gray-800 dark:text-gray-200">{u.username}</div>
                                                     <div className="text-xs text-gray-400">{u.email}</div>
                                                 </td>
                                                 <td className="p-4">
@@ -748,7 +748,7 @@ const AdminPanel = () => {
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b">
+                                <thead className="bg-gray-50 dark:bg-white/5 border-b dark:border-gray-700">
                                     <tr>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Reporter</th>
                                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Reported User</th>
@@ -1498,24 +1498,24 @@ const AdminPanel = () => {
                 activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
                     <div className="space-y-6">
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">System Status</div>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">System Status</div>
                                 <div className="flex items-center gap-2 text-green-600 font-bold">
                                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                                     Operational
                                 </div>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">Version</div>
-                                <div className="font-mono text-xl">{diagnostics.current_version}</div>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Version</div>
+                                <div className="font-mono text-xl dark:text-white">{diagnostics.current_version}</div>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">Disk Usage</div>
-                                <div className="font-mono text-xl">{diagnostics.disk_percent}%</div>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Disk Usage</div>
+                                <div className="font-mono text-xl dark:text-white">{diagnostics.disk_percent}%</div>
                                 <div className="text-xs text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">Database</div>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Database</div>
                                 <div className="flex items-center gap-2 text-green-600 font-bold">
                                     <Database size={16} /> Connected
                                 </div>

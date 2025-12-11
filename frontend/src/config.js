@@ -1,6 +1,5 @@
 
 export const API_URL = (import.meta.env && import.meta.env.VITE_API_URL) ? import.meta.env.VITE_API_URL : "http://localhost:7777";
-/* eslint-enable no-undef */
 /* eslint-disable no-undef */
 export const APP_VERSION = (typeof __APP_VERSION__ !== 'undefined') ? __APP_VERSION__ : '0.0.0';
 /* eslint-enable no-undef */

@@ -35,45 +35,46 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
         }
     }, [chatPartner.id, token]);
 
-    const connectWebSocket = useCallback(() => {
-        if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
-
-        // Pass token in query param
-        const socket = new WebSocket(`${WS_URL}/ws/chat?token=${token}`);
-
-        socket.onopen = () => {
-            console.log("WS Connected");
-            setStatus("connected");
-        };
-
-        socket.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg.sender_id === chatPartner.id || msg.receiver_id === chatPartner.id) {
-                    setMessages(prev => {
-                        if (prev.some(m => m.id === msg.id)) return prev;
-                        return [...prev, msg];
-                    });
-                    scrollToBottom();
-                }
-            } catch { /* ignore */ }
-        };
-
-        socket.onclose = () => {
-            console.log("WS Disconnected");
-            setStatus("disconnected");
-            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
-            reconnectTimeout.current = setTimeout(() => {
-                console.log("Attempting Reconnect...");
-                connectWebSocket();
-            }, 3000);
-        };
-
-        ws.current = socket;
-    }, [WS_URL, chatPartner.id, token]);
-
     useEffect(() => {
         const t = setTimeout(() => fetchHistory(), 0);
+
+        const connectWebSocket = () => {
+            if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
+
+            // Pass token in query param
+            const socket = new WebSocket(`${WS_URL}/ws/chat?token=${token}`);
+
+            socket.onopen = () => {
+                console.log("WS Connected");
+                setStatus("connected");
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.sender_id === chatPartner.id || msg.receiver_id === chatPartner.id) {
+                        setMessages(prev => {
+                            if (prev.some(m => m.id === msg.id)) return prev;
+                            return [...prev, msg];
+                        });
+                        scrollToBottom();
+                    }
+                } catch { /* ignore */ }
+            };
+
+            socket.onclose = () => {
+                console.log("WS Disconnected");
+                setStatus("disconnected");
+                if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+                reconnectTimeout.current = setTimeout(() => {
+                    console.log("Attempting Reconnect...");
+                    connectWebSocket();
+                }, 3000);
+            };
+
+            ws.current = socket;
+        };
+
         connectWebSocket();
 
         return () => {
@@ -81,7 +82,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
             if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
             clearTimeout(t);
         };
-    }, [fetchHistory, connectWebSocket]);
+    }, [fetchHistory, WS_URL, chatPartner.id, token]);
 
 
     const sendMessage = (msgContent = null) => {

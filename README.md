@@ -114,7 +114,6 @@ Check out the repository here: **[Solumati Addon](https://github.com/FaserF/hass
 ### ⚙️ Configuration
 
 #### OAuth (Social Login)
-#### OAuth (Social Login)
 Enable login via GitHub, Google, or Microsoft by configuring the client IDs and secrets in the Admin Console.
 
 ➡️ **[Detailed OAuth Setup Guide](docs/OAUTH_SETUP.md)**
@@ -122,6 +121,11 @@ Enable login via GitHub, Google, or Microsoft by configuring the client IDs and 
 *   `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`
 *   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
 *   `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`
+
+#### 🤖 CAPTCHA
+Protect your instance from bots and brute-force attacks by enabling CAPTCHA (Cloudflare Turnstile, reCAPTCHA, or hCaptcha).
+
+➡️ **[Detailed Captcha Setup Guide](docs/CAPTCHA_SETUP.md)**
 
 #### Android Release Signing & Configuration
 To enable secure and persistent signing for Android releases, you can set the following secrets in your GitHub repository (**Settings** -> **Secrets and variables** -> **Actions**).
