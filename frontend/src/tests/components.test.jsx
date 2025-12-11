@@ -12,7 +12,7 @@ vi.mock('react-router-dom', () => ({
 const mockLogin = vi.fn().mockResolvedValue({ status: 'success' });
 const mockRegister = vi.fn().mockResolvedValue({ status: 'success' });
 
-vi.mock('../../context/AuthContext', () => ({
+vi.mock('../context/AuthContext', () => ({
     useAuth: () => ({
         login: mockLogin,
         register: mockRegister,
@@ -27,11 +27,11 @@ const mockConfig = {
     oauth_providers: { github: true, google: true }
 };
 
-vi.mock('../../context/ConfigContext', () => ({
+vi.mock('../context/ConfigContext', () => ({
     useConfig: () => ({ globalConfig: mockConfig })
 }));
 
-vi.mock('../../context/I18nContext', () => ({
+vi.mock('../context/I18nContext', () => ({
     useI18n: () => ({
         t: (key, defaultText) => defaultText || key
     })
