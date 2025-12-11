@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { API_URL } from '../config';
 
 const AuthContext = createContext();
@@ -41,9 +41,9 @@ export const AuthProvider = ({ children }) => {
                     localStorage.removeItem('token');
                 });
         }
-    }, []);
+    }, [finalizeLogin, user]);
 
-    const applyTheme = (themeName) => {
+    const applyTheme = useCallback((themeName) => {
         setThemeState(themeName);
         const root = document.documentElement;
         if (themeName === 'dark') root.classList.add('dark');
@@ -52,9 +52,9 @@ export const AuthProvider = ({ children }) => {
             if (window.matchMedia('(prefers-color-scheme: dark)').matches) root.classList.add('dark');
             else root.classList.remove('dark');
         }
-    };
+    }, []);
 
-    const finalizeLogin = (data) => {
+    const finalizeLogin = useCallback((data) => {
         setUser(data);
         localStorage.setItem('token', data.user_id);
         setIsGuest(data.role === 'guest' || data.is_guest);
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
                 applyTheme(s.theme);
             } catch (e) { console.error("Theme apply error", e); }
         }
-    };
+    }, [applyTheme]);
 
     const updateUser = (updates) => {
         setUser(prev => ({ ...prev, ...updates }));
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
                 const err = await res.json();
                 return { status: 'error', error: err };
             }
-        } catch (e) {
+        } catch {
             return { status: 'error', error: { detail: "Network error" } };
         }
     };

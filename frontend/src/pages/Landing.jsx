@@ -5,7 +5,7 @@ import { useI18n } from '../context/I18nContext';
 import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 
 // Render Banner Helper
-const AppBanner = ({ platform, icon: Icon, title, sub, onClick, color }) => (
+const AppBanner = ({ icon: Icon, title, sub, onClick, color }) => (
     <a
         href="#"
         onClick={(e) => { e.preventDefault(); onClick(); }}

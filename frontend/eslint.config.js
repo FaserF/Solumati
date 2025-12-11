@@ -32,7 +32,7 @@ export default [
             'no-unused-vars': 'warn',
             'react-refresh/only-export-components': [
                 'warn',
-                { allowConstantExport: true, allowExportNames: ['useTheme'] },
+                { allowConstantExport: true, allowExportNames: ['useTheme', 'useConfig', 'useI18n', 'useAuth'] },
             ],
         },
     },

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { API_URL } from '../config';
 
 const ConfigContext = createContext();
@@ -16,7 +16,7 @@ export const ConfigProvider = ({ children }) => {
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [maintenanceReason, setMaintenanceReason] = useState('startup');
 
-    const fetchConfig = () => {
+    const fetchConfig = useCallback(() => {
         fetch(`${API_URL}/public-config`)
             .then(res => {
                 if (res.status === 503) {
@@ -42,7 +42,7 @@ export const ConfigProvider = ({ children }) => {
                     setMaintenanceReason('startup');
                 }
             });
-    };
+    }, [maintenanceMode]);
 
     useEffect(() => {
         // Initial Fetch
@@ -57,7 +57,7 @@ export const ConfigProvider = ({ children }) => {
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [maintenanceMode]);
+    }, [maintenanceMode, fetchConfig]);
 
     return (
         <ConfigContext.Provider value={{ globalConfig, maintenanceMode, maintenanceReason, fetchConfig }}>
