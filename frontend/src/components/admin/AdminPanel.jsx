@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
@@ -11,18 +11,9 @@ const AdminPanel = () => {
     const { user } = useAuth();
     const { globalConfig, maintenanceMode } = useConfig();
     const { t } = useI18n();
-    const navigate = useNavigate();
-
-    const testMode = globalConfig?.test_mode;
-    // Role Checks
-    const isModerator = user?.role === 'moderator';
-    const isAdmin = user?.role === 'admin';
-    const canManageUsers = isAdmin;
-    const canViewReports = isAdmin || isModerator;
-    const canManageSettings = isAdmin;
-    const canViewDiagnostics = isAdmin;
-
-    const [activeTab, setActiveTab] = useState(isModerator ? 'reports' : 'users');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || (isModerator ? 'reports' : 'users');
+    const setActiveTab = (tab) => setSearchParams({ tab });
     const [users, setUsers] = useState([]);
     const [reports, setReports] = useState([]);
     const [settings, setSettings] = useState(null);
@@ -1487,8 +1478,7 @@ const AdminPanel = () => {
                     </div>
                 </div>
             )}
-            )
-            }
+
 
             {/* 5. BACKUP & MIGRATION TAB */}
             {
@@ -1564,59 +1554,60 @@ const AdminPanel = () => {
                     </div>
                 )
             }
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                    <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
-                    <div className="space-y-3 mb-4">
-                        <label className="block text-sm font-bold dark:text-gray-300">Username</label>
-                        <input
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            value={editForm.username}
-                            onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                        />
-                        <label className="block text-sm font-bold dark:text-gray-300">Email</label>
-                        <input
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            value={editForm.email}
-                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                        />
-                        <input
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            type="password"
-                            value={editForm.password}
-                            onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                        />
-
-                        <label className="block text-sm font-bold dark:text-gray-300">Role</label>
-                        <select
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            value={editForm.role}
-                            onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                            disabled={[0, 1, 3].includes(editModal.user.id)}
-                        >
-                            <option value="user">User</option>
-                            <option value="moderator">Moderator</option>
-                            <option value="admin">Admin</option>
-                            <option value="guest">Guest</option>
-                            <option value="test">{t('role.test', 'Test')}</option>
-                        </select>
-                        {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                        <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+            {editModal.show && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                        <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
+                        <div className="space-y-3 mb-4">
+                            <label className="block text-sm font-bold dark:text-gray-300">Username</label>
                             <input
-                                type="checkbox"
-                                checked={editForm.is_visible_in_matches}
-                                onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                                disabled={[0, 1, 3].includes(editModal.user.id)}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                value={editForm.username}
+                                onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                             />
-                            Is Visible in Matches
-                        </label>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                        <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                        <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                            <label className="block text-sm font-bold dark:text-gray-300">Email</label>
+                            <input
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                value={editForm.email}
+                                onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                            />
+                            <input
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                type="password"
+                                value={editForm.password}
+                                onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                            />
+
+                            <label className="block text-sm font-bold dark:text-gray-300">Role</label>
+                            <select
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                value={editForm.role}
+                                onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                                disabled={[0, 1, 3].includes(editModal.user.id)}
+                            >
+                                <option value="user">User</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="admin">Admin</option>
+                                <option value="guest">Guest</option>
+                                <option value="test">{t('role.test', 'Test')}</option>
+                            </select>
+                            {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
+                            <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+                                <input
+                                    type="checkbox"
+                                    checked={editForm.is_visible_in_matches}
+                                    onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                                    disabled={[0, 1, 3].includes(editModal.user.id)}
+                                />
+                                Is Visible in Matches
+                            </label>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                            <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             )}
 
             {/* Roles Info Modal */}

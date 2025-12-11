@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Activity, Shield, EyeOff, LifeBuoy } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PublicProfile from '../user/PublicProfile';
 import DashboardNavbar from './DashboardNavbar';
 import MatchCard from './MatchCard';
@@ -77,7 +77,9 @@ const Dashboard = () => {
     };
 
     // Inbox State
-    const [activeTab, setActiveTab] = useState('matches');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'matches';
+    const setActiveTab = (tab) => setSearchParams({ tab });
     const [inboxConversations, setInboxConversations] = useState([]);
 
     // APK Update Check State
