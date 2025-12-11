@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
 import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
+import { useConfig } from '../context/ConfigContext';
 
 // Render Banner Helper
 const AppBanner = ({ icon: Icon, title, sub, onClick, color }) => (
@@ -76,7 +77,7 @@ const Landing = () => {
         }
     };
 
-    // AppBanner was moved outside
+    const { globalConfig } = useConfig();
 
     return (
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -125,7 +126,7 @@ const Landing = () => {
                     />
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mx-auto mb-8">
                     <button onClick={onLogin} className="bg-white text-gray-900 font-bold py-3 px-6 rounded-full hover:scale-105 transition transform shadow-lg">
                         {t('landing.btn_login')}
                     </button>
@@ -136,6 +137,17 @@ const Landing = () => {
                         {t('landing.btn_guest')}
                     </button>
                 </div>
+
+                {/* Marketing Link */}
+                {globalConfig.marketing_enabled && (
+                    <button
+                        onClick={() => navigate('/about')}
+                        className="text-gray-400 hover:text-pink-400 underline underline-offset-4 transition-colors font-medium text-sm flex items-center gap-1"
+                    >
+                        <Info size={14} />
+                        {t('landing.more_info', 'More Information')}
+                    </button>
+                )}
             </div>
 
             <div className="z-10 w-full p-6 flex justify-between items-end text-gray-500 text-xs md:text-sm">

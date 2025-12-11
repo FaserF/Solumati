@@ -4,7 +4,7 @@ from app.services import i18n
 from app.core.database import get_db
 from app.services.utils import get_setting
 from app.db import schemas
-from app.core.config import TEST_MODE, CURRENT_VERSION
+from app.core.config import TEST_MODE, CURRENT_VERSION, ENABLE_MARKETING_PAGE
 
 router = APIRouter()
 
@@ -39,7 +39,8 @@ def get_public_config(db: Session = Depends(get_db)):
         "oauth_providers": oauth_config,
         "support_chat_enabled": support_conf.get("enabled", False),
         "support_email": support_conf.get("email_target") if support_conf.get("enabled", False) else None,
-        "captcha": captcha_config
+        "captcha": captcha_config,
+        "marketing_enabled": ENABLE_MARKETING_PAGE
     }
 
 @router.get("/public/legal", response_model=schemas.LegalConfig)

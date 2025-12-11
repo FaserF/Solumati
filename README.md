@@ -95,7 +95,7 @@ If you prefer to run services individually without Docker:
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 7777
+uvicorn app.main:app --reload --port 7777
 ```
 
 **2. Frontend Setup**
@@ -131,6 +131,9 @@ To enable secure and persistent signing for Android releases, you can set the fo
 
 **Note on Defaults:**
 If you do not provide these secrets, the workflow will automatically generate a secure random password and a new keystore for you. These are **cached** (`android-keystore.jks` and `keystore.pwd`) by GitHub Actions so that future builds use the same signing key, allowing app updates to work. However, if the cache is cleared, you will lose the ability to update existing installations of your app. For production apps, setting the secrets manually is highly recommended.
+
+#### Marketing Page
+*   **Enable Marketing Page:** Set `ENABLE_MARKETING_PAGE=true` to enable the public-facing promotional page and "More Info" link.
 
 #### Testing
 *   **Test Mode:** Set `TEST_MODE=true` in backend environment variables to enable debug features.

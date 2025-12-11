@@ -231,6 +231,7 @@ class PublicConfig(BaseModel):
     allow_password_registration: Optional[bool] = True
     support_chat_enabled: bool = False
     support_email: Optional[str] = None
+    marketing_enabled: bool = False
     captcha: CaptchaPublicConfig = CaptchaPublicConfig()
 
 class SystemSettings(BaseModel):

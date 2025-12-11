@@ -7,6 +7,7 @@ import { useI18n } from '../context/I18nContext';
 // Components
 // Components
 import Landing from '../pages/Landing';
+import MarketingPage from '../pages/MarketingPage';
 import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
 import Dashboard from '../components/dashboard/Dashboard';
@@ -132,6 +133,8 @@ const MainLayout = () => {
                     onLegal={() => navigate('/imprint')}
                     t={t}
                 />} />
+
+                <Route path="/about" element={<MarketingPage />} />
 
                 {/* Auth Routes */}
                 <Route element={<AuthLayout t={t} />}>
