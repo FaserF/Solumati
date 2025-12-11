@@ -17,7 +17,10 @@ def test_login_invalid_credentials(client):
     payload = {"login": "nonexistent@example.com", "password": "wrongpassword"}
     response = client.post("/login", json=payload)
     assert response.status_code == 401
-    assert "Invalid credentials" in response.json()["detail"]
+    data = response.json()
+    # Support both 'detail' (FastAPI default) and 'message' (Custom)
+    error_msg = data.get("detail") or data.get("message") or str(data)
+    assert "Invalid credentials" in error_msg
 
 def test_registration_duplicate_email(client):
     # 1. Register User

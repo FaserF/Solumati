@@ -194,7 +194,8 @@ def ensure_admin_user(db: Session):
                 logger.info("Updated Admin User description.")
 
         try:
-            db.execute(text("SELECT setval('users_id_seq', 10000, false);"))
+            # Fix sequence to prevent UniqueViolation on restart if users > 10000 exist
+            db.execute(text("SELECT setval('users_id_seq', GREATEST(10000, (SELECT MAX(id) FROM users)), true);"))
             db.commit()
             logger.info("Database sequence 'users_id_seq' adjusted to start at 10000.")
         except Exception as seq_e:
