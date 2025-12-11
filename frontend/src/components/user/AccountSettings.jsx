@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe } from 'lucide-react';
+import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe, Download } from 'lucide-react';
 import { API_URL, APP_VERSION } from '../../config';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useNavigate } from 'react-router-dom';
@@ -313,6 +313,49 @@ const AccountSettings = () => {
         return connectedAccounts.some(a => a.provider === provider);
     }
 
+    // --- Privacy Handlers ---
+    const handleExport = async (method) => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            if (method === 'download') {
+                const res = await fetch(`${API_URL}/users/${user.user_id}/export?method=download`, {
+                    method: 'POST',
+                    headers: { ...headers } // Standard headers
+                });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `solumati_export.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert("Download failed: " + (err.detail || "Unknown error"));
+                }
+            } else {
+                const res = await fetch(`${API_URL}/users/${user.user_id}/export?method=email`, {
+                    method: 'POST',
+                    headers
+                });
+                if (res.ok) {
+                    alert(t('settings.export_email_sent'));
+                } else {
+                    const err = await res.json();
+                    alert("Error: " + err.detail);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network Error");
+        }
+        setLoading(false);
+    };
+
     // --- Permissions Checks ---
     const canDeleteAccount = user.role !== 'guest' && user.role !== 'admin';
     const canEditAccount = user.role !== 'guest' && !user.is_guest;
@@ -352,6 +395,13 @@ const AccountSettings = () => {
                         className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'account' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
                     >
                         {t('settings.tab_account', 'Account')}
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('privacy')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-md transition ${activeTab === 'privacy' ? 'bg-black dark:bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}
+                    >
+                        {t('settings.tab_privacy', 'Privacy')}
                     </button>
                 </div>
 
@@ -826,12 +876,69 @@ const AccountSettings = () => {
                             </div>
                         </div>
 
+
+                    </div>
+                )}
+
+                {/* === PRIVACY TAB === */}
+                {activeTab === 'privacy' && (
+                    <div className="space-y-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
+                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
+                                <Shield className="text-blue-600" /> {t('settings.privacy_title', 'Privacy Portal')}
+                            </h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                                {t('settings.export_desc', 'Download all your personal data stored on Solumati.')}
+                            </p>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => handleExport('download')}
+                                    disabled={loading}
+                                    className="w-full flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-750 transition group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition">
+                                            <Download size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.export_btn_download')}</div>
+                                            <div className="text-xs text-gray-400">.ZIP Archive</div>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => handleExport('email')}
+                                    disabled={loading}
+                                    className="w-full flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-750 transition group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition">
+                                            <Mail size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.export_btn_email')}</div>
+                                            <div className="text-xs text-gray-400">{t('settings.export_limit')}</div>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Delete Account */}
-                        {canDeleteAccount && (
-                            <button onClick={handleDelete} className="w-full text-red-600 border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 py-3 rounded-lg font-bold hover:bg-red-100 dark:hover:bg-red-900/40 flex justify-center items-center gap-2 transition">
-                                <Trash2 size={18} /> {t('settings.delete_acc')}
-                            </button>
-                        )}
+                        <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl shadow-sm p-6 border border-red-100 dark:border-red-900/30">
+                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-red-700 dark:text-red-400">
+                                <AlertTriangle size={20} /> {t('settings.danger_zone', 'Danger Zone')}
+                            </h2>
+                            {canDeleteAccount ? (
+                                <button onClick={handleDelete} className="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-sm">
+                                    <Trash2 size={18} /> {t('settings.delete_acc')}
+                                </button>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic text-center">Deletion disabled for this account type.</p>
+                            )}
+                        </div>
                     </div>
                 )}
                 <div className="mt-8 pt-6 border-t text-center text-xs text-gray-400">

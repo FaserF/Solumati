@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, UploadFile, File, BackgroundTasks, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from datetime import datetime
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 from app.services.password_validation import validate_password_complexity, check_pwned_password
+from app.services.export_service import collect_user_data, create_export_archive
 
 @router.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, request: Request, db: Session = Depends(get_db)):
@@ -441,6 +443,92 @@ def delete_own_account(user_id: int, user: models.User = Depends(get_current_use
     db.delete(user)
     db.commit()
     return {"status": "deleted"}
+
+@router.post("/users/{user_id}/export")
+async def export_user_data(user_id: int, method: str = "download", background_tasks: BackgroundTasks = None, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+    """
+    GDPR Data Export. Method can be 'download' or 'email'.
+    """
+    if user.id != user_id:
+        raise HTTPException(403, "Forbidden")
+
+    # Check Mail config if email requested
+    if method == "email":
+        mail_conf = get_setting(db, "mail", {})
+        if not mail_conf.get("enabled"):
+             raise HTTPException(400, "Email service is not enabled. Please use download.")
+
+    # 1. Collect Data
+    data = collect_user_data(db, user_id)
+    if not data:
+         raise HTTPException(404, "User data extraction failed.")
+
+    # 2. Create Archive
+    zip_buffer = create_export_archive(data)
+    zip_size = zip_buffer.getbuffer().nbytes
+
+    if method == "download":
+        zip_buffer.seek(0)
+        headers = {
+            'Content-Disposition': f'attachment; filename="solumati_export_{user.username}.zip"'
+        }
+        return StreamingResponse(
+            iter([zip_buffer.read()]),
+            media_type="application/zip",
+            headers=headers
+        )
+
+    elif method == "email":
+        # Check size limit (12MB)
+        if zip_size > 12 * 1024 * 1024:
+            raise HTTPException(413, "Export too large for email (Max 12MB). Please use download.")
+
+        # We need to attach the file.
+        # send_mail_sync / create_html_email helper might not support attachments directly?
+        # Checking services/utils.py ...
+        # Assuming we need to extend utils or implement raw email sending here.
+        # Let's inspect utils.py first? Or assume I can use a standard python mail helper.
+        # utils.send_mail_sync uses SMTP.
+        # I'll double check utils.py below. For now, I'll place a TODO or simple implementation.
+
+        # Actually, let's inject the task to send mail with attachment.
+        # Since send_mail_sync likely doesn't support attachments (based on what I recall),
+        # I might need to improve it or write a custom sender here.
+
+        # Function to send mail with attachment
+        def send_export_mail(target_email, zip_data, filename):
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            from email.mime.application import MIMEApplication
+
+            nonlocal mail_conf
+            msg = MIMEMultipart()
+            msg['Subject'] = "Your Solumati Data Export"
+            msg['From'] = f"{mail_conf.get('sender_name', 'Solumati')} <{mail_conf.get('from_email')}>"
+            msg['To'] = target_email
+
+            text_body = "Here is the data export you requested."
+            msg.attach(MIMEText(text_body, 'plain'))
+
+            part = MIMEApplication(zip_data, Name=filename)
+            part['Content-Disposition'] = f'attachment; filename="{filename}"'
+            msg.attach(part)
+
+            try:
+                with smtplib.SMTP(mail_conf['smtp_host'], mail_conf['smtp_port']) as server:
+                    if mail_conf.get('smtp_tls'): server.starttls()
+                    if mail_conf.get('smtp_user') and mail_conf.get('smtp_password'):
+                        server.login(mail_conf['smtp_user'], mail_conf['smtp_password'])
+                    server.send_message(msg)
+            except Exception as e:
+                logger.error(f"Failed to send export email: {e}")
+
+        background_tasks.add_task(send_export_mail, user.email, zip_buffer.getvalue(), f"solumati_export_{user.username}.zip")
+        return {"status": "queued", "message": "Email will be sent shortly."}
+
+    else:
+        raise HTTPException(400, "Invalid method")
 
 # --- Password Reset Flow ---
 from datetime import timedelta

@@ -890,5 +890,14 @@
     "settings.saved": "Settings saved!",
     "update.available_msg": "A new version is available. Update now for the latest features.",
     "update.available_title": "Update Available",
-    "update.banner": "New version available! Click to update."
+    "update.banner": "New version available! Click to update.",
+    "settings.tab_privacy": "Privacy & Data",
+    "settings.privacy_title": "Privacy Portal",
+    "settings.export_data": "Export My Data",
+    "settings.export_desc": "Download all your personal data stored on Solumati.",
+    "settings.export_btn_download": "Download Archive (ZIP)",
+    "settings.export_btn_email": "Send via Email",
+    "settings.export_email_sent": "Email sent! Check your inbox.",
+    "settings.export_limit": "Max 12MB. Use download for larger files.",
+    "settings.danger_zone": "Danger Zone"
 }

@@ -890,5 +890,14 @@
     "settings.saved": "Einstellungen gespeichert!",
     "update.available_msg": "Eine neue Version ist verfügbar. Jetzt aktualisieren für die neuesten Funktionen.",
     "update.available_title": "Update verfügbar",
-    "update.banner": "Neue Version verfügbar! Klicken zum Aktualisieren."
+    "update.banner": "Neue Version verfügbar! Klicken zum Aktualisieren.",
+    "settings.tab_privacy": "Datenschutz & Daten",
+    "settings.privacy_title": "Datenschutz-Portal",
+    "settings.export_data": "Meine Daten exportieren",
+    "settings.export_desc": "Lade alle deine gespeicherten persönlichen Daten herunter.",
+    "settings.export_btn_download": "Archiv herunterladen (ZIP)",
+    "settings.export_btn_email": "Per E-Mail senden",
+    "settings.export_email_sent": "E-Mail gesendet! Prüfe deinen Posteingang.",
+    "settings.export_limit": "Max 12MB. Für größere Dateien Download nutzen.",
+    "settings.danger_zone": "Gefahrenzone"
 }

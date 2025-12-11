@@ -149,7 +149,10 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     support_conf = get_setting(db, "support_chat", schemas.SupportChatConfig().dict())
     reg_notify_conf = get_setting(db, "registration_notification", schemas.RegistrationNotificationConfig().dict())
     captcha_conf = get_setting(db, "captcha", schemas.CaptchaConfig().dict())
+
     assetlinks = get_setting(db, "assetlinks", [])
+    if not isinstance(assetlinks, list):
+        assetlinks = [] # Force list if DB contains invalid data
 
     # Mask Secrets for UI
     # We do not want to send the actual secrets to the frontend
@@ -351,8 +354,8 @@ def get_reports(db: Session = Depends(get_db), current_mod: models.User = Depend
     for r in reports:
         res.append(schemas.ReportDisplay(
             id=r.id,
-            reporter_username=r.reporter.username if r.reporter else "Unknown",
-            reported_username=r.reported.username if r.reported else "Unknown",
+            reporter_username=r.reporter.username if (r.reporter and r.reporter.username) else "Unknown",
+            reported_username=r.reported.username if (r.reported and r.reported.username) else "Unknown",
             reason=r.reason,
             status=r.status,
             created_at=r.created_at

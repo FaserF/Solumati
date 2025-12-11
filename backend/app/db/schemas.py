@@ -55,6 +55,12 @@ class UserDisplay(UserBase):
     # New fields
     app_settings: Optional[str] = None
 
+    @field_validator('email')
+    @classmethod
+    def validate_email_address(cls, v: str) -> str:
+        # In Admin Display, we should not crash if email is invalid in DB.
+        # Just return it as is.
+        return v
 
     class Config:
         from_attributes = True
