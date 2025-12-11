@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
 import ChatWindow from '../social/ChatWindow';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone, Upload, Download, HardDrive, Scale } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone, Upload, Download, HardDrive, Scale, Phone } from 'lucide-react';
 import { API_URL, APP_VERSION, APP_RELEASE_TYPE } from '../../config';
 
 const AdminPanel = () => {

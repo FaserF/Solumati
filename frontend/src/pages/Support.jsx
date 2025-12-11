@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronLeft, Github, Heart, MessageCircle, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from '../context/ConfigContext';

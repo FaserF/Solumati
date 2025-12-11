@@ -6,18 +6,17 @@ import { CheckCircle, XCircle, Loader } from 'lucide-react';
 const VerifyEmail = ({ t }) => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [status, setStatus] = useState('verifying'); // verifying, success, error
-    const [message, setMessage] = useState('');
+
 
     const id = searchParams.get('id');
     const code = searchParams.get('code');
 
+    // Initialize state based on params existence to avoid basic errors
+    const [status, setStatus] = useState((!id || !code) ? 'error' : 'verifying');
+    const [message, setMessage] = useState((!id || !code) ? 'Invalid verification link.' : '');
+
     useEffect(() => {
-        if (!id || !code) {
-            setStatus('error');
-            setMessage('Invalid verification link.');
-            return;
-        }
+        if (!id || !code) return; // Already handled in initial state
 
         const verify = async () => {
             try {

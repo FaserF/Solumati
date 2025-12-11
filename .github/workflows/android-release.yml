@@ -65,7 +65,7 @@ jobs:
 
       - name: Restore Keystore from Cache
         id: cache-keystore
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             android-keystore.jks

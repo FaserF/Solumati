@@ -82,6 +82,7 @@
     "admin.table.role": "Role",
     "admin.table.actions": "Actions",
     "admin.status.active": "Active",
+    "status.active": "Active",
     "admin.status.inactive": "Inactive",
     "admin.status.pending": "Pending",
     "admin.status.guest": "Guest",

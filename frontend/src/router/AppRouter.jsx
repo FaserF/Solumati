@@ -94,9 +94,7 @@ const MainLayout = () => {
     const { user, finalizeLogin, serverStatus } = useAuth();
     const { t } = useI18n();
     const navigate = useNavigate();
-
-    // Check verification banner state?
-    // Ideally this is a layout wrapping the specific pages.
+    const location = useLocation(); // Hook moved to top level
 
     const [ignoreOffline, setIgnoreOffline] = useState(false);
 
@@ -114,8 +112,6 @@ const MainLayout = () => {
             />
         );
     }
-
-    const location = useLocation();
 
     // If Maintenance Mode is active
     // We must allow access to Login/Auth routes so Admins can log in!

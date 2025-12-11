@@ -33,7 +33,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
         } catch {
             // console.error("Failed to load history");
         }
-    }, [API_URL, chatPartner.id, token]);
+    }, [chatPartner.id, token]);
 
     const connectWebSocket = useCallback(() => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
