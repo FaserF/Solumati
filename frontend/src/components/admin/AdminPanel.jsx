@@ -462,7 +462,7 @@ const AdminPanel = () => {
                     </div>
                     <div>
                         <h1 className="font-bold text-2xl tracking-tight flex items-center gap-2">
-                            {isModerator ? 'Moderator Panel' : 'Admin Console'}
+                            {isAdmin ? 'Admin Console' : 'Moderator Panel'}
                             {renderReleaseBadge()}
                         </h1>
                         <p className="text-xs text-gray-500 dark:text-gray-400 font-mono tracking-wider uppercase">
