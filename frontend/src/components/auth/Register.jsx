@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
+import CaptchaWidget from '../common/CaptchaWidget';
 
 const Register = () => {
     const { t } = useI18n();
@@ -17,6 +18,10 @@ const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [captchaToken, setCaptchaToken] = useState(null);
+
+    // CAPTCHA config
+    const captchaEnabled = globalConfig?.captcha?.enabled;
 
     // Config Derived State
     const registrationEnabled = globalConfig ? globalConfig.registration_enabled !== false : true;
@@ -49,7 +54,8 @@ const Register = () => {
             password,
             real_name: realName,
             intent: "longterm", // Default
-            answers: answersArray
+            answers: answersArray,
+            captcha_token: captchaToken
         };
 
         const result = await register(payload);
@@ -160,14 +166,25 @@ const Register = () => {
                     </div>
 
                     <div className="pt-2">
-                        {/* Hidden fields / default values for now.
-                             Ideally questions should be re-implemented if needed.
-                             For now, we default to 3.
-                         */}
+                        {/* CAPTCHA Widget */}
+                        {captchaEnabled && (
+                            <CaptchaWidget
+                                onVerify={(token) => setCaptchaToken(token)}
+                                onExpire={() => setCaptchaToken(null)}
+                                onError={() => setCaptchaToken(null)}
+                            />
+                        )}
                     </div>
 
-                    <button onClick={handleRegister} className="w-full mt-6 bg-pink-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-pink-700 active:scale-[0.98] transition-all shadow-xl shadow-pink-500/20">
-                        {t('btn.register_now')}
+                    <button
+                        onClick={handleRegister}
+                        disabled={captchaEnabled && !captchaToken}
+                        className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all shadow-xl ${captchaEnabled && !captchaToken
+                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                : 'bg-pink-600 text-white hover:bg-pink-700 active:scale-[0.98] shadow-pink-500/20'
+                            }`}
+                    >
+                        {captchaEnabled && !captchaToken ? t('register.complete_captcha', 'Complete CAPTCHA first') : t('btn.register_now')}
                     </button>
                 </div>
             )}

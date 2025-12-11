@@ -35,7 +35,7 @@ const Support = () => {
                 </button>
 
                 <div className="text-center max-w-2xl mx-auto mb-12">
-                    <div className="inline-flex items-center justify-center p-3 bg-blue-100 text-blue-600 rounded-2xl mb-4">
+                    <div className="inline-flex items-center justify-center p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-2xl mb-4">
                         <Heart size={32} className="fill-current" />
                     </div>
                     <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -71,12 +71,12 @@ const Support = () => {
                     {/* Contact Card */}
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center">
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center">
                                 <MessageCircle size={24} />
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Get in Touch</h3>
-                                <p className="text-sm text-gray-500">We love to hear from you.</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">We love to hear from you.</p>
                             </div>
                         </div>
 
@@ -86,7 +86,7 @@ const Support = () => {
                                     {supportConfig.contact_info}
                                 </div>
                             ) : (
-                                <p className="text-gray-500 italic">No specific support instructions configured.</p>
+                                <p className="text-gray-500 dark:text-gray-400 italic">No specific support instructions configured.</p>
                             )}
                         </div>
 

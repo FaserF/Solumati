@@ -50,10 +50,10 @@ const AccountSettings = () => {
     const [totpCode, setTotpCode] = useState("");
 
     // Wrap headers in useMemo to fix useEffect dep warning
-    const headers = useMemo(() => (user ? {
+    const headers = useMemo(() => (user?.user_id ? {
         'Content-Type': 'application/json',
         'X-User-ID': user.user_id.toString()
-    } : {}), [user]);
+    } : { 'Content-Type': 'application/json' }), [user?.user_id]);
 
     // --- 1. Fetch User Data on Mount ---
     useEffect(() => {

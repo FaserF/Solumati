@@ -35,17 +35,20 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const finalizeLogin = useCallback((data) => {
-        setUser(data);
-        localStorage.setItem('token', data.user_id);
-        localStorage.setItem('user_cache', JSON.stringify(data)); // Update Cache
-        setIsGuest(data.role === 'guest' || data.is_guest);
+        // Normalize: backend returns 'id', frontend uses 'user_id'
+        const normalizedData = { ...data, user_id: data.user_id || data.id };
+
+        setUser(normalizedData);
+        localStorage.setItem('token', normalizedData.user_id);
+        localStorage.setItem('user_cache', JSON.stringify(normalizedData)); // Update Cache
+        setIsGuest(normalizedData.role === 'guest' || normalizedData.is_guest);
         setTempAuth(null);
         setServerStatus('online');
 
         // Apply Theme
-        if (data.app_settings) {
+        if (normalizedData.app_settings) {
             try {
-                const s = typeof data.app_settings === 'string' ? JSON.parse(data.app_settings) : data.app_settings;
+                const s = typeof normalizedData.app_settings === 'string' ? JSON.parse(normalizedData.app_settings) : normalizedData.app_settings;
                 applyTheme(s.theme);
             } catch (e) { console.error("Theme apply error", e); }
         }
