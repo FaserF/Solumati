@@ -13,7 +13,7 @@ on:
         - beta
         - nightly
       version_override:
-        description: 'Manual version (leave empty for auto-increment, e.g. 2025.12.5)'
+        description: 'Manual version (leave empty for auto-increment, e.g. 2025.12.3-b1). Do not add v in front.'
         required: false
         default: ''
         type: string
