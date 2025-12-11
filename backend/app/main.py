@@ -14,7 +14,7 @@ from app.scripts.init_data import check_schema, ensure_guest_user, ensure_admin_
 from app.services.tasks import periodic_cleanup_task
 
 # Routers
-from app.api.routers import auth, users, admin, system, oauth, chat, notifications, assets, backup
+from app.api.routers import auth, users, admin, system, oauth, chat, notifications, backup
 
 # --- App Initialization ---
 app = FastAPI(title=PROJECT_NAME, version=CURRENT_VERSION)
@@ -82,5 +82,5 @@ app.include_router(system.router)
 app.include_router(oauth.router)
 app.include_router(chat.router, tags=["chat"])
 app.include_router(notifications.router, tags=["notifications"])
-app.include_router(assets.router, tags=["assets"])
+
 app.include_router(backup.router, tags=["backup"])

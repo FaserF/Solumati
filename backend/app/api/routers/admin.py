@@ -147,6 +147,7 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
     oauth_conf = get_setting(db, "oauth", schemas.OAuthConfig().dict()) # Get Raw
     support_conf = get_setting(db, "support_chat", schemas.SupportChatConfig().dict())
+    reg_notify_conf = get_setting(db, "registration_notification", schemas.RegistrationNotificationConfig().dict())
     captcha_conf = get_setting(db, "captcha", schemas.CaptchaConfig().dict())
     assetlinks = get_setting(db, "assetlinks", [])
 
@@ -165,6 +166,7 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
         "legal": legal_conf,
         "oauth": oauth_conf,
         "support_chat": support_conf,
+        "registration_notification": reg_notify_conf,
         "captcha": captcha_conf,
         "assetlinks": assetlinks
     }
@@ -176,6 +178,7 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     save_setting(db, "registration", settings.registration.dict())
     save_setting(db, "legal", settings.legal.dict())
     save_setting(db, "support_chat", settings.support_chat.dict())
+    save_setting(db, "registration_notification", settings.registration_notification.dict())
     save_setting(db, "assetlinks", settings.assetlinks)
 
     # Save OAuth (Handle Secrets)
