@@ -286,6 +286,9 @@ class TwoFactorLoginResponse(BaseModel):
     is_admin: Optional[bool] = None
     is_profile_complete: Optional[bool] = None
     app_settings: Optional[str] = None
+    about_me: Optional[str] = None
+    image_url: Optional[str] = None
+    intent: Optional[str] = None
 
 # WebAuthn DTOs
 class WebAuthnRegistrationOptions(BaseModel):

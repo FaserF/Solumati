@@ -257,26 +257,26 @@ def discover_users(user: models.User = Depends(get_current_user_from_header), db
     """
     import random
 
-    # Base filters
+    # Check if caller is Guest, Admin, or Moderator
+    is_privileged = user.id == 0 or user.role in ('admin', 'moderator')
+
+    # Base filters (always applied)
     base_filters = [
         models.User.id != user.id,
         models.User.is_active == True,
-        models.User.role != 'admin',  # Hide admins from discover
-        models.User.role != 'test',  # Hide test users from discover
-        models.User.id != 0  # Hide guest users from discover
+        models.User.role != 'admin',  # Never show admins
+        models.User.id != 0  # Never show guest user
     ]
 
-    # Visibility logic: Guest (id=0) and Admins can see test users even if hidden
-    is_guest_or_admin = user.id == 0 or user.role == 'admin' or user.role == 'moderator'
-
-    if is_guest_or_admin:
-        # Can see visible users OR test users (even if hidden)
+    if is_privileged:
+        # Guest/Admin/Mod: Can see visible users OR test users (even if hidden)
         visibility_filter = or_(
             models.User.is_visible_in_matches == True,
             models.User.role == 'test'
         )
     else:
-        # Normal users only see visible users
+        # Normal users: Only see visible users, exclude test users
+        base_filters.append(models.User.role != 'test')
         visibility_filter = models.User.is_visible_in_matches == True
 
     candidates = db.query(models.User).filter(

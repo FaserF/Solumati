@@ -229,7 +229,10 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
         "role": user.role,
         "is_guest": user.is_guest,
         "is_admin": user.role == 'admin',
-        "is_profile_complete": is_profile_complete
+        "is_profile_complete": is_profile_complete,
+        "about_me": user.about_me,
+        "image_url": user.image_url,
+        "intent": user.intent
     }
 
 @router.post("/auth/2fa/verify")
@@ -277,7 +280,10 @@ def verify_2fa_login(req: schemas.TwoFactorAuthRequest, db: Session = Depends(ge
             "username": user.username,
             "role": user.role,
             "is_guest": user.is_guest,
-            "is_admin": user.role == 'admin'
+            "is_admin": user.role == 'admin',
+            "about_me": user.about_me,
+            "image_url": user.image_url,
+            "intent": user.intent
         }
     else:
         logger.warning(f"Verification failed: Invalid code provided for User {user.username}")
@@ -572,7 +578,10 @@ def webauthn_auth_verify(req: schemas.WebAuthnAuthResponse, request: Request, db
             "username": user.username,
             "role": user.role,
             "is_guest": user.is_guest,
-            "is_admin": user.role == 'admin'
+            "is_admin": user.role == 'admin',
+            "about_me": user.about_me,
+            "image_url": user.image_url,
+            "intent": user.intent
         }
     except Exception as e:
         logger.error(f"Passkey auth failed: {e}")
