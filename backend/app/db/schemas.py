@@ -230,6 +230,7 @@ class PublicConfig(BaseModel):
     oauth_providers: OAuthProviders
     allow_password_registration: Optional[bool] = True
     support_chat_enabled: bool = False
+    support_email: Optional[str] = None
     captcha: CaptchaPublicConfig = CaptchaPublicConfig()
 
 class SystemSettings(BaseModel):

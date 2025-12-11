@@ -38,6 +38,7 @@ def get_public_config(db: Session = Depends(get_db)):
         "legal": legal_config,
         "oauth_providers": oauth_config,
         "support_chat_enabled": support_conf.get("enabled", False),
+        "support_email": support_conf.get("email_target") if support_conf.get("enabled", False) else None,
         "captcha": captcha_config
     }
 

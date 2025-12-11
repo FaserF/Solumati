@@ -1,6 +1,11 @@
 import { WifiOff, ServerCrash, RefreshCw } from 'lucide-react';
+import { useConfig } from '../../context/ConfigContext';
 
 const ServerOffline = ({ status = 'offline', onContinue }) => {
+    const { globalConfig } = useConfig();
+    const supportEmail = globalConfig?.support_email;
+    const supportEnabled = globalConfig?.support_chat_enabled && supportEmail;
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
             <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-gray-100">
@@ -44,7 +49,17 @@ const ServerOffline = ({ status = 'offline', onContinue }) => {
                 </div>
 
                 <p className="mt-6 text-xs text-gray-400">
-                    If this persists, please contact support.
+                    If this persists, please{' '}
+                    {supportEnabled ? (
+                        <a
+                            href={`mailto:${supportEmail}`}
+                            className="text-pink-500 hover:text-pink-600 underline"
+                        >
+                            contact support
+                        </a>
+                    ) : (
+                        'contact support'
+                    )}.
                 </p>
             </div>
         </div>

@@ -52,21 +52,6 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Install Windows SDK 10.0.22621.0
-        shell: pwsh
-        run: |
-          # Download and install Windows SDK 22621 (Windows 11 22H2)
-          $sdkUrl = "https://go.microsoft.com/fwlink/?linkid=2237387"
-          $installerPath = "$env:TEMP\winsdksetup.exe"
-
-          Write-Host "Downloading Windows SDK 10.0.22621..."
-          Invoke-WebRequest -Uri $sdkUrl -OutFile $installerPath -UseBasicParsing
-
-          Write-Host "Installing Windows SDK (this may take a few minutes)..."
-          Start-Process -FilePath $installerPath -ArgumentList "/features + /quiet /norestart" -Wait
-
-          Write-Host "Windows SDK installation complete."
-
       - name: Build MSIXBundle
         env:
           PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://solumati.fabiseitz.de' }}
