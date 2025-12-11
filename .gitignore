@@ -1,15 +1,25 @@
-/backend/__pycache__
+# Block file extensions
 *.log
+*.pyc
+
+# Block directories
+## Block pycache
+/backend/__pycache__
 /backend/routers/__pycache__
 /backend/middleware/__pycache__
 /backend/utils/__pycache__
 /backend/services/__pycache__
 /backend/migrations/__pycache__
 /backend/*/__pycache__
-*.pyc
+
+## Block static files
 /backend/static/images/dummies
 /static/images/dummies
+
+## Block test files
 ref_test_auth.txt
 ref_test_mail.txt
 role_debug.txt
 refactor_debug.txt
+error_log.txt
+/*.txt

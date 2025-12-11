@@ -30,8 +30,8 @@ import AuthLayout from '../components/layout/AuthLayout';
 const UrlParamHandler = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { finalizeLogin } = useAuth();
-    const { t } = useI18n(); // Ensure i18n is ready if we need strings, though we might not alert here
+    // const { finalizeLogin } = useAuth(); // Unused
+    // const { t } = useI18n(); // Unused
 
     useEffect(() => {
         // 1. Password Reset

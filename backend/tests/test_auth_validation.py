@@ -13,22 +13,30 @@ from app.core.database import get_db
 
 # client = TestClient(app)  <-- Removed global client
 
-def test_login_invalid_credentials(client):
-    payload = {"login": "nonexistent@example.com", "password": "wrongpassword"}
+def test_login_invalid_credentials(client, test_password):
+    payload = {"login": "nonexistent@example.com", "password": "wrongpassword"} # Explicit wrong password
     response = client.post("/login", json=payload)
     assert response.status_code == 401
     data = response.json()
     # Support both 'detail' (FastAPI default) and 'message' (Custom)
-    error_msg = data.get("detail") or data.get("message") or str(data)
+    # Detail might be a dict (pydantic error) or string. Handle accordingly.
+    detail = data.get("detail")
+    if isinstance(detail, dict):
+         error_msg = str(detail)
+    elif isinstance(detail, list):
+         error_msg = str(detail)
+    else:
+         error_msg = detail or data.get("message") or str(data)
+
     assert "Invalid credentials" in error_msg
 
-def test_registration_duplicate_email(client):
+def test_registration_duplicate_email(client, test_password):
     # 1. Register User
     unique_str = str(datetime.now().timestamp())
     email = f"dup_{unique_str}@example.com"
     payload = {
         "email": email,
-        "password": "Password123!",
+        "password": test_password,
         "real_name": "Duplicate Test",
         "intent": "longterm",
         "answers": []

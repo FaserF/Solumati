@@ -14,6 +14,8 @@ from app.api.dependencies import get_current_user_from_header
 from app.db import models
 from app.core.config import TEST_MODE
 
+from unittest.mock import patch
+
 @pytest.fixture(scope="module")
 def test_db():
     # Use in-memory SQLite for tests
@@ -26,12 +28,18 @@ def test_db():
     )
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    # Create tables
-    Base.metadata.create_all(bind=engine)
+    # Patch the main app's engine and SessionLocal to use our test DB
+    with patch("app.main.engine", engine), \
+         patch("app.main.SessionLocal", TestingSessionLocal), \
+         patch("app.core.database.engine", engine), \
+         patch("app.core.database.SessionLocal", TestingSessionLocal):
 
-    yield TestingSessionLocal
+        # Create tables
+        Base.metadata.create_all(bind=engine)
 
-    Base.metadata.drop_all(bind=engine)
+        yield TestingSessionLocal
+
+        Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="module")
 def client(test_db):
@@ -48,3 +56,11 @@ def client(test_db):
     # Use TestClient as context manager to trigger startup events
     with TestClient(app) as c:
         yield c
+
+import secrets
+import string
+
+@pytest.fixture
+def test_password():
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    return ''.join(secrets.choice(alphabet) for i in range(15))

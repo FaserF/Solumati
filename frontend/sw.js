@@ -1,5 +1,5 @@
 // Minimal Service Worker for PWA and Push
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
     self.skipWaiting();
 });
 
