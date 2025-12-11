@@ -8,7 +8,7 @@ def test_password_complexity_valid():
     validate_password_complexity("StrongP@ssw0rd!")
 
 def test_password_complexity_too_short():
-    with pytest.raises(ValueError, match="at least 12 characters"):
+    with pytest.raises(ValueError, match="at least 8 characters"):
         validate_password_complexity("Short1!")
 
 def test_password_complexity_missing_upper():

@@ -62,8 +62,21 @@ import string
 
 @pytest.fixture
 def test_password():
+    # Ensure at least one of each required character type
+    password_chars = [
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.digits),
+        secrets.choice("!@#$%^&*")
+    ]
+    # Fill the rest with random choices from all allowed characters
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-    return ''.join(secrets.choice(alphabet) for i in range(15))
+    for _ in range(11):  # 4 already added, need 11 more for total 15
+        password_chars.append(secrets.choice(alphabet))
+
+    # Shuffle to avoid predictable pattern
+    secrets.SystemRandom().shuffle(password_chars)
+    return ''.join(password_chars)
 
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_txt_files():
