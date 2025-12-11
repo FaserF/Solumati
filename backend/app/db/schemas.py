@@ -230,6 +230,7 @@ class SystemSettings(BaseModel):
     registration_notification: RegistrationNotificationConfig = RegistrationNotificationConfig()
     captcha: CaptchaConfig = CaptchaConfig()
     assetlinks: List[Dict[str, Any]] = []
+    maintenance_mode: bool = False
 
 class SystemDiagnostics(BaseModel):
     current_version: str

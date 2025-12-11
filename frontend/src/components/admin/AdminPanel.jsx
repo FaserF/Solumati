@@ -786,6 +786,40 @@ const AdminPanel = () => {
             {
                 activeTab === 'settings' && canManageSettings && settings && (
                     <div className="grid gap-6 animate-in slide-in-from-bottom-8 duration-500">
+                        {/* SYSTEM / GENERAL SETTINGS */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Server className="text-purple-600" />
+                                {t('admin.settings.system', 'System')}
+                            </h2>
+                            <div className="flex flex-col gap-4">
+                                <label className="flex items-center gap-3 p-4 rounded-xl border border-red-100 bg-red-50/50 dark:bg-red-900/10 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer transition">
+                                    <div className={`w-12 h-6 flex items-center bg-gray-300 rounded-full p-1 duration-300 ease-in-out ${settings.maintenance_mode ? 'bg-red-500' : ''}`}>
+                                        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${settings.maintenance_mode ? 'translate-x-6' : ''}`}></div>
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={settings.maintenance_mode || false}
+                                        onChange={(e) => {
+                                            setSettings(prev => ({ ...prev, maintenance_mode: e.target.checked }));
+                                            setUnsavedChanges(true);
+                                        }}
+                                    />
+                                    <div className="flex-1 ml-2">
+                                        <span className="font-bold text-gray-800 dark:text-gray-100 block flex items-center gap-2">
+                                            <AlertTriangle size={16} className={settings.maintenance_mode ? 'text-red-600' : 'text-gray-400'} />
+                                            {t('admin.settings.maintenance_mode', 'Maintenance Mode')}
+                                        </span>
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                            {t('admin.settings.maintenance_desc', 'When active, only administrators can access the system. regular users will see a maintenance page.')}
+                                        </span>
+                                    </div>
+                                    {settings.maintenance_mode && <span className="text-red-600 font-bold text-xs uppercase tracking-wider bg-red-100 dark:bg-red-900/50 px-2 py-1 rounded">{t('status.active', 'ACTIVE')}</span>}
+                                </label>
+                            </div>
+                        </div>
+
                         {/* MAIL SETTINGS - REDESIGNED */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
                             <div className="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">

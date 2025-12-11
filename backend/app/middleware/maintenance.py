@@ -18,10 +18,10 @@ class MaintenanceMiddleware(BaseHTTPMiddleware):
             # We need to check the setting. Using a fresh DB session.
             db = SessionLocal()
             try:
-                reg_config_dict = get_setting(db, "registration", {})
-                reg_config = schemas.RegistrationConfig(**reg_config_dict)
+                # Check global maintenance mode setting
+                maintenance_mode = get_setting(db, "maintenance_mode", False)
 
-                if reg_config.maintenance_mode:
+                if maintenance_mode:
                     # Check for Admin via X-User-ID (Project pattern)
                     user_id = request.headers.get('X-User-ID')
                     is_admin = False

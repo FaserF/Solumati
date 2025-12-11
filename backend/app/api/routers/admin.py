@@ -148,7 +148,9 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     oauth_conf = get_setting(db, "oauth", schemas.OAuthConfig().dict()) # Get Raw
     support_conf = get_setting(db, "support_chat", schemas.SupportChatConfig().dict())
     reg_notify_conf = get_setting(db, "registration_notification", schemas.RegistrationNotificationConfig().dict())
+    reg_notify_conf = get_setting(db, "registration_notification", schemas.RegistrationNotificationConfig().dict())
     captcha_conf = get_setting(db, "captcha", schemas.CaptchaConfig().dict())
+    maintenance_mode = get_setting(db, "maintenance_mode", False)
 
     assetlinks = get_setting(db, "assetlinks", [])
     if not isinstance(assetlinks, list):
@@ -171,7 +173,10 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
         "support_chat": support_conf,
         "registration_notification": reg_notify_conf,
         "captcha": captcha_conf,
-        "assetlinks": assetlinks
+        "registration_notification": reg_notify_conf,
+        "captcha": captcha_conf,
+        "assetlinks": assetlinks,
+        "maintenance_mode": maintenance_mode
     }
 
 @router.put("/settings")
@@ -182,7 +187,9 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     save_setting(db, "legal", settings.legal.dict())
     save_setting(db, "support_chat", settings.support_chat.dict())
     save_setting(db, "registration_notification", settings.registration_notification.dict())
+    save_setting(db, "registration_notification", settings.registration_notification.dict())
     save_setting(db, "assetlinks", settings.assetlinks)
+    save_setting(db, "maintenance_mode", settings.maintenance_mode)
 
     # Save OAuth (Handle Secrets)
     current_oauth = get_setting(db, "oauth", schemas.OAuthConfig().dict())
