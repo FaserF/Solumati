@@ -251,6 +251,19 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
                 data = json.loads(response.read().decode())
 
                 # Helper to parse version roughly for comparison [Year, Month, Patch, Beta]
+                def parse_ver(v_str):
+                    v = v_str.lstrip('v')
+                    parts = v.split('-')
+
+                    try:
+                        base = [int(x) for x in parts[0].split('.')]
+                    except ValueError:
+                         return (0, 0, 0, 0, 0) # Invalid format fallback
+
+                    beta_num = 0
+                    is_beta = False
+                    ver_priority = 4 # Default to Stable
+
                     if len(parts) > 1:
                         is_beta = True
                         suffix = parts[1]
