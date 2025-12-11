@@ -139,26 +139,56 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
     else:
         query = query.filter(models.User.is_visible_in_matches == True)
 
+    import random
+
+    # Guest promotional ads
+    ADS = [
+        "🔒 Unlock to see full profile! The Solumati community is waiting.",
+        "✨ This user seems interesting! Sign up to see more.",
+        "❤️ Real connections happen here. Join us to chat!",
+        "🚀 Upgrade for the full experience. It's free!",
+    ]
+
     res = []
+    is_guest_mode = (user_id == 0)
+
     for other in query.all():
         compatibility = calculate_compatibility(curr_answ, other.answers, curr_int, other.intent)
         s = compatibility["score"]
 
         # ESCAPE HATCH FOR GUEST + TEST USERS
         # If I am guest (user_id=0) or Admin and target is 'test', force match
-        if (user_id == 0 or is_admin) and other.role == 'test':
+        if (is_guest_mode or is_admin) and other.role == 'test':
             if s <= 0: s = 95 # Force high score
             compatibility["details"].append("Debug Mode: Dummy Match")
+
+        # GUEST RESTRICTION LOGIC
+        final_username = other.username
+        final_about = other.about_me
+        final_image = other.image_url
+        match_details = compatibility["details"]
+
+        if is_guest_mode and other.role != 'test':
+             # Obfuscate Real Users
+             final_username = f"{other.username[0]}..."
+             final_about = random.choice(ADS)
+             # Mark as restricted for frontend blurring (via match_details flag)
+             match_details = ["RESTRICTED_VIEW"]
+
+             # We want to force show them even if score is bad?
+             # Probably yes, to show "activity".
+             if s <= 0: s = float(random.randint(40, 85))
 
         if s > 0:
             res.append(schemas.MatchResult(
                 user_id=other.id,
-                username=other.username,
-                about_me=other.about_me,
-                image_url=other.image_url,
+                username=final_username,
+                about_me=final_about,
+                image_url=final_image,
                 score=s,
-                match_details=compatibility["details"]
+                match_details=match_details
             ))
+
     res.sort(key=lambda x: x.score, reverse=True)
     return res
 

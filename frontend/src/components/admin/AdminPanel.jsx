@@ -148,7 +148,7 @@ const AdminPanel = () => {
             const diagRes = await fetch(`${API_URL}/admin/diagnostics`, { headers: authHeaders });
             if (diagRes.ok) setDiagnostics(await diagRes.json());
 
-            const changeRes = await fetch(`${API_URL}/public/changelog`);
+            const changeRes = await fetch(`${API_URL}/admin/changelog`, { headers: authHeaders });
             if (changeRes.ok) setChangelog(await changeRes.json());
         } catch { setError("Diagnostics failed."); }
         setLoading(false);

@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import AdminPanel from '../components/admin/AdminPanel';
-import { AuthProvider } from '../context/AuthContext';
 import { ConfigProvider } from '../context/ConfigContext';
 import { I18nProvider } from '../context/I18nContext';
 import { MemoryRouter } from 'react-router-dom';
