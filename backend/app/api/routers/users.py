@@ -131,8 +131,12 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
 
     # Filtering logic:
     # Normal users: Must be visible.
-    # Guest (id=0): Can see visible users OR users with role 'test' (even if hidden).
-    if user_id == 0:
+    # Guest (id=0) OR Admin: Can see visible users OR users with role 'test' (even if hidden).
+    is_admin = False
+    if user_id != 0 and u.role == 'admin':
+        is_admin = True
+
+    if user_id == 0 or is_admin:
         query = query.filter(
             or_(
                 models.User.is_visible_in_matches == True,
@@ -148,10 +152,10 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
         s = compatibility["score"]
 
         # ESCAPE HATCH FOR GUEST + TEST USERS
-        # If I am guest (user_id=0) and target is 'test', force match
-        if user_id == 0 and other.role == 'test':
+        # If I am guest (user_id=0) or Admin and target is 'test', force match
+        if (user_id == 0 or is_admin) and other.role == 'test':
             if s <= 0: s = 95 # Force high score
-            compatibility["details"].append("Guest Mode: Dummy Match")
+            compatibility["details"].append("Debug Mode: Dummy Match")
 
         if s > 0:
             res.append(schemas.MatchResult(

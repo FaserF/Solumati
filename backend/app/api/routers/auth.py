@@ -169,12 +169,9 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
     # We'll stick to: if user.two_factor_method == 'email' OR user has it configured.
     # Currently Schema only has one 'two_factor_method' string.
     # BUT, we want to allow selection. So:
-    if user.two_factor_method == 'email':
+    # If email 2FA is globally enabled, always offer it as an option (if they have email, which they do)
+    if reg_config.email_2fa_enabled:
         available_methods.append("email")
-    elif reg_config.email_2fa_enabled and not available_methods:
-        # If no other methods, maybe we allow email?
-        # For now, let's strictly follow what they have "setup".
-        pass
 
     # Profile Completion Check
     # Considered complete if they have an image and a custom about_me (not default)
@@ -204,6 +201,21 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
                 "available_methods": available_methods,
                 "is_profile_complete": is_profile_complete
             }
+
+@router.post("/auth/2fa/send-email-code")
+def send_email_2fa_code_endpoint(body: dict, db: Session = Depends(get_db)):
+    """Triggers sending of an Email 2FA code during login verification."""
+    user_id = body.get("user_id")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user: raise HTTPException(404, "User not found")
+
+    # Check if Email 2FA is allowed
+    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+    if not reg_config.email_2fa_enabled:
+        raise HTTPException(403, "Email 2FA disabled")
+
+    generate_email_2fa_code(user, db)
+    return {"status": "sent", "message": "Code sent to email"}
 
     # No 2FA required
     # Trigger Notification (Background)

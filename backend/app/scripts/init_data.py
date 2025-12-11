@@ -108,13 +108,11 @@ def ensure_guest_user(db: Session):
             )
             db.add(guest)
         else:
-            # Force update promotional fields
-            if guest.about_me != promo_about or guest.intent != promo_intent or guest.real_name != "Guest Explorer":
-                guest.about_me = promo_about
-                guest.intent = promo_intent
-                guest.real_name = "Guest Explorer"
-                # guest.username = "Guest" # Keep username stable if possible, or update? User said "Guest" header.
-                logger.info("Updated Guest User profile with promotional content.")
+            # Force update promotional fields always
+            guest.about_me = promo_about
+            guest.intent = promo_intent
+            guest.real_name = "Guest Explorer"
+            logger.info("Updated Guest User profile with promotional content.")
 
         db.commit()
         logger.info("Guest user ensured.")

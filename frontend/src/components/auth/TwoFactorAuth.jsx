@@ -249,6 +249,27 @@ const TwoFactorAuth = () => {
                             <button onClick={handleVerifySubmit} disabled={loading} className="w-full bg-pink-600 text-white py-4 rounded-lg font-bold hover:bg-pink-700 transition">{loading ? "..." : t('2fa.btn_verify')}</button>
                         )}
 
+                        {selectedMethod === 'email' && (
+                            <button
+                                onClick={async () => {
+                                    setLoading(true);
+                                    try {
+                                        await fetch(`${API_URL}/auth/2fa/send-email-code`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ user_id: tempAuth.user_id })
+                                        });
+                                        alert("Code sent!");
+                                    } catch { alert("Failed to send code"); }
+                                    setLoading(false);
+                                }}
+                                disabled={loading}
+                                className="mt-4 text-sm text-blue-600 font-bold hover:underline block mx-auto"
+                            >
+                                {t('2fa.resend_code', 'Resend Email Code')}
+                            </button>
+                        )}
+
                         <button onClick={() => setView('menu')} className="mt-6 text-sm text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 mx-auto">
                             <HelpCircle size={14} /> {t('2fa.trouble_logging_in', 'Trouble logging in?')}
                         </button>

@@ -657,35 +657,48 @@ const AccountSettings = () => {
                                     </div>
 
                                     {/* Email 2FA */}
-                                    {globalConfig.email_2fa_enabled && (
-                                        <div className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-750">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-lg"><Mail size={20} /></div>
-                                                <div>
-                                                    <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_verify', 'Email Verification')}</div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {securityState.current_method === 'email' ? (
-                                                            <span className="text-green-600 font-bold">Active Method</span>
-                                                        ) : t('btn.available', "Available")}
-                                                    </div>
+                                    {/* Email 2FA */}
+                                    <div className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-750">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg ${globalConfig.email_2fa_enabled ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600' : 'bg-gray-200 text-gray-400'}`}><Mail size={20} /></div>
+                                            <div>
+                                                <div className="font-bold text-gray-800 dark:text-gray-200">{t('settings.email_verify', 'Email Verification')}</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {!globalConfig.email_2fa_enabled ? (
+                                                        <span className="text-gray-400 italic">{t('settings.disabled_by_admin', 'Disabled by Administrator')}</span>
+                                                    ) : securityState.current_method === 'email' ? (
+                                                        <span className="text-green-600 font-bold">Active Method</span>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-gray-500">{t('btn.available', "Available")}</span>
+                                                            <div className="text-[10px] text-orange-500 flex items-center gap-1 mt-1 font-bold">
+                                                                <AlertTriangle size={10} />
+                                                                {t('settings.email_security_warn', 'Less secure than Apps/Passkeys')}
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
-                                            {securityState.current_method === 'email' ? (
-                                                <button
-                                                    onClick={() => removeMethod('email')}
-                                                    disabled={!canEditAccount}
-                                                    className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition"
-                                                    title="Turn Off Email 2FA"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            ) : (
-                                                <button onClick={enableEmail2FA} disabled={!canEditAccount} className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                                    {t('btn.use_this', 'Use This')}
-                                                </button>
-                                            )}
                                         </div>
-                                    )}
+                                        {securityState.current_method === 'email' ? (
+                                            <button
+                                                onClick={() => removeMethod('email')}
+                                                disabled={!canEditAccount || !globalConfig.email_2fa_enabled}
+                                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title="Turn Off Email 2FA"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={enableEmail2FA}
+                                                disabled={!canEditAccount || !globalConfig.email_2fa_enabled}
+                                                className="px-3 py-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {t('btn.use_this', 'Use This')}
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>

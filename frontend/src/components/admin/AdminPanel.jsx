@@ -934,6 +934,20 @@ const AdminPanel = () => {
                                         {!isMailConfigured() && <span className="text-xs text-red-500 font-bold">Requires configured Mail Server</span>}
                                     </div>
                                 </label>
+                                <label className={`flex items-center gap-3 p-3 rounded-lg border transition ${(!isMailConfigured() || !settings.mail.enabled) ? 'bg-gray-100 opacity-60 cursor-not-allowed' : 'hover:bg-gray-50 cursor-pointer'}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.registration.email_2fa_enabled}
+                                        onChange={(e) => updateSetting('registration', 'email_2fa_enabled', e.target.checked)}
+                                        disabled={!isMailConfigured() || !settings.mail.enabled}
+                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500 disabled:opacity-50"
+                                    />
+                                    <div>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 block">{t('admin.settings.email_2fa', 'Allow Email 2FA')}</span>
+                                        {!isMailConfigured() && <span className="text-xs text-red-500 font-bold block">Requires configured Mail Server</span>}
+                                        {!settings.mail.enabled && <span className="text-xs text-red-500 font-bold block">Requires Mail Service Enabled</span>}
+                                    </div>
+                                </label>
 
                                 <div className="mt-2 grid md:grid-cols-2 gap-4">
                                     <div className="col-span-full">
@@ -1135,45 +1149,47 @@ const AdminPanel = () => {
                         </div>
 
                         {/* REGISTRATION NOTIFICATIONS - Only show if mail is configured */}
-                        {isMailConfigured() && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
-                                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                                    <Mail className="text-pink-500" />
-                                    {t('admin.settings.reg_notification_title', 'Registration Notifications')}
-                                </h2>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_enabled', 'Email Notifications')}</label>
-                                            <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={settings.registration_notification?.enabled || false}
-                                                    onChange={(e) => updateSetting('registration_notification', 'enabled', e.target.checked)}
-                                                    className="w-5 h-5 text-pink-600 rounded focus:ring-pink-500"
-                                                />
-                                                <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.reg_notification_label', 'Receive email on new registrations')}</span>
-                                            </label>
-                                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_hint', 'Get notified whenever a new user registers on your instance.')}</p>
+                        {
+                            isMailConfigured() && (
+                                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                        <Mail className="text-pink-500" />
+                                        {t('admin.settings.reg_notification_title', 'Registration Notifications')}
+                                    </h2>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_enabled', 'Email Notifications')}</label>
+                                                <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={settings.registration_notification?.enabled || false}
+                                                        onChange={(e) => updateSetting('registration_notification', 'enabled', e.target.checked)}
+                                                        className="w-5 h-5 text-pink-600 rounded focus:ring-pink-500"
+                                                    />
+                                                    <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.reg_notification_label', 'Receive email on new registrations')}</span>
+                                                </label>
+                                                <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_hint', 'Get notified whenever a new user registers on your instance.')}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className={!settings.registration_notification?.enabled ? 'opacity-50' : ''}>
-                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_email', 'Notification Email')}</label>
-                                            <input
-                                                type="email"
-                                                value={settings.registration_notification?.email_target || ''}
-                                                onChange={(e) => updateSetting('registration_notification', 'email_target', e.target.value)}
-                                                disabled={!settings.registration_notification?.enabled}
-                                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
-                                                placeholder="admin@example.com"
-                                            />
-                                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_email_hint', 'The email address where registration notifications will be sent.')}</p>
+                                        <div className="space-y-4">
+                                            <div className={!settings.registration_notification?.enabled ? 'opacity-50' : ''}>
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_email', 'Notification Email')}</label>
+                                                <input
+                                                    type="email"
+                                                    value={settings.registration_notification?.email_target || ''}
+                                                    onChange={(e) => updateSetting('registration_notification', 'email_target', e.target.value)}
+                                                    disabled={!settings.registration_notification?.enabled}
+                                                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
+                                                    placeholder="admin@example.com"
+                                                />
+                                                <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_email_hint', 'The email address where registration notifications will be sent.')}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        }
 
                         {/* CAPTCHA / BOT PROTECTION */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
@@ -1305,7 +1321,7 @@ const AdminPanel = () => {
                                 <Save size={20} /> {t('btn.save')} {unsavedChanges && '*'}
                             </button>
                         </div>
-                    </div>
+                    </div >
                 )
             }
 
@@ -1392,106 +1408,110 @@ const AdminPanel = () => {
             }
 
             {/* Modals */}
-            {punishModal.show && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-transparent dark:border-white/10">
-                        <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
-                            <Ban /> Punish User
-                        </h3>
-                        <div className="space-y-3 mb-6">
-                            <label className="block">
-                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Type</span>
-                                <select
-                                    className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    value={punishReason}
-                                    onChange={e => setPunishReason(e.target.value)}
-                                >
-                                    <option value="AdminDeactivation">Permanent Deactivation</option>
-                                    <option value="TempBan">Temporary Ban</option>
-                                </select>
-                            </label>
-
-                            {punishReason === 'TempBan' && (
+            {
+                punishModal.show && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
+                                <Ban /> Punish User
+                            </h3>
+                            <div className="space-y-3 mb-6">
                                 <label className="block">
-                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Duration (Hours)</span>
-                                    <input
-                                        type="number"
+                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Type</span>
+                                    <select
                                         className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        value={banHours}
-                                        onChange={e => setBanHours(e.target.value)}
+                                        value={punishReason}
+                                        onChange={e => setPunishReason(e.target.value)}
+                                    >
+                                        <option value="AdminDeactivation">Permanent Deactivation</option>
+                                        <option value="TempBan">Temporary Ban</option>
+                                    </select>
+                                </label>
+
+                                {punishReason === 'TempBan' && (
+                                    <label className="block">
+                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Duration (Hours)</span>
+                                        <input
+                                            type="number"
+                                            className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            value={banHours}
+                                            onChange={e => setBanHours(e.target.value)}
+                                        />
+                                    </label>
+                                )}
+
+                                <label className="block">
+                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Reason (Show to user)</span>
+                                    <input
+                                        type="text"
+                                        className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="Violating Terms..."
+                                        value={customReason}
+                                        onChange={e => setCustomReason(e.target.value)}
                                     />
                                 </label>
-                            )}
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                <button
+                                    onClick={() => {
+                                        handleAction(punishModal.userId, 'deactivate');
+                                        setPunishModal({ show: false, userId: null });
+                                    }}
+                                    className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700"
+                                >
+                                    Execute
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
-                            <label className="block">
-                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Reason (Show to user)</span>
+            {
+                createUserModal && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
+                            <div className="space-y-3 mb-4">
                                 <input
-                                    type="text"
-                                    className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    placeholder="Violating Terms..."
-                                    value={customReason}
-                                    onChange={e => setCustomReason(e.target.value)}
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Username"
+                                    value={createUserForm.username}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
                                 />
-                            </label>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                            <button
-                                onClick={() => {
-                                    handleAction(punishModal.userId, 'deactivate');
-                                    setPunishModal({ show: false, userId: null });
-                                }}
-                                className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700"
-                            >
-                                Execute
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {createUserModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                        <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
-                        <div className="space-y-3 mb-4">
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                placeholder="Username"
-                                value={createUserForm.username}
-                                onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
-                            />
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                placeholder="Email"
-                                value={createUserForm.email}
-                                onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
-                            />
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                placeholder="Password"
-                                type="password"
-                                value={createUserForm.password}
-                                onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
-                            />
-                            <select
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={createUserForm.role}
-                                onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
-                            >
-                                <option value="user">User</option>
-                                <option value="moderator">Moderator</option>
-                                <option value="admin">Admin</option>
-                                <option value="test">{t('role.test', 'Test')}</option>
-                            </select>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                            <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Email"
+                                    value={createUserForm.email}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Password"
+                                    type="password"
+                                    value={createUserForm.password}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                                />
+                                <select
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={createUserForm.role}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="test">{t('role.test', 'Test')}</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                                <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
 
             {/* 5. BACKUP & MIGRATION TAB */}
@@ -1568,102 +1588,106 @@ const AdminPanel = () => {
                     </div>
                 )
             }
-            {editModal.show && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                        <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
-                        <div className="space-y-3 mb-4">
-                            <label className="block text-sm font-bold dark:text-gray-300">Username</label>
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={editForm.username}
-                                onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                            />
-                            <label className="block text-sm font-bold dark:text-gray-300">Email</label>
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={editForm.email}
-                                onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                            />
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                type="password"
-                                value={editForm.password}
-                                onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                            />
-
-                            <label className="block text-sm font-bold dark:text-gray-300">Role</label>
-                            <select
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={editForm.role}
-                                onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                                disabled={[0, 1, 3].includes(editModal.user.id)}
-                            >
-                                <option value="user">User</option>
-                                <option value="moderator">Moderator</option>
-                                <option value="admin">Admin</option>
-                                <option value="guest">Guest</option>
-                                <option value="test">{t('role.test', 'Test')}</option>
-                            </select>
-                            {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                            <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+            {
+                editModal.show && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
+                            <div className="space-y-3 mb-4">
+                                <label className="block text-sm font-bold dark:text-gray-300">Username</label>
                                 <input
-                                    type="checkbox"
-                                    checked={editForm.is_visible_in_matches}
-                                    onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                                    disabled={[0, 1, 3].includes(editModal.user.id)}
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.username}
+                                    onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                                 />
-                                Is Visible in Matches
-                            </label>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                            <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                                <label className="block text-sm font-bold dark:text-gray-300">Email</label>
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.email}
+                                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    type="password"
+                                    value={editForm.password}
+                                    onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                                />
+
+                                <label className="block text-sm font-bold dark:text-gray-300">Role</label>
+                                <select
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.role}
+                                    onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                                    disabled={[0, 1, 3].includes(editModal.user.id)}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="guest">Guest</option>
+                                    <option value="test">{t('role.test', 'Test')}</option>
+                                </select>
+                                {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
+                                <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+                                    <input
+                                        type="checkbox"
+                                        checked={editForm.is_visible_in_matches}
+                                        onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                                        disabled={[0, 1, 3].includes(editModal.user.id)}
+                                    />
+                                    Is Visible in Matches
+                                </label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                                <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Roles Info Modal */}
-            {rolesModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
-                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
-                            <Info size={20} className="text-blue-600" /> System Roles
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
+            {
+                rolesModalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
+                                <Info size={20} className="text-blue-600" /> System Roles
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
 
-                        <div className="space-y-4">
-                            {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
-                                <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
-                                            {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
-                                            {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
-                                            {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
-                                            {role.name}
-                                        </h4>
-                                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+                            <div className="space-y-4">
+                                {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
+                                    <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
+                                                {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
+                                                {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
+                                                {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
+                                                {role.name}
+                                            </h4>
+                                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {role.permissions && role.permissions.map(p => (
+                                                <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                                    {p}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
-                                    <div className="flex flex-wrap gap-1">
-                                        {role.permissions && role.permissions.map(p => (
-                                            <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                                                {p}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
 
-                        <div className="flex justify-end mt-6">
-                            <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
+                            <div className="flex justify-end mt-6">
+                                <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
