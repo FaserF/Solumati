@@ -988,812 +988,812 @@ const AdminPanel = () => {
                             </div>
                         </div>
 
-                    </div>
+
 
                         {/* LEGAL SETTINGS */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                    <Scale className="text-gray-600 dark:text-gray-300" />
-                    {t('admin.settings.legal', 'Legal & Imprint')}
-                </h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="col-span-full">
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.company_name')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.company_name || ''}
-                            onChange={(e) => updateSetting('legal', 'company_name', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="My Company GmbH"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.ceo')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.ceo_name || ''}
-                            onChange={(e) => updateSetting('legal', 'ceo_name', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="Max Mustermann"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_street')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.address_street || ''}
-                            onChange={(e) => updateSetting('legal', 'address_street', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="Musterstraße 1"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_city')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.address_zip_city || ''}
-                            onChange={(e) => updateSetting('legal', 'address_zip_city', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="12345 Musterstadt"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_email')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.contact_email || ''}
-                            onChange={(e) => updateSetting('legal', 'contact_email', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="info@solumati.com"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_phone')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.contact_phone || ''}
-                            onChange={(e) => updateSetting('legal', 'contact_phone', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="+49 123 45678"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.register_court')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.register_court || ''}
-                            onChange={(e) => updateSetting('legal', 'register_court', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="Amtsgericht München"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.register_number')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.register_number || ''}
-                            onChange={(e) => updateSetting('legal', 'register_number', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="HRB 123456"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.vat_id')}</label>
-                        <input
-                            type="text"
-                            value={settings.legal.vat_id || ''}
-                            onChange={(e) => updateSetting('legal', 'vat_id', e.target.value)}
-                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="DE123456789"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* OAUTH SETTINGS */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                    <Github className="text-purple-500" />
-                    {t('admin.settings.oauth_title', 'OAuth Providers')}
-                </h2>
-
-                <div className="grid md:grid-cols-3 gap-6">
-                    {/* Github */}
-                    <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
-                        <h3 className="font-bold mb-4 flex items-center gap-2"><Github size={18} /> GitHub</h3>
-                        <div className="space-y-3">
-
-                            <label className="flex items-center gap-2 text-sm font-medium">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.oauth.github.enabled}
-                                    onChange={e => updateSetting('oauth', 'github', { ...settings.oauth.github, enabled: e.target.checked })}
-                                    className="rounded text-purple-600"
-                                />
-                                {t('admin.settings.enable', 'Enable')}
-                            </label>
-
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_id', 'Client ID')}</label>
-                                <input
-                                    type="text"
-                                    value={settings.oauth.github.client_id}
-                                    onChange={e => updateSetting('oauth', 'github', { ...settings.oauth.github, client_id: e.target.value })}
-                                    className={`w-full p-2 text-sm border rounded ${validateOAuth('github', settings.oauth.github.client_id) ? '' : 'border-red-500 bg-red-50'}`}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_secret', 'Client Secret')}</label>
-                                <input
-                                    type="password"
-                                    value={settings.oauth.github.client_secret}
-                                    onChange={e => updateSetting('oauth', 'github', { ...settings.oauth.github, client_secret: e.target.value })}
-                                    className="w-full p-2 text-sm border rounded"
-                                    placeholder="******"
-                                />
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Scale className="text-gray-600 dark:text-gray-300" />
+                                {t('admin.settings.legal', 'Legal & Imprint')}
+                            </h2>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="col-span-full">
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.company_name')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.company_name || ''}
+                                        onChange={(e) => updateSetting('legal', 'company_name', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="My Company GmbH"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.ceo')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.ceo_name || ''}
+                                        onChange={(e) => updateSetting('legal', 'ceo_name', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="Max Mustermann"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_street')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.address_street || ''}
+                                        onChange={(e) => updateSetting('legal', 'address_street', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="Musterstraße 1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_city')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.address_zip_city || ''}
+                                        onChange={(e) => updateSetting('legal', 'address_zip_city', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="12345 Musterstadt"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_email')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.contact_email || ''}
+                                        onChange={(e) => updateSetting('legal', 'contact_email', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="info@solumati.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_phone')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.contact_phone || ''}
+                                        onChange={(e) => updateSetting('legal', 'contact_phone', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="+49 123 45678"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.register_court')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.register_court || ''}
+                                        onChange={(e) => updateSetting('legal', 'register_court', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="Amtsgericht München"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.register_number')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.register_number || ''}
+                                        onChange={(e) => updateSetting('legal', 'register_number', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="HRB 123456"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.vat_id')}</label>
+                                    <input
+                                        type="text"
+                                        value={settings.legal.vat_id || ''}
+                                        onChange={(e) => updateSetting('legal', 'vat_id', e.target.value)}
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="DE123456789"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Google */}
-                    <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
-                        <h3 className="font-bold mb-4 flex items-center gap-2 dark:text-white"><Globe size={18} /> Google</h3>
-                        <div className="space-y-3">
-                            <label className="flex items-center gap-2 text-sm font-medium">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.oauth.google.enabled}
-                                    onChange={e => updateSetting('oauth', 'google', { ...settings.oauth.google, enabled: e.target.checked })}
-                                    className="rounded text-blue-600"
-                                />
-                                {t('admin.settings.enable', 'Enable')}
-                            </label>
+                        {/* OAUTH SETTINGS */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Github className="text-purple-500" />
+                                {t('admin.settings.oauth_title', 'OAuth Providers')}
+                            </h2>
 
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_id', 'Client ID')}</label>
-                                <input
-                                    type="text"
-                                    value={settings.oauth.google.client_id}
-                                    onChange={e => updateSetting('oauth', 'google', { ...settings.oauth.google, client_id: e.target.value })}
-                                    className={`w-full p-2 text-sm border rounded ${validateOAuth('google', settings.oauth.google.client_id) ? '' : 'border-red-500 bg-red-50'}`}
-                                />
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {/* Github */}
+                                <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
+                                    <h3 className="font-bold mb-4 flex items-center gap-2"><Github size={18} /> GitHub</h3>
+                                    <div className="space-y-3">
+
+                                        <label className="flex items-center gap-2 text-sm font-medium">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.oauth.github.enabled}
+                                                onChange={e => updateSetting('oauth', 'github', { ...settings.oauth.github, enabled: e.target.checked })}
+                                                className="rounded text-purple-600"
+                                            />
+                                            {t('admin.settings.enable', 'Enable')}
+                                        </label>
+
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_id', 'Client ID')}</label>
+                                            <input
+                                                type="text"
+                                                value={settings.oauth.github.client_id}
+                                                onChange={e => updateSetting('oauth', 'github', { ...settings.oauth.github, client_id: e.target.value })}
+                                                className={`w-full p-2 text-sm border rounded ${validateOAuth('github', settings.oauth.github.client_id) ? '' : 'border-red-500 bg-red-50'}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_secret', 'Client Secret')}</label>
+                                            <input
+                                                type="password"
+                                                value={settings.oauth.github.client_secret}
+                                                onChange={e => updateSetting('oauth', 'github', { ...settings.oauth.github, client_secret: e.target.value })}
+                                                className="w-full p-2 text-sm border rounded"
+                                                placeholder="******"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Google */}
+                                <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
+                                    <h3 className="font-bold mb-4 flex items-center gap-2 dark:text-white"><Globe size={18} /> Google</h3>
+                                    <div className="space-y-3">
+                                        <label className="flex items-center gap-2 text-sm font-medium">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.oauth.google.enabled}
+                                                onChange={e => updateSetting('oauth', 'google', { ...settings.oauth.google, enabled: e.target.checked })}
+                                                className="rounded text-blue-600"
+                                            />
+                                            {t('admin.settings.enable', 'Enable')}
+                                        </label>
+
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_id', 'Client ID')}</label>
+                                            <input
+                                                type="text"
+                                                value={settings.oauth.google.client_id}
+                                                onChange={e => updateSetting('oauth', 'google', { ...settings.oauth.google, client_id: e.target.value })}
+                                                className={`w-full p-2 text-sm border rounded ${validateOAuth('google', settings.oauth.google.client_id) ? '' : 'border-red-500 bg-red-50'}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_secret', 'Client Secret')}</label>
+                                            <input
+                                                type="password"
+                                                value={settings.oauth.google.client_secret}
+                                                onChange={e => updateSetting('oauth', 'google', { ...settings.oauth.google, client_secret: e.target.value })}
+                                                className="w-full p-2 text-sm border rounded"
+                                                placeholder="******"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Microsoft */}
+                                <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
+                                    <h3 className="font-bold mb-4 flex items-center gap-2 dark:text-white"><Server size={18} /> Microsoft</h3>
+                                    <div className="space-y-3">
+                                        <label className="flex items-center gap-2 text-sm font-medium">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.oauth.microsoft.enabled}
+                                                onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth.microsoft, enabled: e.target.checked })}
+                                                className="rounded text-blue-800"
+                                            />
+                                            {t('admin.settings.enable', 'Enable')}
+                                        </label>
+
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_id', 'Client ID')}</label>
+                                            <input
+                                                type="text"
+                                                value={settings.oauth.microsoft.client_id}
+                                                onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth.microsoft, client_id: e.target.value })}
+                                                className={`w-full p-2 text-sm border rounded ${validateOAuth('microsoft', settings.oauth.microsoft.client_id) ? '' : 'border-red-500 bg-red-50'}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_secret', 'Client Secret')}</label>
+                                            <input
+                                                type="password"
+                                                value={settings.oauth.microsoft.client_secret}
+                                                onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth.microsoft, client_secret: e.target.value })}
+                                                className="w-full p-2 text-sm border rounded"
+                                                placeholder="******"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_secret', 'Client Secret')}</label>
-                                <input
-                                    type="password"
-                                    value={settings.oauth.google.client_secret}
-                                    onChange={e => updateSetting('oauth', 'google', { ...settings.oauth.google, client_secret: e.target.value })}
-                                    className="w-full p-2 text-sm border rounded"
-                                    placeholder="******"
-                                />
+                        </div>
+
+                        {/* SUPPORT CHAT SETTINGS */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <LifeBuoy className="text-blue-500" />
+                                {t('admin.settings.support_title', 'Support Chat')}
+                            </h2>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_permissions', 'Chat Permissions')}</label>
+                                        <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.support_chat?.enabled || false}
+                                                onChange={(e) => updateSetting('support_chat', 'enabled', e.target.checked)}
+                                                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.support_writable', 'Allow users to write messages')}</span>
+                                        </label>
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_readonly_hint', 'If disabled, the chat will be read-only for users.')}</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className={!isMailConfigured() ? 'opacity-50 grayscale' : ''}>
+                                        <div className="flex justify-between">
+                                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
+                                            {!isMailConfigured() && <span className="text-xs text-red-500 font-bold">Mail Server not configured</span>}
+                                        </div>
+                                        <input
+                                            type="email"
+                                            value={settings.support_chat?.email_target || ''}
+                                            onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
+                                            disabled={!isMailConfigured()}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
+                                            placeholder="support@solumati.local"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Microsoft */}
-                    <div className="border dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-white/5">
-                        <h3 className="font-bold mb-4 flex items-center gap-2 dark:text-white"><Server size={18} /> Microsoft</h3>
-                        <div className="space-y-3">
-                            <label className="flex items-center gap-2 text-sm font-medium">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.oauth.microsoft.enabled}
-                                    onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth.microsoft, enabled: e.target.checked })}
-                                    className="rounded text-blue-800"
-                                />
-                                {t('admin.settings.enable', 'Enable')}
-                            </label>
-
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_id', 'Client ID')}</label>
-                                <input
-                                    type="text"
-                                    value={settings.oauth.microsoft.client_id}
-                                    onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth.microsoft, client_id: e.target.value })}
-                                    className={`w-full p-2 text-sm border rounded ${validateOAuth('microsoft', settings.oauth.microsoft.client_id) ? '' : 'border-red-500 bg-red-50'}`}
-                                />
+                        {/* REGISTRATION NOTIFICATIONS */}
+                        <div className={`bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 ${!isMailConfigured() ? 'opacity-70' : ''}`}>
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Mail className="text-pink-500" />
+                                {t('admin.settings.reg_notification_title', 'Registration Notifications')}
+                            </h2>
+                            {!isMailConfigured() && (
+                                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 text-sm rounded-lg flex items-center gap-2">
+                                    <AlertTriangle size={16} />
+                                    <span>{t('admin.settings.mail_required', 'Please configure the Mail Server settings above to enable notifications.')}</span>
+                                </div>
+                            )}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_enabled', 'Email Notifications')}</label>
+                                        <label className={`flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 transition ${!isMailConfigured() ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer'}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.registration_notification?.enabled || false}
+                                                onChange={(e) => updateSetting('registration_notification', 'enabled', e.target.checked)}
+                                                disabled={!isMailConfigured()}
+                                                className="w-5 h-5 text-pink-600 rounded focus:ring-pink-500 disabled:opacity-50"
+                                            />
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.reg_notification_label', 'Receive email on new registrations')}</span>
+                                        </label>
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_hint', 'Get notified whenever a new user registers on your instance.')}</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className={!settings.registration_notification?.enabled ? 'opacity-50' : ''}>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_email', 'Notification Email')}</label>
+                                        <input
+                                            type="email"
+                                            value={settings.registration_notification?.email_target || ''}
+                                            onChange={(e) => updateSetting('registration_notification', 'email_target', e.target.value)}
+                                            disabled={!settings.registration_notification?.enabled || !isMailConfigured()}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
+                                            placeholder="admin@example.com"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_email_hint', 'The email address where registration notifications will be sent.')}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('admin.settings.client_secret', 'Client Secret')}</label>
-                                <input
-                                    type="password"
-                                    value={settings.oauth.microsoft.client_secret}
-                                    onChange={e => updateSetting('oauth', 'microsoft', { ...settings.oauth.microsoft, client_secret: e.target.value })}
-                                    className="w-full p-2 text-sm border rounded"
-                                    placeholder="******"
-                                />
+                        </div>
+
+                        {/* CAPTCHA / BOT PROTECTION */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Shield className="text-purple-500" />
+                                {t('admin.settings.captcha_title', 'CAPTCHA / Bot Protection')}
+                            </h2>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_enabled', 'Enable CAPTCHA')}</label>
+                                        <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.captcha?.enabled || false}
+                                                onChange={(e) => updateSetting('captcha', 'enabled', e.target.checked)}
+                                                className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                            />
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.captcha_enabled_hint', 'Shows CAPTCHA on registration and after failed login attempts')}</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_provider', 'CAPTCHA Provider')}</label>
+                                        <select
+                                            value={settings.captcha?.provider || 'cloudflare'}
+                                            onChange={(e) => updateSetting('captcha', 'provider', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                            <option value="cloudflare">Cloudflare Turnstile</option>
+                                            <option value="google">Google reCAPTCHA</option>
+                                            <option value="hcaptcha">hCaptcha</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_site_key', 'Site Key')}</label>
+                                        <input
+                                            type="text"
+                                            value={settings.captcha?.site_key || ''}
+                                            onChange={(e) => updateSetting('captcha', 'site_key', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="0x..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_secret_key', 'Secret Key')}</label>
+                                        <input
+                                            type="password"
+                                            value={settings.captcha?.secret_key || ''}
+                                            onChange={(e) => updateSetting('captcha', 'secret_key', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="0x..."
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_threshold', 'Attempts until CAPTCHA')}</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="20"
+                                            value={settings.captcha?.failed_attempts_threshold || 5}
+                                            onChange={(e) => updateSetting('captcha', 'failed_attempts_threshold', parseInt(e.target.value) || 5)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.captcha_threshold_hint', 'Failed login attempts before CAPTCHA is required')}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_lockout', 'Lockout Duration (Minutes)')}</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="60"
+                                            value={settings.captcha?.lockout_minutes || 10}
+                                            onChange={(e) => updateSetting('captcha', 'lockout_minutes', parseInt(e.target.value) || 10)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">{t('admin.settings.captcha_lockout_hint', 'Lockout duration when CAPTCHA is disabled')}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                </div>
-            </div>
-
-            {/* SUPPORT CHAT SETTINGS */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                    <LifeBuoy className="text-blue-500" />
-                    {t('admin.settings.support_title', 'Support Chat')}
-                </h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_permissions', 'Chat Permissions')}</label>
-                            <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.support_chat?.enabled || false}
-                                    onChange={(e) => updateSetting('support_chat', 'enabled', e.target.checked)}
-                                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                                />
-                                <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.support_writable', 'Allow users to write messages')}</span>
-                            </label>
-                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_readonly_hint', 'If disabled, the chat will be read-only for users.')}</p>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className={!isMailConfigured() ? 'opacity-50 grayscale' : ''}>
-                            <div className="flex justify-between">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.support_email', 'Forwarding Email')}</label>
-                                {!isMailConfigured() && <span className="text-xs text-red-500 font-bold">Mail Server not configured</span>}
+                        {/* ASSET LINKS SETTINGS */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                                <Smartphone className="text-green-500" />
+                                App Integrity (TWA Asset Links)
+                            </h2>
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-600">
+                                    To hide the browser bar in the Android App (TWA), you must configure the Digital Asset Links JSON here.
+                                    The build script outputs this JSON.
+                                </p>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Asset Links JSON</label>
+                                    <textarea
+                                        value={assetLinksText}
+                                        onChange={(e) => {
+                                            setAssetLinksText(e.target.value);
+                                            setAssetLinksError(null);
+                                        }}
+                                        onBlur={() => {
+                                            try {
+                                                const parsed = JSON.parse(assetLinksText);
+                                                if (!Array.isArray(parsed)) throw new Error("Must be a JSON Array");
+                                                setSettings(prev => ({ ...prev, assetlinks: parsed }));
+                                                setUnsavedChanges(true);
+                                                setAssetLinksText(JSON.stringify(parsed, null, 2)); // Reformat
+                                            } catch (e) {
+                                                setAssetLinksError("Invalid JSON: " + e.message);
+                                            }
+                                        }}
+                                        className={`w-full p-2 border rounded-lg h-48 text-sm font-mono ${assetLinksError ? 'border-red-500 bg-red-50' : ''}`}
+                                        placeholder='[{"relation": ["delegate_permission/common.handle_all_urls"], ...}]'
+                                    />
+                                    {assetLinksError && <p className="text-xs text-red-500 font-bold mt-1">{assetLinksError}</p>}
+                                </div>
                             </div>
-                            <input
-                                type="email"
-                                value={settings.support_chat?.email_target || ''}
-                                onChange={(e) => updateSetting('support_chat', 'email_target', e.target.value)}
-                                disabled={!isMailConfigured()}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
-                                placeholder="support@solumati.local"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.support_email_hint', 'Messages sent to Support will be forwarded here.')}</p>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* REGISTRATION NOTIFICATIONS */}
-            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 ${!isMailConfigured() ? 'opacity-70' : ''}`}>
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                    <Mail className="text-pink-500" />
-                    {t('admin.settings.reg_notification_title', 'Registration Notifications')}
-                </h2>
-                {!isMailConfigured() && (
-                    <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 text-sm rounded-lg flex items-center gap-2">
-                        <AlertTriangle size={16} />
-                        <span>{t('admin.settings.mail_required', 'Please configure the Mail Server settings above to enable notifications.')}</span>
-                    </div>
-                )}
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_enabled', 'Email Notifications')}</label>
-                            <label className={`flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 transition ${!isMailConfigured() ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer'}`}>
-                                <input
-                                    type="checkbox"
-                                    checked={settings.registration_notification?.enabled || false}
-                                    onChange={(e) => updateSetting('registration_notification', 'enabled', e.target.checked)}
-                                    disabled={!isMailConfigured()}
-                                    className="w-5 h-5 text-pink-600 rounded focus:ring-pink-500 disabled:opacity-50"
-                                />
-                                <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.reg_notification_label', 'Receive email on new registrations')}</span>
-                            </label>
-                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_hint', 'Get notified whenever a new user registers on your instance.')}</p>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className={!settings.registration_notification?.enabled ? 'opacity-50' : ''}>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.reg_notification_email', 'Notification Email')}</label>
-                            <input
-                                type="email"
-                                value={settings.registration_notification?.email_target || ''}
-                                onChange={(e) => updateSetting('registration_notification', 'email_target', e.target.value)}
-                                disabled={!settings.registration_notification?.enabled || !isMailConfigured()}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:cursor-not-allowed"
-                                placeholder="admin@example.com"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.reg_notification_email_hint', 'The email address where registration notifications will be sent.')}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* CAPTCHA / BOT PROTECTION */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                    <Shield className="text-purple-500" />
-                    {t('admin.settings.captcha_title', 'CAPTCHA / Bot Protection')}
-                </h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_enabled', 'Enable CAPTCHA')}</label>
-                            <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.captcha?.enabled || false}
-                                    onChange={(e) => updateSetting('captcha', 'enabled', e.target.checked)}
-                                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
-                                />
-                                <span className="font-medium text-gray-700 dark:text-gray-300">{t('admin.settings.captcha_enabled_hint', 'Shows CAPTCHA on registration and after failed login attempts')}</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_provider', 'CAPTCHA Provider')}</label>
-                            <select
-                                value={settings.captcha?.provider || 'cloudflare'}
-                                onChange={(e) => updateSetting('captcha', 'provider', e.target.value)}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        {/* Save Button */}
+                        <div className="sticky bottom-6 flex justify-end">
+                            <button
+                                onClick={saveSettings}
+                                disabled={!unsavedChanges}
+                                className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold shadow-xl transition-all ${unsavedChanges ? 'bg-black text-white hover:scale-105' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                             >
-                                <option value="cloudflare">Cloudflare Turnstile</option>
-                                <option value="google">Google reCAPTCHA</option>
-                                <option value="hcaptcha">hCaptcha</option>
-                            </select>
+                                <Save size={20} /> {t('btn.save')} {unsavedChanges && '*'}
+                            </button>
                         </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_site_key', 'Site Key')}</label>
-                            <input
-                                type="text"
-                                value={settings.captcha?.site_key || ''}
-                                onChange={(e) => updateSetting('captcha', 'site_key', e.target.value)}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                placeholder="0x..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_secret_key', 'Secret Key')}</label>
-                            <input
-                                type="password"
-                                value={settings.captcha?.secret_key || ''}
-                                onChange={(e) => updateSetting('captcha', 'secret_key', e.target.value)}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                placeholder="0x..."
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_threshold', 'Attempts until CAPTCHA')}</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="20"
-                                value={settings.captcha?.failed_attempts_threshold || 5}
-                                onChange={(e) => updateSetting('captcha', 'failed_attempts_threshold', parseInt(e.target.value) || 5)}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.captcha_threshold_hint', 'Failed login attempts before CAPTCHA is required')}</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.captcha_lockout', 'Lockout Duration (Minutes)')}</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="60"
-                                value={settings.captcha?.lockout_minutes || 10}
-                                onChange={(e) => updateSetting('captcha', 'lockout_minutes', parseInt(e.target.value) || 10)}
-                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">{t('admin.settings.captcha_lockout_hint', 'Lockout duration when CAPTCHA is disabled')}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    </div >
+                )
+            }
 
-            {/* ASSET LINKS SETTINGS */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                    <Smartphone className="text-green-500" />
-                    App Integrity (TWA Asset Links)
-                </h2>
-                <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                        To hide the browser bar in the Android App (TWA), you must configure the Digital Asset Links JSON here.
-                        The build script outputs this JSON.
-                    </p>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Asset Links JSON</label>
-                        <textarea
-                            value={assetLinksText}
-                            onChange={(e) => {
-                                setAssetLinksText(e.target.value);
-                                setAssetLinksError(null);
-                            }}
-                            onBlur={() => {
-                                try {
-                                    const parsed = JSON.parse(assetLinksText);
-                                    if (!Array.isArray(parsed)) throw new Error("Must be a JSON Array");
-                                    setSettings(prev => ({ ...prev, assetlinks: parsed }));
-                                    setUnsavedChanges(true);
-                                    setAssetLinksText(JSON.stringify(parsed, null, 2)); // Reformat
-                                } catch (e) {
-                                    setAssetLinksError("Invalid JSON: " + e.message);
-                                }
-                            }}
-                            className={`w-full p-2 border rounded-lg h-48 text-sm font-mono ${assetLinksError ? 'border-red-500 bg-red-50' : ''}`}
-                            placeholder='[{"relation": ["delegate_permission/common.handle_all_urls"], ...}]'
-                        />
-                        {assetLinksError && <p className="text-xs text-red-500 font-bold mt-1">{assetLinksError}</p>}
-                    </div>
-                </div>
-            </div>
-
-            {/* Save Button */}
-            <div className="sticky bottom-6 flex justify-end">
-                <button
-                    onClick={saveSettings}
-                    disabled={!unsavedChanges}
-                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold shadow-xl transition-all ${unsavedChanges ? 'bg-black text-white hover:scale-105' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-                >
-                    <Save size={20} /> {t('btn.save')} {unsavedChanges && '*'}
-                </button>
-            </div>
-        </div >
-    )
-}
-
-{/* 4. DIAGNOSTICS TAB */ }
-{
-    activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
-        <div className="space-y-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-bold uppercase mb-2">System Status</div>
-                    <div className="flex items-center gap-2 text-green-600 font-bold">
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                        Operational
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-bold uppercase mb-2">Version</div>
-                    <div className="font-mono text-xl">{diagnostics.current_version}</div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-bold uppercase mb-2">Disk Usage</div>
-                    <div className="font-mono text-xl">{diagnostics.disk_percent}%</div>
-                    <div className="text-xs text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-bold uppercase mb-2">Database</div>
-                    <div className="flex items-center gap-2 text-green-600 font-bold">
-                        <Database size={16} /> Connected
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-                {/* Changelog */}
-                <div className="bg-white rounded-xl shadow p-6 max-h-[500px] overflow-y-auto">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><FileText className="text-blue-500" /> Changelog</h3>
+            {/* 4. DIAGNOSTICS TAB */}
+            {
+                activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
                     <div className="space-y-6">
-                        {changelog.map((rel, i) => (
-                            <div key={i} className="border-b pb-4 last:border-0">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-bold text-gray-800">{rel.name}</h4>
-                                    <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{rel.tag_name}</span>
-                                </div>
-                                <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
-                                    {rel.body}
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">System Status</div>
+                                <div className="flex items-center gap-2 text-green-600 font-bold">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                    Operational
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Updates */}
-                <div className="bg-white rounded-xl shadow p-6">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Zap className="text-yellow-500" /> Updates</h3>
-
-                    {diagnostics.update_available || diagnostics.beta_update_available ? (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                            <div className="font-bold text-blue-800 mb-2">New Version Available!</div>
-                            <div className="text-sm text-blue-600 mb-4">
-                                A new version of Solumati is available.
-                                {diagnostics.beta_update_available && <span className="block mt-1 font-bold">New Beta also available!</span>}
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">Version</div>
+                                <div className="font-mono text-xl">{diagnostics.current_version}</div>
                             </div>
-                            <div className="flex flex-col gap-2">
-                                <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
-                                    Download {diagnostics.latest_version}
-                                </a>
-                                {diagnostics.beta_update_available && (
-                                    <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-white border border-blue-300 text-blue-600 text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition">
-                                        Check Beta ({diagnostics.latest_beta_version})
-                                    </a>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">Disk Usage</div>
+                                <div className="font-mono text-xl">{diagnostics.disk_percent}%</div>
+                                <div className="text-xs text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="text-gray-500 text-sm font-bold uppercase mb-2">Database</div>
+                                <div className="flex items-center gap-2 text-green-600 font-bold">
+                                    <Database size={16} /> Connected
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Changelog */}
+                            <div className="bg-white rounded-xl shadow p-6 max-h-[500px] overflow-y-auto">
+                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><FileText className="text-blue-500" /> Changelog</h3>
+                                <div className="space-y-6">
+                                    {changelog.map((rel, i) => (
+                                        <div key={i} className="border-b pb-4 last:border-0">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-bold text-gray-800">{rel.name}</h4>
+                                                <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{rel.tag_name}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+                                                {rel.body}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Updates */}
+                            <div className="bg-white rounded-xl shadow p-6">
+                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Zap className="text-yellow-500" /> Updates</h3>
+
+                                {diagnostics.update_available || diagnostics.beta_update_available ? (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                        <div className="font-bold text-blue-800 mb-2">New Version Available!</div>
+                                        <div className="text-sm text-blue-600 mb-4">
+                                            A new version of Solumati is available.
+                                            {diagnostics.beta_update_available && <span className="block mt-1 font-bold">New Beta also available!</span>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+                                                Download {diagnostics.latest_version}
+                                            </a>
+                                            {diagnostics.beta_update_available && (
+                                                <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-white border border-blue-300 text-blue-600 text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition">
+                                                    Check Beta ({diagnostics.latest_beta_version})
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <CheckCircle className="mx-auto w-12 h-12 text-green-500 mb-2" />
+                                        <p>You are using the latest version.</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            <CheckCircle className="mx-auto w-12 h-12 text-green-500 mb-2" />
-                            <p>You are using the latest version.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{/* Modals */ }
-{
-    punishModal.show && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
-                    <Ban /> Punish User
-                </h3>
-                <div className="space-y-3 mb-6">
-                    <label className="block">
-                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Type</span>
-                        <select
-                            className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            value={punishReason}
-                            onChange={e => setPunishReason(e.target.value)}
-                        >
-                            <option value="AdminDeactivation">Permanent Deactivation</option>
-                            <option value="TempBan">Temporary Ban</option>
-                        </select>
-                    </label>
-
-                    {punishReason === 'TempBan' && (
-                        <label className="block">
-                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Duration (Hours)</span>
-                            <input
-                                type="number"
-                                className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={banHours}
-                                onChange={e => setBanHours(e.target.value)}
-                            />
-                        </label>
-                    )}
-
-                    <label className="block">
-                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Reason (Show to user)</span>
-                        <input
-                            type="text"
-                            className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="Violating Terms..."
-                            value={customReason}
-                            onChange={e => setCustomReason(e.target.value)}
-                        />
-                    </label>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                    <button
-                        onClick={() => {
-                            handleAction(punishModal.userId, 'deactivate');
-                            setPunishModal({ show: false, userId: null });
-                        }}
-                        className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700"
-                    >
-                        Execute
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{
-    createUserModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
-                <div className="space-y-3 mb-4">
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Username"
-                        value={createUserForm.username}
-                        onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
-                    />
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Email"
-                        value={createUserForm.email}
-                        onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
-                    />
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Password"
-                        type="password"
-                        value={createUserForm.password}
-                        onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
-                    />
-                    <select
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={createUserForm.role}
-                        onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
-                    >
-                        <option value="user">User</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="admin">Admin</option>
-                        <option value="test">{t('role.test', 'Test')}</option>
-                    </select>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                    <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-
-{/* 5. BACKUP & MIGRATION TAB */ }
-{
-    activeTab === 'backup' && isAdmin && (
-        <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
-            {/* Settings Backup Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                        <Settings size={28} />
                     </div>
-                    <div>
-                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
-                        <p className="text-sm text-gray-500">Export/Import configuration only.</p>
-                    </div>
-                </div>
+                )
+            }
 
-                <div className="flex-1 space-y-4">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
-                    </p>
+            {/* Modals */}
+            {
+                punishModal.show && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
+                                <Ban /> Punish User
+                            </h3>
+                            <div className="space-y-3 mb-6">
+                                <label className="block">
+                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Type</span>
+                                    <select
+                                        className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        value={punishReason}
+                                        onChange={e => setPunishReason(e.target.value)}
+                                    >
+                                        <option value="AdminDeactivation">Permanent Deactivation</option>
+                                        <option value="TempBan">Temporary Ban</option>
+                                    </select>
+                                </label>
 
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
-                        <Info className="shrink-0" size={16} />
-                        <span>This file contains sensitive API keys. Handle with care!</span>
-                    </div>
-                </div>
+                                {punishReason === 'TempBan' && (
+                                    <label className="block">
+                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Duration (Hours)</span>
+                                        <input
+                                            type="number"
+                                            className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            value={banHours}
+                                            onChange={e => setBanHours(e.target.value)}
+                                        />
+                                    </label>
+                                )}
 
-                <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
-                    <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
-                        <Download size={18} /> Export JSON
-                    </button>
-                    <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                        <Upload size={18} /> Import JSON
-                        <input type="file" accept=".json" onChange={importSettings} className="hidden" />
-                    </label>
-                </div>
-            </div>
-
-            {/* Full Database Backup Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-                        <Database size={28} />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
-                        <p className="text-sm text-gray-500">Transfer entire instance data.</p>
-                    </div>
-                </div>
-
-                <div className="flex-1 space-y-4">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
-                    </p>
-
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
-                        <AlertTriangle className="shrink-0" size={16} />
-                        <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
-                    </div>
-                </div>
-
-                <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
-                    <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
-                        <Download size={18} /> Export Full DB
-                    </button>
-                    <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                        <Upload size={18} /> Import DB
-                        <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
-                    </label>
-                </div>
-            </div>
-        </div>
-    )
-}
-{
-    editModal.show && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
-                <div className="space-y-3 mb-4">
-                    <label className="block text-sm font-bold dark:text-gray-300">Username</label>
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={editForm.username}
-                        onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                    />
-                    <label className="block text-sm font-bold dark:text-gray-300">Email</label>
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={editForm.email}
-                        onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                    />
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        type="password"
-                        value={editForm.password}
-                        onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                    />
-
-                    <label className="block text-sm font-bold dark:text-gray-300">Role</label>
-                    <select
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={editForm.role}
-                        onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                        disabled={[0, 1, 3].includes(editModal.user.id)}
-                    >
-                        <option value="user">User</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="admin">Admin</option>
-                        <option value="guest">Guest</option>
-                        <option value="test">{t('role.test', 'Test')}</option>
-                    </select>
-                    {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                    <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
-                        <input
-                            type="checkbox"
-                            checked={editForm.is_visible_in_matches}
-                            onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                            disabled={[0, 1, 3].includes(editModal.user.id)}
-                        />
-                        Is Visible in Matches
-                    </label>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                    <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{/* Roles Info Modal */ }
-{
-    rolesModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
-                    <Info size={20} className="text-blue-600" /> System Roles
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
-
-                <div className="space-y-4">
-                    {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
-                        <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
-                            <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
-                                    {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
-                                    {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
-                                    {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
-                                    {role.name}
-                                </h4>
-                                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+                                <label className="block">
+                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Reason (Show to user)</span>
+                                    <input
+                                        type="text"
+                                        className="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="Violating Terms..."
+                                        value={customReason}
+                                        onChange={e => setCustomReason(e.target.value)}
+                                    />
+                                </label>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
-                            <div className="flex flex-wrap gap-1">
-                                {role.permissions && role.permissions.map(p => (
-                                    <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                                        {p}
-                                    </span>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                <button
+                                    onClick={() => {
+                                        handleAction(punishModal.userId, 'deactivate');
+                                        setPunishModal({ show: false, userId: null });
+                                    }}
+                                    className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700"
+                                >
+                                    Execute
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                createUserModal && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
+                            <div className="space-y-3 mb-4">
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Username"
+                                    value={createUserForm.username}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Email"
+                                    value={createUserForm.email}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Password"
+                                    type="password"
+                                    value={createUserForm.password}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                                />
+                                <select
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={createUserForm.role}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="test">{t('role.test', 'Test')}</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                                <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+
+            {/* 5. BACKUP & MIGRATION TAB */}
+            {
+                activeTab === 'backup' && isAdmin && (
+                    <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
+                        {/* Settings Backup Card */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                                    <Settings size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
+                                    <p className="text-sm text-gray-500">Export/Import configuration only.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-4">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
+                                </p>
+
+                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
+                                    <Info className="shrink-0" size={16} />
+                                    <span>This file contains sensitive API keys. Handle with care!</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                                <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                                    <Download size={18} /> Export JSON
+                                </button>
+                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                                    <Upload size={18} /> Import JSON
+                                    <input type="file" accept=".json" onChange={importSettings} className="hidden" />
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Full Database Backup Card */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                                    <Database size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
+                                    <p className="text-sm text-gray-500">Transfer entire instance data.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-4">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
+                                </p>
+
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
+                                    <AlertTriangle className="shrink-0" size={16} />
+                                    <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                                <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                                    <Download size={18} /> Export Full DB
+                                </button>
+                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                                    <Upload size={18} /> Import DB
+                                    <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {
+                editModal.show && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
+                            <div className="space-y-3 mb-4">
+                                <label className="block text-sm font-bold dark:text-gray-300">Username</label>
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.username}
+                                    onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                                />
+                                <label className="block text-sm font-bold dark:text-gray-300">Email</label>
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.email}
+                                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    type="password"
+                                    value={editForm.password}
+                                    onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                                />
+
+                                <label className="block text-sm font-bold dark:text-gray-300">Role</label>
+                                <select
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.role}
+                                    onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                                    disabled={[0, 1, 3].includes(editModal.user.id)}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="guest">Guest</option>
+                                    <option value="test">{t('role.test', 'Test')}</option>
+                                </select>
+                                {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
+                                <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+                                    <input
+                                        type="checkbox"
+                                        checked={editForm.is_visible_in_matches}
+                                        onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                                        disabled={[0, 1, 3].includes(editModal.user.id)}
+                                    />
+                                    Is Visible in Matches
+                                </label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                                <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Roles Info Modal */}
+            {
+                rolesModalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
+                                <Info size={20} className="text-blue-600" /> System Roles
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
+
+                            <div className="space-y-4">
+                                {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
+                                    <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
+                                                {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
+                                                {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
+                                                {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
+                                                {role.name}
+                                            </h4>
+                                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {role.permissions && role.permissions.map(p => (
+                                                <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                                    {p}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
-                        </div>
-                    ))}
-                </div>
 
-                <div className="flex justify-end mt-6">
-                    <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
-                </div>
-            </div>
-        </div>
-    )
-}
+                            <div className="flex justify-end mt-6">
+                                <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
         </div >
     );
 };
