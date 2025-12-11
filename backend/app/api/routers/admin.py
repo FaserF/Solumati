@@ -151,6 +151,7 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
     reg_notify_conf = get_setting(db, "registration_notification", schemas.RegistrationNotificationConfig().dict())
     captcha_conf = get_setting(db, "captcha", schemas.CaptchaConfig().dict())
     maintenance_mode = get_setting(db, "maintenance_mode", False)
+    update_channel = get_setting(db, "update_channel", "stable")
 
     assetlinks = get_setting(db, "assetlinks", [])
     if not isinstance(assetlinks, list):
@@ -176,7 +177,8 @@ def get_admin_settings(db: Session = Depends(get_db), current_admin: models.User
         "registration_notification": reg_notify_conf,
         "captcha": captcha_conf,
         "assetlinks": assetlinks,
-        "maintenance_mode": maintenance_mode
+        "maintenance_mode": maintenance_mode,
+        "update_channel": update_channel
     }
 
 @router.put("/settings")
@@ -190,6 +192,7 @@ def update_admin_settings(settings: schemas.SystemSettings, db: Session = Depend
     save_setting(db, "registration_notification", settings.registration_notification.dict())
     save_setting(db, "assetlinks", settings.assetlinks)
     save_setting(db, "maintenance_mode", settings.maintenance_mode)
+    save_setting(db, "update_channel", settings.update_channel)
 
     # Save OAuth (Handle Secrets)
     current_oauth = get_setting(db, "oauth", schemas.OAuthConfig().dict())
@@ -233,17 +236,15 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
     total, used, free = shutil.disk_usage(".")
 
     # Fetch Releases
-    latest_stable = "Unknown"
-    latest_beta = "Unknown"
+    latest_version_in_channel = "Unknown"
     update_available = False
-    beta_update_available = False
 
     current_ver_str = CURRENT_VERSION.lstrip('v')
-    is_current_beta = "beta" in current_ver_str or "-" in current_ver_str
+    update_channel = get_setting(db, "update_channel", "stable") # User preference
 
     try:
-        # Fetch list of releases (not just latest stable)
-        url = "https://api.github.com/repos/FaserF/Solumati/releases?per_page=10"
+        # Fetch list of releases
+        url = "https://api.github.com/repos/FaserF/Solumati/releases?per_page=20"
         req = urllib.request.Request(url, headers={'User-Agent': 'Solumati-Backend'})
         with urllib.request.urlopen(req) as response:
             if response.status == 200:
@@ -260,76 +261,80 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
                         is_beta = True
                         if 'beta' in parts[1]:
                             beta_num = int(parts[1].split('.')[-1])
-
-                    # Return tuple for comparison: (Year, Month, Patch, IsStable(0=beta, 1=stable), BetaNum)
-                    # We want Stable > Beta for same base.
                     return (base[0], base[1], base[2], 0 if is_beta else 1, beta_num)
 
                 current_tuple = parse_ver(current_ver_str)
-
-                # Find latest
-                found_stable = None
-                found_beta = None
+                found_ver_tuple = None
+                found_tag = None
 
                 for rel in data:
                     tag = rel.get('tag_name', 'v0.0.0')
+                    is_prerelease = rel.get('prerelease', False)
                     t_ver = parse_ver(tag)
 
-                    if rel.get('prerelease'):
-                        if not found_beta or t_ver > found_beta[1]: # Compare tuples
-                            found_beta = (tag, t_ver)
-                    else:
-                        if not found_stable or t_ver > found_stable[1]:
-                            found_stable = (tag, t_ver)
+                    # Filter based on Channel
+                    # If channel is 'stable', ignore prereleases
+                    if update_channel == 'stable' and is_prerelease:
+                        continue
 
-                # Logic:
-                # 1. Update Stable
-                if found_stable:
-                    latest_stable = found_stable[0]
-                    # If found stable > current
-                    if found_stable[1] > current_tuple:
+                    # If channel is 'beta', we accept prereleases (and stable ones)
+                    # If channel is 'alpha', everything goes (logic mainly same as beta here effectively)
+
+                    # Logic: Find the highest version number that fits the channel
+                    if not found_ver_tuple or t_ver > found_ver_tuple:
+                        found_ver_tuple = t_ver
+                        found_tag = tag
+
+                if found_tag:
+                    latest_version_in_channel = found_tag
+                    if found_ver_tuple > current_tuple:
                         update_available = True
-
-                # 2. Update Beta
-                if found_beta:
-                    latest_beta = found_beta[0]
-                    # If found beta > current
-                    if found_beta[1] > current_tuple:
-                        if is_current_beta:
-                            # If we are on beta, we treat newer beta as main update
-                            # UNLESS there is a stable that is even newer?
-                            # Usually if a stable exists > current beta, we prefer stable.
-                            if update_available:
-                                # Stable is available and newer than current.
-                                # Check if beta is even newer than that stable?
-                                if found_beta[1] > found_stable[1]:
-                                    beta_update_available = True
-                                else:
-                                    pass # Stable is the way to go
-                            else:
-                                update_available = True # Show beta as main update
-                                latest_stable = latest_beta # Hack: Display beta as "Latest Version" in frontend
-                        else:
-                            # Current is Stable.
-                            # Beta is available.
-                            if found_beta[1] > found_stable[1] if found_stable else True:
-                                beta_update_available = True
 
     except Exception as e:
         logger.warning(f"Diagnostics: Could not fetch releases: {e}")
 
     return {
         "current_version": CURRENT_VERSION,
-        "latest_version": latest_stable, # Should contain the recommended update
-        "latest_beta_version": latest_beta, # Extra field (need to add to schema?)
+        "latest_version": latest_version_in_channel,
+        "latest_beta_version": latest_version_in_channel if update_channel != 'stable' else None, # Legacy field support
         "update_available": update_available,
-        "beta_update_available": beta_update_available, # Extra field
+        "beta_update_available": False, # Legacy field
         "internet_connected": True,
         "disk_total_gb": round(total / (2**30), 2),
         "disk_free_gb": round(free / (2**30), 2),
         "disk_percent": round((used / total) * 100, 1),
         "database_connected": True,
         "api_reachable": True
+    }
+
+@router.post("/update/trigger")
+def trigger_update(version: str, db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+    """
+    Triggers the update process.
+    Since we cannot reliably self-update in all environments, we:
+    1. Save the target version to a file 'UPDATE_REQUEST'
+    2. Save it to DB settings
+    3. Return instruction
+    """
+    if not version:
+        raise HTTPException(400, "Version required")
+
+    # 1. Save to DB
+    save_setting(db, "target_version", version)
+
+    # 2. Touch File (for external watchers like run.sh or watchtower logic)
+    try:
+        with open("UPDATE_REQUEST", "w") as f:
+            f.write(version)
+    except Exception as e:
+        logger.warning(f"Could not write UPDATE_REQUEST file: {e}")
+
+    logger.info(f"Admin {current_admin.username} triggered update to {version}")
+
+    return {
+        "status": "pending",
+        "message": f"Update to {version} requested. Container restart may be required.",
+        "target_version": version
     }
 
 @router.get("/changelog", response_model=List[schemas.ChangelogRelease])

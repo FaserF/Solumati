@@ -231,6 +231,7 @@ class SystemSettings(BaseModel):
     captcha: CaptchaConfig = CaptchaConfig()
     assetlinks: List[Dict[str, Any]] = []
     maintenance_mode: bool = False
+    update_channel: str = "stable" # stable, beta, alpha
 
 class SystemDiagnostics(BaseModel):
     current_version: str
