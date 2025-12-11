@@ -71,19 +71,28 @@ class ProgressFilter(logging.Filter):
 
 
 def configure_logging():
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG if TEST_MODE else logging.INFO)
+    # Determine Log Level from Env (Default: INFO)
+    log_level_str = os.getenv('LOG_LEVEL', 'INFO').upper()
+    valid_levels = {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}
+    if log_level_str not in valid_levels:
+        log_level_str = 'INFO'
 
-    # Console handler: always show everything
+    level = getattr(logging, log_level_str)
+
+    # Root Logger
+    logger = logging.getLogger()
+    logger.setLevel(level)
+
+    # Console handler: always show everything allowed by level
     ch = StreamHandler()
-    ch.setLevel(logging.DEBUG if TEST_MODE else logging.INFO)
+    ch.setLevel(level)
     ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     ch.setFormatter(ch_formatter)
     logger.addHandler(ch)
 
     # File handler: filter progress bar lines
     fh = FileHandler(LOG_FILE, encoding='utf-8')
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(level)
     fh.addFilter(ProgressFilter())
     fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     fh.setFormatter(fh_formatter)

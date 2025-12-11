@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
 import ChatWindow from '../social/ChatWindow';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone, Upload, Download, HardDrive } from 'lucide-react';
 import { API_URL, APP_VERSION, APP_RELEASE_TYPE } from '../../config';
 
 const AdminPanel = () => {
@@ -144,10 +144,93 @@ const AdminPanel = () => {
             const diagRes = await fetch(`${API_URL}/admin/diagnostics`, { headers: authHeaders });
             if (diagRes.ok) setDiagnostics(await diagRes.json());
 
-            const changeRes = await fetch(`${API_URL}/admin/changelog`, { headers: authHeaders });
             if (changeRes.ok) setChangelog(await changeRes.json());
         } catch { setError("Diagnostics failed."); }
         setLoading(false);
+    };
+
+    // Backup & Migration Handlers
+    const exportSettings = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/backup/settings/export`, { headers: authHeaders });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `solumati_settings_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else { alert("Export failed."); }
+        } catch { alert("Network Error"); }
+    };
+
+    const importSettings = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch(`${API_URL}/admin/backup/settings/import`, {
+                method: "POST",
+                headers: { 'X-User-ID': user.user_id.toString() }, // No Content-Type for FormData
+                body: formData
+            });
+
+            if (res.ok) {
+                alert("Settings Imported Successfully!");
+                if (activeTab === 'settings') fetchSettings();
+            } else {
+                const err = await res.json();
+                alert("Import Failed: " + (err.detail || "Unknown error"));
+            }
+        } catch { alert("Network Error"); }
+    };
+
+    const exportDatabase = async () => {
+        if (!confirm("Exporting the full database might take a moment. Continue?")) return;
+        try {
+            const res = await fetch(`${API_URL}/admin/backup/database/export`, { headers: authHeaders });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `solumati_full_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else { alert("Export failed."); }
+        } catch { alert("Network Error"); }
+    };
+
+    const importDatabase = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!confirm("WARNING: Importing a database backup will OVERWRITE/MERGE existing data. This is a destructive action intended for migration. Are you absolutely sure?")) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch(`${API_URL}/admin/backup/database/import`, {
+                method: "POST",
+                headers: { 'X-User-ID': user.user_id.toString() },
+                body: formData
+            });
+
+            if (res.ok) {
+                alert("Database Restored Successfully! The page will now reload.");
+                window.location.reload();
+            } else {
+                const err = await res.json();
+                alert("Restore Failed: " + (err.detail || "Unknown error"));
+            }
+        } catch { alert("Network Error"); }
     };
 
     const fetchConversations = async () => {
@@ -469,6 +552,11 @@ const AdminPanel = () => {
                 {canViewDiagnostics && (
                     <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <Activity size={18} /> {t('admin.tab.diagnostics')}
+                    </button>
+                )}
+                {isAdmin && (
+                    <button onClick={() => setActiveTab('backup')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'backup' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+                        <HardDrive size={18} /> Backup & Migration
                     </button>
                 )}
             </div>
@@ -1399,61 +1487,136 @@ const AdminPanel = () => {
                     </div>
                 </div>
             )}
+            )
+            }
 
-            {editModal.show && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                        <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
-                        <div className="space-y-3 mb-4">
-                            <label className="block text-sm font-bold dark:text-gray-300">Username</label>
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={editForm.username}
-                                onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                            />
-                            <label className="block text-sm font-bold dark:text-gray-300">Email</label>
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={editForm.email}
-                                onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                            />
-                            <input
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                type="password"
-                                value={editForm.password}
-                                onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                            />
+            {/* 5. BACKUP & MIGRATION TAB */}
+            {
+                activeTab === 'backup' && isAdmin && (
+                    <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
+                        {/* Settings Backup Card */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                                    <Settings size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
+                                    <p className="text-sm text-gray-500">Export/Import configuration only.</p>
+                                </div>
+                            </div>
 
-                            <label className="block text-sm font-bold dark:text-gray-300">Role</label>
-                            <select
-                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                value={editForm.role}
-                                onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                                disabled={[0, 1, 3].includes(editModal.user.id)}
-                            >
-                                <option value="user">User</option>
-                                <option value="moderator">Moderator</option>
-                                <option value="admin">Admin</option>
-                                <option value="guest">Guest</option>
-                                <option value="test">{t('role.test', 'Test')}</option>
-                            </select>
-                            {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                            <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
-                                <input
-                                    type="checkbox"
-                                    checked={editForm.is_visible_in_matches}
-                                    onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                                    disabled={[0, 1, 3].includes(editModal.user.id)}
-                                />
-                                Is Visible in Matches
-                            </label>
+                            <div className="flex-1 space-y-4">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
+                                </p>
+
+                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
+                                    <Info className="shrink-0" size={16} />
+                                    <span>This file contains sensitive API keys. Handle with care!</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                                <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                                    <Download size={18} /> Export JSON
+                                </button>
+                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                                    <Upload size={18} /> Import JSON
+                                    <input type="file" accept=".json" onChange={importSettings} className="hidden" />
+                                </label>
+                            </div>
                         </div>
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                            <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+
+                        {/* Full Database Backup Card */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                                    <Database size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
+                                    <p className="text-sm text-gray-500">Transfer entire instance data.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-4">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
+                                </p>
+
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
+                                    <AlertTriangle className="shrink-0" size={16} />
+                                    <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                                <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                                    <Download size={18} /> Export Full DB
+                                </button>
+                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                                    <Upload size={18} /> Import DB
+                                    <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
+                                </label>
+                            </div>
                         </div>
                     </div>
+                )
+            }
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                    <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
+                    <div className="space-y-3 mb-4">
+                        <label className="block text-sm font-bold dark:text-gray-300">Username</label>
+                        <input
+                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            value={editForm.username}
+                            onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                        />
+                        <label className="block text-sm font-bold dark:text-gray-300">Email</label>
+                        <input
+                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            value={editForm.email}
+                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                        />
+                        <input
+                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            type="password"
+                            value={editForm.password}
+                            onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                        />
+
+                        <label className="block text-sm font-bold dark:text-gray-300">Role</label>
+                        <select
+                            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            value={editForm.role}
+                            onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                            disabled={[0, 1, 3].includes(editModal.user.id)}
+                        >
+                            <option value="user">User</option>
+                            <option value="moderator">Moderator</option>
+                            <option value="admin">Admin</option>
+                            <option value="guest">Guest</option>
+                            <option value="test">{t('role.test', 'Test')}</option>
+                        </select>
+                        {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
+                        <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+                            <input
+                                type="checkbox"
+                                checked={editForm.is_visible_in_matches}
+                                onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                                disabled={[0, 1, 3].includes(editModal.user.id)}
+                            />
+                            Is Visible in Matches
+                        </label>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                        <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                    </div>
                 </div>
+            </div>
             )}
 
             {/* Roles Info Modal */}

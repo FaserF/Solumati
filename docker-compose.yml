@@ -37,6 +37,7 @@ services:
       - DATABASE_URL=postgresql://solumati:secure_dev_password@db:5432/solumatidb
       - TEST_MODE=true
       - ADMIN_SECRET=SuperSecretAdminPassword! # Change this value as needed
+      - LOG_LEVEL=DEBUG  # Control log verbosity (DEBUG, INFO, WARNING, ERROR)
       - LANG            # forward host language env (if set) for automatic locale detection
     depends_on:
       - db

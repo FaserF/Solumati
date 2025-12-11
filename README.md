@@ -135,6 +135,13 @@ If you do not provide these secrets, the workflow will automatically generate a 
 #### Testing
 *   **Test Mode:** Set `TEST_MODE=true` in backend environment variables to enable debug features.
 
+#### Logging & Secrets
+*   **Log Level:** You can configure the logging verbosity by setting the `LOG_LEVEL` environment variable (e.g., in `docker-compose.yml`).
+    *   **Allowed Values:** `DEBUG`, `INFO` (Default), `WARNING`, `ERROR`, `CRITICAL`.
+*   **Password Visibility:**
+    *   Critical secrets, such as the **Initial Admin Password** and **Emergency Reset Tokens**, are **always printed** to the standard output (terminal/Docker logs) for visibility, regardless of the configured `LOG_LEVEL`.
+    *   This ensures that you can always retrieve access credentials during initial setup or emergency recovery, even if logging is set to `ERROR`.
+
 ### 🧪 Manual CI Test Execution
 
 To ensure your code meets the quality standards before pushing, you can run the Continuous Integration (CI) checks manually on your local machine.
