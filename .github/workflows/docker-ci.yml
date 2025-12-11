@@ -1,0 +1,80 @@
+name: Docker Integration Test
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-ci.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-ci.yml'
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-startup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Dummy Configs
+        run: |
+          echo "DUMMY_SECRET" > backend/secret.key
+          touch frontend/package.json
+          echo "{ \"version\": \"0.0.0\" }" > frontend/package.json
+
+      - name: Build and Start Containers
+        run: |
+          docker compose up -d --build backend db
+
+      - name: Wait for Backend Health
+        run: |
+          # Poll the backend for up to 30 seconds
+          echo "Waiting for backend to start..."
+          for i in {1..10}; do
+            if curl -s http://localhost:7777/health > /dev/null; then
+              echo "Backend is up!"
+              exit 0
+            elif curl -s http://localhost:7777/ > /dev/null; then
+               echo "Backend root reachable!"
+               exit 0
+            fi
+            echo "Waiting... ($i/10)"
+            sleep 3
+          done
+
+          echo "Backend failed to start within timeout."
+          docker compose logs backend
+          exit 1
+
+      - name: Verify No Crash (Restart Check)
+        run: |
+          # Check if container is still running and hasn't restarted
+          STATUS=$(docker inspect --format '{{.State.Status}}' solumati_backend)
+          RESTARTS=$(docker inspect --format '{{.RestartCount}}' solumati_backend)
+
+          echo "Backend Status: $STATUS"
+          echo "Restart Count: $RESTARTS"
+
+          if [ "$STATUS" != "running" ]; then
+            echo "Backend is not running!"
+            docker compose logs backend
+            exit 1
+          fi
+
+          if [ "$RESTARTS" -gt 1 ]; then
+             echo "Backend restarted $RESTARTS times! Instability detected."
+             docker compose logs backend
+             exit 1
+          fi
+
+      - name: Teardown
+        if: always()
+        run: docker compose down

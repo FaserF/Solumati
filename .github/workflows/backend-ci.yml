@@ -39,3 +39,12 @@ jobs:
     - name: Verify i18n Sync
       run: |
         python backend/tests/check_i18n.py
+    - name: Startup Smoke Test
+      env:
+        DATABASE_URL: "sqlite:///:memory:"
+        TEST_MODE: "true"
+        ADMIN_SECRET: "dummy"
+      run: |
+        # Attempt to import the main app module to verify no syntax/import errors
+        cd backend
+        python -c "from app.main import app; print('App imported successfully')"
