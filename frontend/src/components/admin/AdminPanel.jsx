@@ -11,7 +11,20 @@ const AdminPanel = () => {
     const { user } = useAuth();
     const { globalConfig, maintenanceMode } = useConfig();
     const { t } = useI18n();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+
+    // Derived State
+    const isAdmin = user?.role === 'admin';
+    const isModerator = user?.role === 'admin' || user?.role === 'moderator';
+    const testMode = globalConfig?.test_mode || false;
+
+    // Permissions
+    const canManageUsers = isModerator; // Admins + Mods
+    const canViewReports = isModerator; // Admins + Mods
+    const canManageSettings = isAdmin; // Only Admins
+    const canViewDiagnostics = isAdmin; // Only Admins
+
     const activeTab = searchParams.get('tab') || (isModerator ? 'reports' : 'users');
     const setActiveTab = (tab) => setSearchParams({ tab });
     const [users, setUsers] = useState([]);
@@ -135,6 +148,7 @@ const AdminPanel = () => {
             const diagRes = await fetch(`${API_URL}/admin/diagnostics`, { headers: authHeaders });
             if (diagRes.ok) setDiagnostics(await diagRes.json());
 
+            const changeRes = await fetch(`${API_URL}/public/changelog`);
             if (changeRes.ok) setChangelog(await changeRes.json());
         } catch { setError("Diagnostics failed."); }
         setLoading(false);
