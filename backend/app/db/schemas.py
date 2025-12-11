@@ -107,27 +107,7 @@ class AdminPunishAction(BaseModel):
     custom_reason: Optional[str] = None
     duration_hours: Optional[int] = None
 
-class ReportCreate(BaseModel):
-    reported_user_id: int
-    reason: str
-    reported_message_id: Optional[int] = None
 
-class ReportDisplay(BaseModel):
-    id: int
-    reporter_id: int
-    reported_user_id: int
-    reported_message_id: Optional[int]
-    reason: str
-    timestamp: datetime
-    company_name: str = ""
-    address_street: str = ""
-    address_zip_city: str = ""
-    contact_email: str = ""
-    contact_phone: str = ""
-    ceo_name: str = ""
-    register_court: str = ""
-    register_number: str = ""
-    vat_id: str = ""
 
 class MailConfig(BaseModel):
     enabled: bool = False

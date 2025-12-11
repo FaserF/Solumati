@@ -53,7 +53,9 @@ export const AuthProvider = ({ children }) => {
 
     // Initial Session Restore & Background Sync
     useEffect(() => {
-        const storedToken = localStorage.getItem('token');
+        let storedToken = localStorage.getItem('token');
+        if (storedToken === 'undefined' || storedToken === 'null') storedToken = null;
+
         if (storedToken) {
             console.log("[Auth] Syncing session from server...");
             fetch(`${API_URL}/users/${storedToken}`, {

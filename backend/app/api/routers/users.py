@@ -108,18 +108,11 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
     if user_id != 0:
         from app.services.utils import is_profile_complete
         # We need the user object, which we fetched as 'u'
-        if not is_profile_complete(u):
-             # User requested specific message: "Vor 'Deine Matches'... stehen dass man erst das Profil vervollständigen muss."
-             # We can't change the UI text from here directly if it expects a list.
-             # We return an empty list? Or error?
-             # If we raise 403, frontend might show generic error.
-             # Ideally we return a special status or empty list?
-             # Let's return empty list for now, but maybe the frontend checks a flag?
-             # The user asked for a TEXT change. That implies frontend work.
-             # But we can ENFORCE it here.
-             # If I raise HTTPException(400, "Profile Incomplete"), user sees error.
-             # Let's try 403.
-             raise HTTPException(403, "Profile Incomplete. Please finish setting up your account.")
+        # Admins/Mods are exempt from profile completion check
+        if u.role not in ['admin', 'moderator']:
+            if not is_profile_complete(u):
+                 # User requested specific message: "Vor 'Deine Matches'... stehen dass man erst das Profil vervollständigen muss."
+                 raise HTTPException(403, "Profile Incomplete. Please finish setting up your account.")
 
     # Prepare Query
     query = db.query(models.User).filter(
