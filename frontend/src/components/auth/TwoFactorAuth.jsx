@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 
 const TwoFactorAuth = () => {
-    const { tempAuth, finalizeLogin, logout } = useAuth();
+    const { tempAuth, finalizeLogin, logout, user } = useAuth(); // Extract user to check status
     const { t } = useI18n();
     const navigate = useNavigate();
 
@@ -19,19 +19,14 @@ const TwoFactorAuth = () => {
     const [error, setError] = useState(null);
 
     // 2. Handle missing auth (redirect)
-    // 2. Handle missing auth (redirect)
     useEffect(() => {
-        if (!tempAuth) {
+        //If we are already logged in (user exists), don't redirect to login even if tempAuth is null
+        if (!tempAuth && !user) {
             navigate('/login');
-        } else if (tempAuth.available_methods && tempAuth.available_methods.length > 1) {
-            // Only switch if not already matched (prevent loop/re-render if view is already set)
-            // We can use a ref or check current view, but view is a dependency? No.
-            // We can't check 'view' here easily without adding it to deps which causes loop.
-            // Best to do this check ONCE.
-            // Or use a functional update with check.
+        } else if (tempAuth && tempAuth.available_methods && tempAuth.available_methods.length > 1) {
             setView(v => v === 'verify' ? 'select_method' : v);
         }
-    }, [tempAuth, navigate]);
+    }, [tempAuth, user, navigate]);
 
 
 
@@ -56,7 +51,7 @@ const TwoFactorAuth = () => {
                 body: JSON.stringify({ user_id: tempAuth.user_id })
             });
             const data = await resp.json();
-            const asseResp = await startAuthentication(data.options);
+            const asseResp = await startAuthentication({ optionsJSON: data.options });
             const verifyResp = await fetch(`${API_URL}/auth/2fa/webauthn/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

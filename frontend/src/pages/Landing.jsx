@@ -152,6 +152,7 @@ const Landing = () => {
 
             <div className="z-10 w-full p-6 flex justify-between items-end text-gray-500 text-xs md:text-sm">
                 <div className="flex gap-4">
+                    {/* GitHub Link - Always Visible or move to Support Page? Leaving for now as it's separate requirement */}
                     <a
                         href="https://github.com/FaserF/Solumati"
                         target="_blank"
@@ -161,9 +162,20 @@ const Landing = () => {
                         <Github size={20} className="group-hover:text-white" />
                         <span className="hidden md:inline">{t('landing.opensource')}</span>
                     </a>
-                    <button onClick={onLegal} className="hover:text-white transition flex items-center gap-1">
-                        <Scale size={16} /> {t('landing.legal')}
-                    </button>
+
+                    {/* Support Link */}
+                    {globalConfig?.support_page?.enabled !== false && (
+                        <button onClick={() => navigate('/support')} className="hover:text-white transition flex items-center gap-1">
+                            <Monitor size={16} /> {t('landing.support', 'Support')}
+                        </button>
+                    )}
+
+                    {/* Legal Link */}
+                    {(globalConfig?.legal?.enabled_imprint !== false || globalConfig?.legal?.enabled_privacy !== false) && (
+                        <button onClick={onLegal} className="hover:text-white transition flex items-center gap-1">
+                            <Scale size={16} /> {t('landing.legal')}
+                        </button>
+                    )}
                 </div>
 
                 {/* Release Status Badge (Beta / Nightly) */}

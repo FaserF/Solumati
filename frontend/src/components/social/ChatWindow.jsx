@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './ChatWindow.css';
 
+import { API_URL } from '../../config';
+
 const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabled = false, t }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
@@ -9,7 +11,6 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     const messagesEndRef = useRef(null);
     const reconnectTimeout = useRef(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
     const WS_URL = API_URL.replace("http", "ws");
 
     const scrollToBottom = () => {

@@ -322,6 +322,10 @@ def setup_email_2fa(user: models.User = Depends(get_current_user_from_header), d
     if not reg_config.email_2fa_enabled:
         raise HTTPException(403, "Email 2FA is currently disabled by administrator.")
 
+    # Block for local dummy/test domain
+    if user.email.endswith("@solumati.local"):
+        raise HTTPException(403, "Email 2FA cannot be enabled for solumati.local accounts.")
+
     user.two_factor_method = 'email'
     db.commit()
     return {"status": "enabled"}

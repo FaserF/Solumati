@@ -44,13 +44,32 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
 
     # Determine host URL with fallback chain
     host_url = server_domain if server_domain else None
-    if not host_url and db:
+    support_url = None
+    contact_email = None
+    support_enabled = False
+
+    if db:
         try:
             reg_config = get_setting(db, "registration", {})
-            host_url = reg_config.get("server_domain", "")
-            if host_url and host_url.endswith("/"): host_url = host_url[:-1]
-        except:
-            pass
+            if not host_url:
+                host_url = reg_config.get("server_domain", "")
+                if host_url and host_url.endswith("/"): host_url = host_url[:-1]
+
+            # Fetch Support & Legal Config
+            support_conf = get_setting(db, "support_page", schemas.SupportPageConfig().dict())
+            if isinstance(support_conf, dict):
+                 support_enabled = support_conf.get("enabled", True)
+
+            legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
+            if isinstance(legal_conf, dict):
+                contact_email = legal_conf.get("contact_email", "")
+
+            if host_url and support_enabled:
+                support_url = f"{host_url}/support"
+
+        except Exception as e:
+            logger.warn(f"Failed to fetch settings for email build: {e}")
+
     if not host_url:
         host_url = "http://solumati.local"
 
@@ -67,6 +86,13 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
         <circle cx="50" cy="50" r="45" fill="url(#grad1)"/>
         <text x="50" y="65" font-size="40" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif">S</text>
     </svg>'''
+
+    # Build Support Link HTML for Footer
+    footer_support_link = ""
+    if support_url:
+        footer_support_link = f' • <a href="{support_url}">Support</a>'
+    elif contact_email:
+        footer_support_link = f' • <a href="mailto:{contact_email}">Support</a>'
 
     html = f"""
     <!DOCTYPE html>
@@ -151,7 +177,8 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
                 <div class="footer">
                     <p>Sent via Solumati System</p>
                     <p>
-                        <a href="{host_url}">Open Solumati</a> •
+                        <a href="{host_url}">Open Solumati</a>
+                        {footer_support_link} •
                         <a href="{github_url}">GitHub Repository</a>
                     </p>
                     <p style="margin-top: 10px; color: #d1d5db;">&copy; {datetime.now().year} Solumati Project</p>
@@ -198,6 +225,25 @@ def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
         logger.error(f"Failed to send email: {e}")
 
 # --- Core Logic Helpers ---
+
+# Helper to get dynamic support phrase
+def get_support_contact_html(db: Session, server_domain: str = "") -> str:
+    support_phrase = "please contact support immediately"
+    try:
+        support_conf = get_setting(db, "support_page", schemas.SupportPageConfig().dict())
+        legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
+
+        support_enabled = isinstance(support_conf, dict) and support_conf.get("enabled", True)
+        contact_email = legal_conf.get("contact_email", "") if isinstance(legal_conf, dict) else ""
+
+        if support_enabled and server_domain:
+            return f'<a href="{server_domain}/support">contact support</a> immediately'
+        elif contact_email:
+            return f'<a href="mailto:{contact_email}">contact support</a> immediately'
+    except:
+        pass
+    return support_phrase
+
 def generate_unique_username(db: Session, real_name: str) -> str:
     base = real_name.strip() if real_name else "User"
     count = db.query(models.User).filter(models.User.real_name == base).count()
@@ -288,8 +334,13 @@ def send_login_notification(email: str, ip: str, user_agent: str, user=None):
         if user:
             prefs = get_user_email_preferences(user)
             if not prefs.get('login_alerts', True):
-                logger.info(f"Login notification skipped for {email} - disabled by user preference")
+                # logger.info(f"Login notification skipped for {email} - disabled by user preference")
                 return
+
+        # Determine Support String
+        reg_config = get_setting(db, "registration", {})
+        server_domain = reg_config.get("server_domain", "")
+        support_link_html = get_support_contact_html(db, server_domain)
 
         title = "New Login Detected"
         content = f"""
@@ -297,9 +348,9 @@ def send_login_notification(email: str, ip: str, user_agent: str, user=None):
         <b>IP Address:</b> {ip}<br>
         <b>Device:</b> {user_agent}<br>
         <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
-        If this was you, you can ignore this email. If you did not authorize this login, please contact support immediately.
+        If this was you, you can ignore this email. If you did not authorize this login, {support_link_html}.
         """
-        html = create_html_email(title, content, server_domain="", db=db)
+        html = create_html_email(title, content, server_domain=server_domain, db=db)
         send_mail_sync(email, title, html, db)
     except Exception as e:
         logger.error(f"Error in send_login_notification: {e}")
@@ -409,16 +460,19 @@ def send_password_changed_notification(user, db_session=None):
         if not prefs.get('security_alerts', True):
             return
 
+        # Determine Support String
+        reg_config = get_setting(db, "registration", {})
+        server_domain = reg_config.get("server_domain", "")
+        support_link_html = get_support_contact_html(db, server_domain)
+
         title = "Password Changed"
         content = f"""
         Your {PROJECT_NAME} password was just changed.<br><br>
         <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
         If you made this change, you can ignore this email.<br>
-        If you did not change your password, please reset it immediately and contact support.
+        If you did not change your password, please reset it immediately and {support_link_html}.
         """
 
-        reg_config = get_setting(db, "registration", {})
-        server_domain = reg_config.get("server_domain", "")
         reset_url = f"{server_domain}/forgot-password" if server_domain else None
 
         html = create_html_email(
@@ -447,6 +501,11 @@ def send_email_changed_notification(old_email: str, new_email: str, db_session=N
     from app.core.database import SessionLocal
     db = db_session if db_session else SessionLocal()
     try:
+        # Determine Support String
+        reg_config = get_setting(db, "registration", {})
+        server_domain = reg_config.get("server_domain", "")
+        support_link_html = get_support_contact_html(db, server_domain)
+
         title = "Email Address Changed"
         content = f"""
         The email address for your {PROJECT_NAME} account was just changed.<br><br>
@@ -454,10 +513,10 @@ def send_email_changed_notification(old_email: str, new_email: str, db_session=N
         <b>New Email:</b> {new_email}<br>
         <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
         If you made this change, you can ignore this email.<br>
-        If you did not authorize this change, please contact support immediately.
+        If you did not authorize this change, {support_link_html}.
         """
 
-        html = create_html_email(title, content, server_domain="", db=db)
+        html = create_html_email(title, content, server_domain=server_domain, db=db)
         send_mail_sync(old_email, f"[{PROJECT_NAME}] {title}", html, db)
         logger.info(f"Email changed notification sent to {old_email}")
     except Exception as e:
@@ -475,16 +534,21 @@ def send_account_deactivated_notification(user, reason: str = None, db_session=N
     from app.core.database import SessionLocal
     db = db_session if db_session else SessionLocal()
     try:
+        # Determine Support String
+        reg_config = get_setting(db, "registration", {})
+        server_domain = reg_config.get("server_domain", "")
+        support_link_html = get_support_contact_html(db, server_domain)
+
         title = "Account Suspended"
         reason_text = f"<b>Reason:</b> {reason}<br>" if reason else ""
         content = f"""
         Your {PROJECT_NAME} account has been suspended.<br><br>
         {reason_text}
         <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br><br>
-        If you believe this was a mistake, please contact support.
+        If you believe this was a mistake, {support_link_html}.
         """
 
-        html = create_html_email(title, content, server_domain="", db=db)
+        html = create_html_email(title, content, server_domain=server_domain, db=db)
         send_mail_sync(user.email, f"[{PROJECT_NAME}] {title}", html, db)
         logger.info(f"Account deactivation notification sent to {user.email}")
     except Exception as e:

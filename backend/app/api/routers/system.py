@@ -20,6 +20,7 @@ def get_public_config(db: Session = Depends(get_db)):
     )
     maint_mode = get_setting(db, "maintenance_mode", False)
     support_conf = get_setting(db, "support_chat", {"enabled": False})
+    support_page_conf = schemas.SupportPageConfig(**get_setting(db, "support_page", {}))
 
     # CAPTCHA public config (site key only, no secret)
     raw_captcha = get_setting(db, "captcha", {})
@@ -38,6 +39,7 @@ def get_public_config(db: Session = Depends(get_db)):
         "legal": legal_config,
         "oauth_providers": oauth_config,
         "support_chat_enabled": support_conf.get("enabled", False),
+        "support_page": support_page_conf,
         "support_email": support_conf.get("email_target") if support_conf.get("enabled", False) else None,
         "captcha": captcha_config,
         "marketing_enabled": ENABLE_MARKETING_PAGE,

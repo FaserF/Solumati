@@ -12,6 +12,8 @@ const Legal = ({ type }) => {
     const onBack = () => navigate(-1);
 
     const {
+        enabled_imprint = true,
+        enabled_privacy = true,
         company_name = "Solumati Inc.",
         address_street = "Musterstraße 1",
         address_zip_city = "12345 Musterstadt",
@@ -23,8 +25,25 @@ const Legal = ({ type }) => {
         vat_id = "DE123456789"
     } = config || {};
 
-    const [activeTab, setActiveTab] = React.useState(type === 'imprint' ? 'imprint' : 'privacy');
+    // Determine initial tab based on type and availability
+    const getInitialTab = () => {
+        if (type === 'imprint' && enabled_imprint) return 'imprint';
+        if (type === 'privacy' && enabled_privacy) return 'privacy';
+        if (enabled_imprint) return 'imprint';
+        if (enabled_privacy) return 'privacy';
+        return null;
+    };
+
+    const [activeTab, setActiveTab] = React.useState(getInitialTab());
     const isImprint = activeTab === 'imprint';
+
+    if (!activeTab) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
+                Legal pages are currently disabled.
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -41,20 +60,24 @@ const Legal = ({ type }) => {
 
                     {/* Tab Switcher */}
                     <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full">
-                        <button
-                            onClick={() => setActiveTab('privacy')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${!isImprint ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
-                        >
-                            <Shield size={16} className="inline mr-1.5 -mt-0.5" />
-                            {t('legal.privacy', 'Datenschutz')}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('imprint')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isImprint ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
-                        >
-                            <Scale size={16} className="inline mr-1.5 -mt-0.5" />
-                            {t('legal.imprint', 'Impressum')}
-                        </button>
+                        {enabled_privacy && (
+                            <button
+                                onClick={() => setActiveTab('privacy')}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${!isImprint ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+                            >
+                                <Shield size={16} className="inline mr-1.5 -mt-0.5" />
+                                {t('legal.privacy', 'Datenschutz')}
+                            </button>
+                        )}
+                        {enabled_imprint && (
+                            <button
+                                onClick={() => setActiveTab('imprint')}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isImprint ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+                            >
+                                <Scale size={16} className="inline mr-1.5 -mt-0.5" />
+                                {t('legal.imprint', 'Impressum')}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

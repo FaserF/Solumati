@@ -76,7 +76,7 @@ const Login = () => {
             const data = await res.json();
 
             // Start Auth
-            const asseResp = await startAuthentication(data.options);
+            const asseResp = await startAuthentication({ optionsJSON: data.options });
 
             // Verify
             const verifyRes = await fetch(`${API_URL}/auth/2fa/webauthn/verify`, {

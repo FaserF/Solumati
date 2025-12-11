@@ -158,6 +158,8 @@ class RegistrationConfig(BaseModel):
     allow_password_registration: bool = True
 
 class LegalConfig(BaseModel):
+    enabled_imprint: bool = True
+    enabled_privacy: bool = True
     company_name: str = ""
     ceo_name: str = ""
     address_street: str = ""
@@ -189,6 +191,10 @@ class SupportChatConfig(BaseModel):
     enabled: bool = False
     email_target: Optional[str] = ""
 
+class SupportPageConfig(BaseModel):
+    enabled: bool = True
+    contact_info: Optional[str] = ""
+
 class RegistrationNotificationConfig(BaseModel):
     enabled: bool = False
     email_target: Optional[str] = ""
@@ -216,6 +222,7 @@ class PublicConfig(BaseModel):
     oauth_providers: OAuthProviders
     allow_password_registration: Optional[bool] = True
     support_chat_enabled: bool = False
+    support_page: SupportPageConfig = SupportPageConfig()
     support_email: Optional[str] = None
     marketing_enabled: bool = False
     mail_enabled: bool = False
@@ -227,6 +234,7 @@ class SystemSettings(BaseModel):
     legal: LegalConfig
     oauth: OAuthConfig = OAuthConfig()
     support_chat: SupportChatConfig = SupportChatConfig()
+    support_page: SupportPageConfig = SupportPageConfig()
     registration_notification: RegistrationNotificationConfig = RegistrationNotificationConfig()
     captcha: CaptchaConfig = CaptchaConfig()
     assetlinks: List[Dict[str, Any]] = []

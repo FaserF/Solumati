@@ -35,7 +35,7 @@ def get_app_version():
 
 # Independent Backend Version (can be overriden by env or file)
 def get_backend_version():
-    return os.getenv("BACKEND_VERSION", "2025.12.2-b6")
+    return os.getenv("BACKEND_VERSION", "2025.12.3-d1")
 
 FRONTEND_VERSION = get_app_version()
 BACKEND_VERSION = get_backend_version()
@@ -43,6 +43,6 @@ BACKEND_VERSION = get_backend_version()
 CURRENT_VERSION = BACKEND_VERSION
 
 def get_release_type():
-    return os.getenv("RELEASE_TYPE", "beta")
+    return os.getenv("RELEASE_TYPE", "dev")
 
 RELEASE_TYPE = get_release_type()

@@ -239,7 +239,7 @@ const AccountSettings = () => {
             console.log("WebAuthn Options:", options);
             if (!options || !options.challenge) throw new Error("Invalid registration options received");
 
-            const attResp = await startRegistration(options);
+            const attResp = await startRegistration({ optionsJSON: options });
 
             const verifyResp = await fetch(`${API_URL}/users/2fa/setup/webauthn/register/verify`, {
                 method: 'POST', headers, body: JSON.stringify({ credential: attResp })

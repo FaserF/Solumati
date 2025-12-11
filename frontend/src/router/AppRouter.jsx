@@ -8,8 +8,10 @@ import { useI18n } from '../context/I18nContext';
 // Components
 import Landing from '../pages/Landing';
 import MarketingPage from '../pages/MarketingPage';
+import Support from '../pages/Support';
 import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
+import VerifyEmail from '../components/auth/VerifyEmail';
 import Dashboard from '../components/dashboard/Dashboard';
 import AdminPanel from '../components/admin/AdminPanel';
 import UserProfile from '../components/user/UserProfile';
@@ -146,6 +148,7 @@ const MainLayout = () => {
                 <Route element={<AuthLayout t={t} />}>
                     <Route path="/login" element={<Login t={t} />} />
                     <Route path="/register" element={<Register t={t} />} />
+                    <Route path="/verify-email" element={<VerifyEmail t={t} />} />
                     <Route path="/forgot-password" element={<ForgotPassword t={t} onBack={() => navigate('/login')} />} />
                     <Route path="/reset-password" element={<ResetPassword t={t} onSuccess={() => navigate('/login')} />} />
                     <Route path="/verify-2fa" element={<TwoFactorAuth t={t} onVerified={(data) => { finalizeLogin(data); navigate('/dashboard'); }} onCancel={() => navigate('/login')} />} />
@@ -155,6 +158,7 @@ const MainLayout = () => {
                 <Route path="/imprint" element={<div className="container mx-auto p-8"><Legal type="imprint" t={t} onBack={() => navigate(-1)} /></div>} />
                 <Route path="/privacy" element={<div className="container mx-auto p-8"><Legal type="privacy" t={t} onBack={() => navigate(-1)} /></div>} />
                 <Route path="/legal" element={<div className="container mx-auto p-8"><Legal type="imprint" t={t} onBack={() => navigate(-1)} /></div>} />
+                <Route path="/support" element={<Support />} />
 
 
                 {/* Protected Dashboard Routes */}

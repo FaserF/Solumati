@@ -902,5 +902,12 @@
     "settings.export_btn_email": "Send via Email",
     "settings.export_email_sent": "Email sent! Check your inbox.",
     "settings.export_limit": "Max 12MB. Use download for larger files.",
-    "settings.danger_zone": "Danger Zone"
+    "settings.danger_zone": "Danger Zone",
+    "landing.support": "Support & Help",
+    "admin.settings.legal_support": "Legal & Support",
+    "admin.settings.enable_support": "Enable Support Page",
+    "landing.get_ios": "Get the iOS App",
+    "landing.download_ipa": "Download IPA (AltStore)",
+    "landing.get_windows": "Get the Windows App",
+    "landing.download_msix": "Download App"
 }

@@ -1024,102 +1024,129 @@ const AdminPanel = () => {
 
 
 
-                        {/* LEGAL SETTINGS */}
+                        {/* LEGAL & SUPPORT SETTINGS */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10">
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
-                                <Scale className="text-gray-600 dark:text-gray-300" />
-                                {t('admin.settings.legal', 'Legal & Imprint')}
+                                <Scale className="text-purple-500" />
+                                {t('admin.settings.legal_support', 'Legal & Support Pages')}
                             </h2>
+
+                            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition bg-white dark:bg-gray-800">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.legal.enabled_imprint !== false}
+                                        onChange={(e) => updateSetting('legal', 'enabled_imprint', e.target.checked)}
+                                        className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                    />
+                                    <span className="font-medium text-gray-700 dark:text-gray-300">Enable Imprint</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition bg-white dark:bg-gray-800">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.legal.enabled_privacy !== false}
+                                        onChange={(e) => updateSetting('legal', 'enabled_privacy', e.target.checked)}
+                                        className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                    />
+                                    <span className="font-medium text-gray-700 dark:text-gray-300">Enable Privacy</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition bg-white dark:bg-gray-800">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.support_page?.enabled !== false}
+                                        onChange={(e) => setSettings(prev => ({
+                                            ...prev,
+                                            support_page: { ...prev.support_page, enabled: e.target.checked }
+                                        }))}
+                                        className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                    />
+                                    <span className="font-medium text-gray-700 dark:text-gray-300">Enable Support</span>
+                                </label>
+                            </div>
+
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div className="col-span-full">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.company_name')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.company_name || ''}
-                                        onChange={(e) => updateSetting('legal', 'company_name', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="My Company GmbH"
-                                    />
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-gray-700 dark:text-gray-300 border-b pb-2">Company Information</h3>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.company_name')}</label>
+                                        <input
+                                            type="text"
+                                            value={settings.legal.company_name}
+                                            onChange={(e) => updateSetting('legal', 'company_name', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.ceo_name')}</label>
+                                        <input
+                                            type="text"
+                                            value={settings.legal.ceo_name}
+                                            onChange={(e) => updateSetting('legal', 'ceo_name', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_street')}</label>
+                                        <input
+                                            type="text"
+                                            value={settings.legal.address_street}
+                                            onChange={(e) => updateSetting('legal', 'address_street', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_zip_city')}</label>
+                                        <input
+                                            type="text"
+                                            value={settings.legal.address_zip_city}
+                                            onChange={(e) => updateSetting('legal', 'address_zip_city', e.target.value)}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.ceo')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.ceo_name || ''}
-                                        onChange={(e) => updateSetting('legal', 'ceo_name', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="Max Mustermann"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_street')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.address_street || ''}
-                                        onChange={(e) => updateSetting('legal', 'address_street', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="Musterstraße 1"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.address_city')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.address_zip_city || ''}
-                                        onChange={(e) => updateSetting('legal', 'address_zip_city', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="12345 Musterstadt"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_email')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.contact_email || ''}
-                                        onChange={(e) => updateSetting('legal', 'contact_email', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="info@solumati.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_phone')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.contact_phone || ''}
-                                        onChange={(e) => updateSetting('legal', 'contact_phone', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="+49 123 45678"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.register_court')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.register_court || ''}
-                                        onChange={(e) => updateSetting('legal', 'register_court', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="Amtsgericht München"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.register_number')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.register_number || ''}
-                                        onChange={(e) => updateSetting('legal', 'register_number', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="HRB 123456"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.vat_id')}</label>
-                                    <input
-                                        type="text"
-                                        value={settings.legal.vat_id || ''}
-                                        onChange={(e) => updateSetting('legal', 'vat_id', e.target.value)}
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="DE123456789"
-                                    />
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-gray-700 dark:text-gray-300 border-b pb-2">Support & Contact Details</h3>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_email')}</label>
+                                        <div className="flex items-center gap-2">
+                                            <Mail size={16} className="text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={settings.legal.contact_email}
+                                                onChange={(e) => updateSetting('legal', 'contact_email', e.target.value)}
+                                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.contact_phone')}</label>
+                                        <div className="flex items-center gap-2">
+                                            <Phone size={16} className="text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={settings.legal.contact_phone}
+                                                onChange={(e) => updateSetting('legal', 'contact_phone', e.target.value)}
+                                                className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                            Support Page Custom Text
+                                            <span className="text-xs font-normal text-gray-500 ml-2">(Optional info displayed on Support page)</span>
+                                        </label>
+                                        <textarea
+                                            rows={3}
+                                            value={settings.support_page?.contact_info || ''}
+                                            onChange={(e) => setSettings(prev => ({
+                                                ...prev,
+                                                support_page: { ...prev.support_page, contact_info: e.target.value }
+                                            }))}
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="e.g. For urgent inquiries, please create a ticket..."
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
