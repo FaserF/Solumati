@@ -135,6 +135,43 @@ If you do not provide these secrets, the workflow will automatically generate a 
 #### Testing
 *   **Test Mode:** Set `TEST_MODE=true` in backend environment variables to enable debug features.
 
+### 🧪 Manual CI Test Execution
+
+To ensure your code meets the quality standards before pushing, you can run the Continuous Integration (CI) checks manually on your local machine.
+
+#### Prerequisites
+Ensure you have the following installed on your PC:
+*   **Python 3.10+**: [Download Python](https://www.python.org/downloads/)
+*   **Node.js 18+ & npm**: [Download Node.js](https://nodejs.org/)
+*   **Git**: [Download Git](https://git-scm.com/)
+
+#### 1. Backend Tests
+The backend uses `pytest` for testing.
+
+```bash
+# Navigate to root directory
+pip install -r backend/requirements.txt
+python -m pytest backend/tests
+```
+
+#### 2. Frontend Linting
+The frontend uses `ESLint` (v9) to enforce code quality.
+
+```bash
+cd frontend
+npm install
+npm run lint
+```
+
+#### 3. Translation Synchronization
+Ensure that the German (`de.json`) and English (`en.json`) translation files are synchronized.
+
+```bash
+# From root directory
+python backend/tests/check_i18n.py
+```
+
+
 ---
 
 ### 📄 License

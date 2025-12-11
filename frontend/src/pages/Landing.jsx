@@ -4,6 +4,21 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
 import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 
+// Render Banner Helper
+const AppBanner = ({ platform, icon: Icon, title, sub, onClick, color }) => (
+    <a
+        href="#"
+        onClick={(e) => { e.preventDefault(); onClick(); }}
+        className={`mb-8 flex items-center gap-2 ${color} text-white px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg animate-bounce`}
+    >
+        <Icon size={24} />
+        <div className="text-left">
+            <div className="font-bold text-sm">{title}</div>
+            <div className="text-xs opacity-90">{sub}</div>
+        </div>
+    </a>
+);
+
 const Landing = () => {
     const { t } = useI18n();
     const { guestLogin } = useAuth();
@@ -11,7 +26,7 @@ const Landing = () => {
 
     const onLogin = () => navigate('/login');
     const onRegister = () => navigate('/register');
-    const onAdmin = () => navigate('/login');
+    // const onAdmin = () => navigate('/login');  // Unused
     const onLegal = () => navigate('/imprint');
 
     const onGuest = async () => {
@@ -61,20 +76,7 @@ const Landing = () => {
         }
     };
 
-    // Render Banner Helper
-    const AppBanner = ({ platform, icon: Icon, title, sub, onClick, color }) => (
-        <a
-            href="#"
-            onClick={(e) => { e.preventDefault(); onClick(); }}
-            className={`mb-8 flex items-center gap-2 ${color} text-white px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg animate-bounce`}
-        >
-            <Icon size={24} />
-            <div className="text-left">
-                <div className="font-bold text-sm">{title}</div>
-                <div className="text-xs opacity-90">{sub}</div>
-            </div>
-        </a>
-    );
+    // AppBanner was moved outside
 
     return (
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">

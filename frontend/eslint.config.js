@@ -42,4 +42,13 @@ export default [
             globals: globals.node,
         },
     },
+    {
+        files: ['**/*.test.{js,jsx}', 'src/tests/**/*.js'],
+        languageOptions: {
+            globals: {
+                ...globals.jest,
+                vi: 'readonly',
+            }
+        },
+    },
 ]

@@ -1,12 +1,12 @@
 /* eslint-env serviceworker */
-const CACHE_NAME = 'solumati-v1';
+// const CACHE_NAME = 'solumati-v1'; // Unused
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(clients.claim());
+    event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {
@@ -39,6 +39,6 @@ self.addEventListener('push', function (event) {
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow(event.notification.data.url)
+        self.clients.openWindow(event.notification.data.url)
     );
 });

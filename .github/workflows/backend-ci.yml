@@ -1,10 +1,20 @@
-name: CI Tests
+name: Backend CI
 
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   backend-test:
@@ -29,24 +39,3 @@ jobs:
     - name: Verify i18n Sync
       run: |
         python backend/tests/check_i18n.py
-
-  frontend-test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-    - name: Set up Node
-      uses: actions/setup-node@v6
-      with:
-        node-version: '24'
-    - name: Install Dependencies
-      run: |
-        cd frontend
-        npm install
-    - name: Lint Frontend
-      run: |
-        cd frontend
-        npm run lint
-    - name: Run Tests
-      run: |
-        cd frontend
-        npm test
