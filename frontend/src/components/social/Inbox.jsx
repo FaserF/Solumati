@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Clock } from 'lucide-react';
 import { API_URL } from '../../config';
 
-const Inbox = ({ user, onSelectChat, t }) => {
+const Inbox = ({ onSelectChat }) => {
+    // const { user, t } = props; // Unused
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -20,9 +21,13 @@ const Inbox = ({ user, onSelectChat, t }) => {
     }, []);
 
     useEffect(() => {
-        fetchConversations();
+        // Use setTimeout to avoid synchronous setState warning
+        const tLoad = setTimeout(() => fetchConversations(), 0);
         const interval = setInterval(fetchConversations, 10000); // Poll every 10s
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(tLoad);
+            clearInterval(interval);
+        };
     }, [fetchConversations]);
 
     if (loading) return <div className="p-8 text-center">Loading Inbox...</div>;

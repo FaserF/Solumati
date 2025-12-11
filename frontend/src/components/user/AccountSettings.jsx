@@ -95,7 +95,7 @@ const AccountSettings = () => {
             } catch (e) { console.error("Failed to load user profile", e); }
         };
         fetchUserData();
-    }, [user?.user_id]);
+    }, [user?.user_id, applyTheme, headers, user]);
 
     // Removed local useEffect for theme application as ThemeContext handles it
 
@@ -252,12 +252,15 @@ const AccountSettings = () => {
         setLoading(false);
     };
 
+    // const disable2FA = async () => { ... } // Unused function removed or commented out per linter
+    /*
     const disable2FA = async () => {
         if (!window.confirm(t('settings.delete_confirm'))) return;
         await fetch(`${API_URL}/users/2fa/disable`, { method: 'POST', headers });
         alert(t('alert.2fa_disabled', "2FA Disabled."));
         setSecurityState({ current_method: 'none', has_totp: false, has_passkeys: false });
     };
+    */
 
     const removeMethod = async (method) => {
         if (!window.confirm(t('settings.delete_confirm'))) return;

@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { X, Heart, ChevronLeft, MapPin, User, Info } from 'lucide-react';
 import { API_URL } from '../../config';
 
-const Swipe = ({ user, onBack, t }) => {
+const Swipe = ({ user, onBack }) => {
+    // const { t } = props; // Unused
     const [candidates, setCandidates] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -27,7 +28,8 @@ const Swipe = ({ user, onBack, t }) => {
     }, [user]);
 
     useEffect(() => {
-        fetchCandidates();
+        const tId = setTimeout(() => fetchCandidates(), 0);
+        return () => clearTimeout(tId);
     }, [fetchCandidates]);
 
     const handleSwipe = (direction) => {

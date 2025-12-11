@@ -78,7 +78,7 @@ const PublicProfile = ({ userId, onClose, onChat, t }) => {
     const getAnswerLabel = (qid) => {
         if (!user.answers) return null;
         let ansObj = {};
-        try { ansObj = typeof user.answers === 'string' ? JSON.parse(user.answers) : user.answers; } catch (e) {
+        try { ansObj = typeof user.answers === 'string' ? JSON.parse(user.answers) : user.answers; } catch {
             // Failed to parse
         }
 

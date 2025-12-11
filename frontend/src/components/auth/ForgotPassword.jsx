@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { API_URL } from '../../config';
 import { useNavigate } from 'react-router-dom';
-import { useI18n } from '../../context/I18nContext';
 
 const ForgotPassword = () => {
     // const { t } = useI18n(); // t is unused

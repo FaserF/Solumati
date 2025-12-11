@@ -18,41 +18,38 @@ const UserProfile = ({ initialMode = 'view' }) => {
     const [questions, setQuestions] = useState([]);
 
     // Form State
+    // Initialize userAnswers from user.answers immediately
+    const parseAnswers = (u) => {
+        try {
+            if (typeof u?.answers === 'string') return JSON.parse(u.answers);
+            return u?.answers || {};
+        } catch { return {}; }
+    };
+
     const [aboutMe, setAboutMe] = useState(user?.about_me || "");
     const [intent, setIntent] = useState(user?.intent || "longterm");
-    const [userAnswers, setUserAnswers] = useState({});
+    const [userAnswers, setUserAnswers] = useState(() => parseAnswers(user));
 
     // Image Upload Ref
     const fileInputRef = useRef(null);
 
+    // Sync state if user object changes deeply (e.g. re-fetch), but avoid direct sync loop.
+    // We'll trust the initial state for now or use a key on the component in parent if user switches.
+    // If we MUST sync:
     useEffect(() => {
-        // Parse answers on mount or user change
-        try {
-            let newAnswers = {};
-            if (typeof user.answers === 'string') {
-                newAnswers = JSON.parse(user.answers);
-            } else {
-                newAnswers = user.answers || {};
-            }
-            // Only update if different to avoid loop/warning
-            // Simple check: if keys length matches? Or just trust React bail-out?
-            // The warning "synchronously within an effect" implies immediate re-render loop or similar.
-            // We use JSON stringify for comparison to be safe and simple here for small objects.
-            setUserAnswers(prev => {
-                const sPrev = JSON.stringify(prev);
-                const sNew = JSON.stringify(newAnswers);
-                return sPrev === sNew ? prev : newAnswers;
-            });
+        setAboutMe(user?.about_me || "");
+        setIntent(user?.intent || "longterm");
+        setUserAnswers(parseAnswers(user));
+    }, [user?.user_id, user?.about_me, user?.intent, user?.answers]);
 
-        } catch { /* ignore */ }
-
+    useEffect(() => {
         // Fetch Questions Definitions
         const lang = navigator.language.split('-')[0] || 'en';
         fetch(`${API_URL}/questions?lang=${lang}`)
             .then(res => res.json())
             .then(data => setQuestions(data))
-            .catch(() => { }); // ignore error
-    }, [user]);
+            .catch(() => { });
+    }, []);
 
     const handleSave = async () => {
         setLoading(true);

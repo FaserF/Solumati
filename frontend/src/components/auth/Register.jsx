@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { API_URL } from '../../config';
 import { Github } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

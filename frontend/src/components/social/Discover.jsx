@@ -6,7 +6,7 @@ import { useI18n } from '../../context/I18nContext';
 import { API_URL } from '../../config';
 
 const Discover = () => {
-    const { user } = useAuth();
+    // const { user } = useAuth(); // Unused
     const { t } = useI18n();
     const navigate = useNavigate();
     const onBack = () => navigate('/dashboard');
@@ -27,7 +27,9 @@ const Discover = () => {
     }, []);
 
     useEffect(() => {
-        fetchCandidates();
+        // Use setTimeout to avoid synchronous setState warning
+        const tId = setTimeout(() => fetchCandidates(), 0);
+        return () => clearTimeout(tId);
     }, [fetchCandidates]);
 
     const handleAction = () => {
@@ -67,9 +69,9 @@ const Discover = () => {
         </div>
     );
 
-    // Score Colors
-    const scoreColor = current.score > 80 ? 'text-green-500' : current.score > 50 ? 'text-yellow-500' : 'text-gray-500';
-    const ringColor = current.score > 80 ? 'ring-green-500' : 'ring-gray-200 dark:ring-gray-700';
+    // Score Colors (Unused removed)
+    // const scoreColor = current.score > 80 ? 'text-green-500' : current.score > 50 ? 'text-yellow-500' : 'text-gray-500';
+    // const ringColor = current.score > 80 ? 'ring-green-500' : 'ring-gray-200 dark:ring-gray-700';
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#121212] flex justify-center items-start pt-4 pb-20 px-4 transition-colors">

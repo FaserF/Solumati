@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useI18n } from '../../context/I18nContext';
 
 const ResetPassword = () => {
-    const { t } = useI18n();
+    // const { t } = useI18n();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
@@ -33,7 +33,7 @@ const ResetPassword = () => {
                 const err = await res.json();
                 alert("Fehler: " + (err.detail || "Link ungültig/abgelaufen."));
             }
-        } catch (e) {
+        } catch {
             alert("Netzwerkfehler");
         }
         setLoading(false);

@@ -1,11 +1,11 @@
 
 import { Settings, User } from 'lucide-react';
-import NotificationBell from './NotificationBell';
+// import NotificationBell from './NotificationBell'; // Unused
 import { APP_NAME } from '../../config';
 
 const DashboardNavbar = ({
     user,
-    isGuest,
+    // isGuest,
     isAdminOrMod,
     onAdminClick,
     onProfileClick,

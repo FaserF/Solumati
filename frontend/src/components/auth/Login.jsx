@@ -18,7 +18,7 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [captchaToken, setCaptchaToken] = useState(null);
     const [showCaptcha, setShowCaptcha] = useState(false);
-    const [lockoutSeconds, setLockoutSeconds] = useState(0);
+    // const [lockoutSeconds, setLockoutSeconds] = useState(0); // Unused
     const [error, setError] = useState(null);
 
     // Config fallback

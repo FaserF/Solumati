@@ -52,9 +52,11 @@ const Dashboard = () => {
     useEffect(() => {
         if (user && user.two_factor_method === 'none') {
             const hasDismissed = localStorage.getItem('dismissed_2fa_prompt');
-            // Only set if not already shown to avoid strict mode double invocation issues or loop
+            // Check if not dismissed and not already shown
             if (!hasDismissed) {
-                setShow2FAPrompt(prev => prev ? prev : true);
+                // Use setTimeout to avoid synchronous setState warning
+                const tId = setTimeout(() => setShow2FAPrompt(true), 0);
+                return () => clearTimeout(tId);
             }
         }
     }, [user]);
