@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+from app.services.password_validation import validate_password_complexity, check_pwned_password
+
 @router.post("/users/", response_model=schemas.UserDisplay)
 def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, request: Request, db: Session = Depends(get_db)):
     logger.info(f"Attempting to register new user: {user.email}")
@@ -34,6 +36,13 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, req
         client_ip = request.client.host if request.client else "unknown"
         if not verify_captcha_sync(user.captcha_token, captcha_config.provider, captcha_config.secret_key, client_ip):
             raise HTTPException(400, "CAPTCHA verification failed")
+
+    # Password Strength & Leak Check
+    try:
+        validate_password_complexity(user.password)
+        check_pwned_password(user.password)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(400, "Email already registered.")
@@ -363,6 +372,12 @@ def update_account_settings(user_id: int, update: schemas.UserAdminUpdate, backg
         email_changed = True
 
     if update.password:
+        try:
+            validate_password_complexity(update.password)
+            check_pwned_password(update.password)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+
         user.hashed_password = hash_password(update.password)
         password_changed = True
 
@@ -471,6 +486,12 @@ def confirm_password_reset(body: dict, db: Session = Depends(get_db)):
     # Extra check just in case
     if user.role == 'test':
         raise HTTPException(403, "Test users cannot change password.")
+
+    try:
+        validate_password_complexity(new_password)
+        check_pwned_password(new_password)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
     user.hashed_password = hash_password(new_password)
     user.reset_token = None
