@@ -140,10 +140,66 @@ jobs:
       ref: ${{ needs.release.outputs.commit_sha }}
     secrets: inherit
 
-  build-windows:
-    needs: release
-    uses: ./.github/workflows/windows-release.yml
-    with:
       tag_name: v${{ needs.release.outputs.new_version }}
       ref: ${{ needs.release.outputs.commit_sha }}
     secrets: inherit
+
+  bump-dev-version:
+    needs: release
+    runs-on: ubuntu-latest
+    # if: inputs.release_type == 'stable' # Only bump main to dev after a stable release
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Calculate Next Dev Version
+        id: dev_version
+        env:
+          CURRENT_RELEASE: ${{ needs.release.outputs.new_version }}
+        run: |
+          # The current released version is in CURRENT_RELEASE (e.g. 2025.12.1)
+          echo "Released Version: $CURRENT_RELEASE"
+
+          # We want to bump patch and add -d1 suffix
+          # We can use the script with a special flag or just do it manually here for simplicity,
+          # but utilizing the script is safer if it supports it.
+          # The script bump_version logic: if stable 2025.12.1 -> bump_version(stable) -> 2025.12.2
+
+          # Let's use the script to get next stable, then append -d1
+          NEXT_STABLE=$(python3 scripts/generate_version.py --current "$CURRENT_RELEASE" --type stable)
+          NEXT_DEV="${NEXT_STABLE}-d1"
+
+          echo "Next Dev Version: $NEXT_DEV"
+          echo "next_dev=$NEXT_DEV" >> $GITHUB_OUTPUT
+
+      - name: Update to Dev Version
+        env:
+          NEW_VERSION: ${{ steps.dev_version.outputs.next_dev }}
+        run: |
+          # Configure Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Update frontend/package.json
+          cd frontend
+          npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+          cd ..
+
+          # Update backend/app/core/config.py
+          sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/app/core/config.py
+          sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "dev")/' backend/app/core/config.py
+
+          # Update frontend/src/config.js
+          sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "dev";/' frontend/src/config.js
+
+          # Commit and Push
+          git add frontend/package.json backend/app/core/config.py frontend/src/config.js
+          git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
+          git push origin main

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 import { useI18n } from '../context/I18nContext';
@@ -113,7 +113,13 @@ const MainLayout = () => {
         );
     }
 
-    if (maintenanceMode && (!user || user.role !== 'admin')) {
+    const location = useLocation();
+
+    // If Maintenance Mode is active
+    // We must allow access to Login/Auth routes so Admins can log in!
+    const isAuthRoute = ['/login', '/verify-2fa', '/admin'].includes(location.pathname);
+
+    if (maintenanceMode && !isAuthRoute && (!user || user.role !== 'admin')) {
         return <MaintenancePage type={maintenanceReason} onAdminLogin={() => navigate('/login')} />;
     }
 

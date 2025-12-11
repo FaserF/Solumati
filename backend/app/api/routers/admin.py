@@ -251,17 +251,29 @@ def get_diagnostics(db: Session = Depends(get_db), current_admin: models.User = 
                 data = json.loads(response.read().decode())
 
                 # Helper to parse version roughly for comparison [Year, Month, Patch, Beta]
-                def parse_ver(v_str):
-                    v = v_str.lstrip('v')
-                    parts = v.split('-')
-                    base = [int(x) for x in parts[0].split('.')]
-                    beta_num = 0
-                    is_beta = False
                     if len(parts) > 1:
                         is_beta = True
-                        if 'beta' in parts[1]:
-                            beta_num = int(parts[1].split('.')[-1])
-                    return (base[0], base[1], base[2], 0 if is_beta else 1, beta_num)
+                        suffix = parts[1]
+                        if 'beta' in suffix or suffix.startswith('b'):
+                            beta_num = int(suffix.replace('beta', '').replace('b', ''))
+                            # Priority: 2 (Beta)
+                            ver_priority = 2
+                        elif 'dev' in suffix or suffix.startswith('d'):
+                            # Dev versions (e.g. -d1)
+                            beta_num = int(suffix.replace('dev', '').replace('d', ''))
+                            # Priority: 0 (Dev - Lowest)
+                            ver_priority = 0
+                        elif 'alpha' in suffix or suffix.startswith('a'):
+                            beta_num = int(suffix.replace('alpha', '').replace('a', ''))
+                            # Priority: 1 (Alpha)
+                            ver_priority = 1
+                        elif 'rc' in suffix:
+                             beta_num = int(suffix.replace('rc', ''))
+                             ver_priority = 3
+
+                    # Return tuple for comparison: (Year, Month, Patch, Priority, SuffixNum)
+                    # Priority: 0=Dev, 1=Alpha, 2=Beta, 3=RC, 4=Stable
+                    return (base[0], base[1], base[2], ver_priority if is_beta else 4, beta_num)
 
                 current_tuple = parse_ver(current_ver_str)
                 found_ver_tuple = None
