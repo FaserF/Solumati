@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
@@ -20,6 +20,7 @@ import TwoFactorAuth from '../components/auth/TwoFactorAuth';
 import Discover from '../components/social/Discover';
 import Questionnaire from '../components/user/Questionnaire';
 import MaintenancePage from '../pages/MaintenancePage';
+import ServerOffline from '../components/layout/ServerOffline';
 import VerificationBanner from '../components/common/VerificationBanner';
 import ConsentBanner from '../components/common/ConsentBanner';
 import NotificationPermission from '../components/common/NotificationPermission';
@@ -93,6 +94,23 @@ const MainLayout = () => {
 
     // Check verification banner state?
     // Ideally this is a layout wrapping the specific pages.
+
+    const [ignoreOffline, setIgnoreOffline] = useState(false);
+
+    // If Server is Offline or Maintenance
+    if (serverStatus !== 'online' && !ignoreOffline) {
+        // Maintenance Mode (503) is always blocking (no continue)
+        // Offline (Network Error) is blocking unless user chooses to continue (if they have data)
+        // If they have no data (user is null), they can't continue anyway.
+        const canContinue = serverStatus === 'offline' && !!user;
+
+        return (
+            <ServerOffline
+                status={serverStatus}
+                onContinue={canContinue ? () => setIgnoreOffline(true) : null}
+            />
+        );
+    }
 
     if (maintenanceMode && (!user || user.role !== 'admin')) {
         return <MaintenancePage type={maintenanceReason} onAdminLogin={() => navigate('/login')} />;

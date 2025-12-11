@@ -202,21 +202,6 @@ def login(creds: schemas.UserLogin, request: Request, background_tasks: Backgrou
                 "is_profile_complete": is_profile_complete
             }
 
-@router.post("/auth/2fa/send-email-code")
-def send_email_2fa_code_endpoint(body: dict, db: Session = Depends(get_db)):
-    """Triggers sending of an Email 2FA code during login verification."""
-    user_id = body.get("user_id")
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user: raise HTTPException(404, "User not found")
-
-    # Check if Email 2FA is allowed
-    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
-    if not reg_config.email_2fa_enabled:
-        raise HTTPException(403, "Email 2FA disabled")
-
-    generate_email_2fa_code(user, db)
-    return {"status": "sent", "message": "Code sent to email"}
-
     # No 2FA required
     # Trigger Notification (Background)
     ip = request.client.host if request.client else "Unknown"
@@ -584,3 +569,24 @@ def webauthn_auth_verify(req: schemas.WebAuthnAuthResponse, request: Request, db
     except Exception as e:
         logger.error(f"Passkey auth failed: {e}")
         raise HTTPException(400, f"Authentication failed: {str(e)}")
+
+@router.post("/auth/2fa/send-email-code")
+def send_email_2fa_code_endpoint(body: dict, db: Session = Depends(get_db)):
+    """Triggers sending of an Email 2FA code during login verification."""
+    user_id = body.get("user_id")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user: raise HTTPException(404, "User not found")
+
+    # Check if Email 2FA is allowed
+    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", {}))
+    if not reg_config.email_2fa_enabled:
+        raise HTTPException(403, "Email 2FA disabled")
+
+    try:
+        generate_email_2fa_code(user, db)
+    except Exception as e:
+        logger.error(f"Failed to send 2FA email: {e}")
+        # Return 500 but handled?
+        raise HTTPException(500, "Failed to send email code. Please contact admin.")
+
+    return {"status": "sent", "message": "Code sent to email"}

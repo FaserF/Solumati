@@ -1,0 +1,43 @@
+import { WifiOff, ServerCrash, RefreshCw } from 'lucide-react';
+
+const ServerOffline = ({ status = 'offline', onContinue }) => {
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+            <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-gray-100">
+                <div className="flex justify-center mb-6">
+                    <div className="bg-red-50 p-6 rounded-full">
+                        {status === 'maintenance' ? (
+                            <ServerCrash size={48} className="text-orange-500" />
+                        ) : (
+                            <WifiOff size={48} className="text-red-500" />
+                        )}
+                    </div>
+                </div>
+
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    {status === 'maintenance' ? 'Under Maintenance' : 'Connection Lost'}
+                </h1>
+
+                <p className="text-gray-500 mb-8 leading-relaxed">
+                    {status === 'maintenance'
+                        ? "We are currently updating our servers to make things better. Please check back shortly."
+                        : "We cannot reach the Solumati servers. This might be due to a server restart, update, or technical issue."
+                    }
+                </p>
+
+                <button
+                    onClick={() => window.location.reload()}
+                    className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
+                >
+                    <RefreshCw size={20} /> Try Again
+                </button>
+
+                <p className="mt-6 text-xs text-gray-400">
+                    If this persists, please contact support.
+                </p>
+            </div>
+        </div>
+    );
+};
+
+export default ServerOffline;

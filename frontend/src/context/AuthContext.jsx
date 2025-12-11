@@ -6,9 +6,19 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    // Initialize user from LocalStorage (Cache)
+    const [user, setUser] = useState(() => {
+        try {
+            const cached = localStorage.getItem('user_cache');
+            return cached ? JSON.parse(cached) : null;
+        } catch { return null; }
+    });
+
     const [isGuest, setIsGuest] = useState(false);
     const [theme, setThemeState] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'system');
+
+    // Server Status State
+    const [serverStatus, setServerStatus] = useState('online'); // online, offline, maintenance
 
     // 2FA Intermediate State
     const [tempAuth, setTempAuth] = useState(null);
@@ -27,8 +37,10 @@ export const AuthProvider = ({ children }) => {
     const finalizeLogin = useCallback((data) => {
         setUser(data);
         localStorage.setItem('token', data.user_id);
+        localStorage.setItem('user_cache', JSON.stringify(data)); // Update Cache
         setIsGuest(data.role === 'guest' || data.is_guest);
         setTempAuth(null);
+        setServerStatus('online');
 
         // Apply Theme
         if (data.app_settings) {
@@ -39,13 +51,11 @@ export const AuthProvider = ({ children }) => {
         }
     }, [applyTheme]);
 
-    // Initial Session Restore
+    // Initial Session Restore & Background Sync
     useEffect(() => {
-        // Theme init is handled by initial state or separate effect if needed, but here we just leave it for now or move logic.
-        // Actually, let's just properly initialize state.
         const storedToken = localStorage.getItem('token');
-        if (storedToken && !user) {
-            console.log("[Auth] Attempting to restore session for:", storedToken);
+        if (storedToken) {
+            console.log("[Auth] Syncing session from server...");
             fetch(`${API_URL}/users/${storedToken}`, {
                 headers: {
                     'Authorization': `Bearer ${storedToken}`,
@@ -54,21 +64,41 @@ export const AuthProvider = ({ children }) => {
             })
                 .then(res => {
                     if (res.ok) return res.json();
+                    if (res.status === 503) {
+                        setServerStatus('maintenance');
+                        throw new Error("Maintenance Mode");
+                    }
+                    if (res.status >= 500) {
+                        setServerStatus('offline'); // Server Error
+                        throw new Error("Server Error");
+                    }
                     throw new Error("Session invalid");
                 })
                 .then(userData => {
-                    console.log("[Auth] Session restored:", userData);
-                    finalizeLogin(userData);
+                    console.log("[Auth] Session synced:", userData);
+                    finalizeLogin(userData); // Updates cache
                 })
                 .catch(e => {
-                    console.warn("[Auth] Session restore failed:", e);
-                    localStorage.removeItem('token');
+                    console.warn("[Auth] Sync failed:", e);
+                    if (e.message === "Session invalid") {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user_cache');
+                        setUser(null);
+                    } else if (e.message === "Failed to fetch" || e.name === 'TypeError') {
+                        // Network Error (Server likely down or unreachable)
+                        setServerStatus('offline');
+                    }
                 });
         }
-    }, [finalizeLogin, user]);
+    }, [finalizeLogin]); // Removed 'user' dependency to prevent loop, sync runs once on mount due to storedToken check logic needs refinement?
+    // Actually, storedToken is constant on mount.
 
     const updateUser = (updates) => {
-        setUser(prev => ({ ...prev, ...updates }));
+        setUser(prev => {
+            const newState = { ...prev, ...updates };
+            localStorage.setItem('user_cache', JSON.stringify(newState));
+            return newState;
+        });
     };
 
     const login = async (loginIdentifier, password) => {
@@ -92,6 +122,7 @@ export const AuthProvider = ({ children }) => {
                 return { status: 'error', error: err };
             }
         } catch {
+            setServerStatus('offline');
             return { status: 'error', error: { detail: "Network error" } };
         }
     };
@@ -100,6 +131,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsGuest(false);
         localStorage.removeItem('token');
+        localStorage.removeItem('user_cache');
     };
 
     const guestLogin = async () => {
@@ -162,7 +194,8 @@ export const AuthProvider = ({ children }) => {
             guestLogin,
             finalizeLogin, // exposed for Oauth/Passkey calls
             updateUser,
-            applyTheme
+            applyTheme,
+            serverStatus
         }}>
             {children}
         </AuthContext.Provider>
