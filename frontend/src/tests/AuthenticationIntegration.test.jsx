@@ -48,7 +48,7 @@ const renderWithRouter = (initialEntry) => {
     return render(
         <MemoryRouter initialEntries={[initialEntry]}>
             <Routes>
-                <Route element={<AuthLayout t={(k) => k} />}>
+                <Route element={<AuthLayout t={(k, d) => d || k} />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                 </Route>
