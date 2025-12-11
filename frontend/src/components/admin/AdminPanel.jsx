@@ -106,7 +106,7 @@ const AdminPanel = () => {
 
     const authHeaders = {
         'Content-Type': 'application/json',
-        'X-User-ID': user.user_id.toString()
+        'X-User-ID': user?.user_id?.toString() || ''
     };
 
     const fetchUsers = async () => {

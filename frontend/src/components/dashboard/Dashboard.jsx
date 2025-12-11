@@ -112,6 +112,7 @@ const Dashboard = () => {
         const checkUpdate = async () => {
             try {
                 const res = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
+                if (res.status === 404) return; // No releases yet
                 if (res.ok) {
                     const data = await res.json();
                     const latest = data.tag_name.replace('v', '');
