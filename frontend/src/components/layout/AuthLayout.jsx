@@ -1,4 +1,4 @@
-
+import { Outlet } from 'react-router-dom';
 import { APP_NAME } from '../../config';
 
 const AuthLayout = ({ children, t, title = APP_NAME, subtitle = "" }) => {
@@ -28,7 +28,7 @@ const AuthLayout = ({ children, t, title = APP_NAME, subtitle = "" }) => {
                     </div>
 
                     <div className="glass-panel relative z-10 animate-in slide-in-from-right-8 duration-500 fade-in">
-                        {children}
+                        {children || <Outlet />}
                     </div>
                 </div>
             </div>
