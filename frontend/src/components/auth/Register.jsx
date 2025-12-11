@@ -8,7 +8,7 @@ import { useI18n } from '../../context/I18nContext';
 
 const Register = () => {
     const { t } = useI18n();
-    const { globalConfig, fetchConfig } = useConfig();
+    const { globalConfig } = useConfig();
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -27,17 +27,12 @@ const Register = () => {
     // Sync with globalConfig
     useEffect(() => {
         if (globalConfig) {
-            setRegistrationEnabled(globalConfig.registration_enabled);
-            setAllowPassword(globalConfig.allow_password_registration !== false);
+            if (globalConfig.registration_enabled !== registrationEnabled) setRegistrationEnabled(globalConfig.registration_enabled);
+            if ((globalConfig.allow_password_registration !== false) !== allowPassword) setAllowPassword(globalConfig.allow_password_registration !== false);
             setOauthConfig(globalConfig.oauth_providers || {});
             setLoadingConfig(false);
-        } else {
-            // Fallback fetch if config is missing?
-            // ConfigProvider handles fetching, but maybe it hasn't finished?
-            // Since ConfigProvider renders children always, globalConfig might be initial state.
-            // We can rely on it updating.
         }
-    }, [globalConfig]);
+    }, [globalConfig, registrationEnabled, allowPassword]);
 
 
     const handleOAuth = (provider) => {
@@ -57,7 +52,7 @@ const Register = () => {
             { id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }
         ];
         // Default answers (all 3)
-        const answersArray = questions.map(q => 3);
+        const answersArray = questions.map(() => 3);
 
         const payload = {
             email,

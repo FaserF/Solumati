@@ -98,7 +98,7 @@ export default function CaptchaWidget({ onVerify, onError, onExpire }) {
                     } else if (provider === 'hcaptcha' && window.hcaptcha) {
                         window.hcaptcha.reset(widgetId.current);
                     }
-                } catch (e) { /* ignore cleanup errors */ }
+                } catch { /* ignore cleanup errors */ }
             }
         };
     }, [enabled, provider, siteKey, onVerify, onError, onExpire]);

@@ -6,7 +6,7 @@ import { useI18n } from '../../context/I18nContext';
 import { API_URL } from '../../config';
 
 const UserProfile = ({ initialMode = 'view' }) => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const { t } = useI18n();
     const navigate = useNavigate();
 
@@ -60,7 +60,7 @@ const UserProfile = ({ initialMode = 'view' }) => {
                 setMode('view');
             }
             else alert("Error saving profile");
-        } catch (e) { alert("Network Error"); }
+        } catch { alert("Network Error"); }
         setLoading(false);
     };
 
@@ -78,12 +78,12 @@ const UserProfile = ({ initialMode = 'view' }) => {
             });
             if (res.ok) {
                 const data = await res.json();
-                user.image_url = data.image_url; // Update local user object (ideally should update global state)
+                updateUser({ image_url: data.image_url });
                 alert("Image uploaded!");
             } else {
                 alert("Upload failed");
             }
-        } catch (e) { alert("Upload Error"); }
+        } catch { alert("Upload Error"); }
     };
 
     const getAnswerLabel = (qid) => {

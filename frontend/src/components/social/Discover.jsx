@@ -14,10 +14,6 @@ const Discover = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchCandidates();
-    }, []);
-
     const fetchCandidates = async () => {
         setLoading(true);
         try {
@@ -26,9 +22,13 @@ const Discover = () => {
                 const data = await res.json();
                 setCandidates(data);
             }
-        } catch (e) { console.error(e); }
+        } catch { /* ignore */ }
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchCandidates();
+    }, []);
 
     const handleAction = () => {
         setCurrentIndex(prev => prev + 1);

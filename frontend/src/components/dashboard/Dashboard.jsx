@@ -80,6 +80,21 @@ const Dashboard = () => {
     // APK Update Check State
     const [updateAvailable, setUpdateAvailable] = useState(null);
 
+    const fetchInbox = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/chat/conversations`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'X-User-Id': token }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setInboxConversations(data);
+            }
+        } catch (e) {
+            console.error("Failed to fetch inbox", e);
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'inbox') {
             fetchInbox();
@@ -106,27 +121,12 @@ const Dashboard = () => {
                         }
                     }
                 }
-            } catch (e) {
+            } catch {
                 // Check failed silently
             }
         };
         checkUpdate();
     }, []);
-
-    const fetchInbox = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/chat/conversations`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'X-User-Id': token }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setInboxConversations(data);
-            }
-        } catch (e) {
-            console.error("Failed to fetch inbox", e);
-        }
-    };
 
     const handleLogout = () => {
         logout();
@@ -158,6 +158,11 @@ const Dashboard = () => {
                         <Activity size={14} />
                         {t('alert.test_mode_active', 'Test Mode Active')}
                     </div>
+                )}
+                {updateAvailable && (
+                    <a href={updateAvailable.html_url} target="_blank" rel="noopener noreferrer" className="bg-blue-600 text-white px-4 py-1 mt-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto hover:bg-blue-700 transition">
+                        🚀 {t('update.banner', 'New Update Available!')}
+                    </a>
                 )}
             </div>
 

@@ -6,12 +6,6 @@ const Inbox = ({ user, onSelectChat, t }) => {
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchConversations();
-        const interval = setInterval(fetchConversations, 10000); // Poll every 10s
-        return () => clearInterval(interval);
-    }, []);
-
     const fetchConversations = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -21,9 +15,15 @@ const Inbox = ({ user, onSelectChat, t }) => {
             if (res.ok) {
                 setConversations(await res.json());
             }
-        } catch (e) { console.error("Inbox load error", e); }
+        } catch { /* ignore */ }
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchConversations();
+        const interval = setInterval(fetchConversations, 10000); // Poll every 10s
+        return () => clearInterval(interval);
+    }, []);
 
     if (loading) return <div className="p-8 text-center">Loading Inbox...</div>;
 

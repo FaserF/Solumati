@@ -12,19 +12,6 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
     const WS_URL = API_URL.replace("http", "ws");
 
-    useEffect(() => {
-        // Fetch History
-        fetchHistory();
-
-        // Connect WS
-        connectWebSocket();
-
-        return () => {
-            if (ws.current) ws.current.close();
-            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
-        };
-    }, [chatPartner.id]);
-
     const fetchHistory = async () => {
         try {
             const res = await fetch(`${API_URL}/chat/history/${chatPartner.id}`, {
@@ -38,8 +25,8 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                 setMessages(data);
                 scrollToBottom();
             }
-        } catch (e) {
-            console.error("Failed to load history", e);
+        } catch {
+            // console.error("Failed to load history", e);
         }
     };
 
@@ -66,8 +53,8 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                     });
                     scrollToBottom();
                 }
-            } catch (e) {
-                console.error("WS Parse Error", e);
+            } catch {
+                // console.error("WS Parse Error", e);
             }
         };
 
@@ -80,6 +67,19 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
 
         ws.current = socket;
     };
+
+    useEffect(() => {
+        // Fetch History
+        fetchHistory();
+
+        // Connect WS
+        connectWebSocket();
+
+        return () => {
+            if (ws.current) ws.current.close();
+            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+        };
+    }, [chatPartner.id]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

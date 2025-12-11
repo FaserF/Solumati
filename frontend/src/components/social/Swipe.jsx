@@ -8,10 +8,6 @@ const Swipe = ({ user, onBack, t }) => {
     const [loading, setLoading] = useState(true);
     const [lastDirection, setLastDirection] = useState(null);
 
-    useEffect(() => {
-        fetchCandidates();
-    }, []);
-
     const fetchCandidates = async () => {
         setLoading(true);
         try {
@@ -35,11 +31,15 @@ const Swipe = ({ user, onBack, t }) => {
                 const data = await res.json();
                 setCandidates(data);
             }
-        } catch (e) {
-            console.error("Failed to load candidates", e);
+        } catch {
+            // console.error("Failed to load candidates", e);
         }
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchCandidates();
+    }, []);
 
     const handleSwipe = (direction) => {
         setLastDirection(direction);

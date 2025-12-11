@@ -25,15 +25,6 @@ const NotificationBell = ({ user, t }) => {
     const [permission, setPermission] = useState(Notification.permission);
     const [isSubscribed, setIsSubscribed] = useState(false);
 
-    useEffect(() => {
-        if (!user) return;
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-        checkSubscription();
-
-        return () => clearInterval(interval);
-    }, [user]);
-
     const fetchNotifications = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -48,6 +39,23 @@ const NotificationBell = ({ user, t }) => {
         } catch (e) { console.error("Notif fetch failed", e); }
     };
 
+    // --- PUSH LOGIC ---
+    const checkSubscription = async () => {
+        if (!('serviceWorker' in navigator)) return;
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        setIsSubscribed(!!sub);
+    };
+
+    useEffect(() => {
+        if (!user) return;
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+        checkSubscription();
+
+        return () => clearInterval(interval);
+    }, [user]);
+
     const markRead = async (id) => {
         try {
             const token = localStorage.getItem('token');
@@ -58,7 +66,7 @@ const NotificationBell = ({ user, t }) => {
             // Optimistic update
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (e) {
+        } catch {
             // Optimistic update, ignore error
         }
     };
@@ -72,18 +80,12 @@ const NotificationBell = ({ user, t }) => {
             });
             setNotifications([]);
             setUnreadCount(0);
-        } catch (e) {
+        } catch {
             // Error clearing
         }
     };
 
-    // --- PUSH LOGIC ---
-    const checkSubscription = async () => {
-        if (!('serviceWorker' in navigator)) return;
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.getSubscription();
-        setIsSubscribed(!!sub);
-    };
+
 
     const subscribeToPush = async () => {
         if (!('serviceWorker' in navigator)) return;

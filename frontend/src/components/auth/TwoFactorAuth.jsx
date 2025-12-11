@@ -27,8 +27,10 @@ const TwoFactorAuth = () => {
         }
     }, [tempAuth, navigate]);
 
-    // 3. Early return for rendering only (after hooks)
-    // MOVED DOWN
+
+
+    // Local override for method (don't mutate context)
+    const [selectedMethod, setSelectedMethod] = useState(tempAuth?.method);
 
     const onVerified = (data) => {
         finalizeLogin(data);
@@ -37,37 +39,6 @@ const TwoFactorAuth = () => {
     const onCancel = () => {
         logout();
         navigate('/login');
-    };
-
-    // Auto-trigger passkey if method matches (only in verify view)
-    useEffect(() => {
-        if (view === 'verify' && tempAuth && tempAuth.method === 'passkey') {
-            handlePasskey();
-        }
-    }, [view, tempAuth?.method]);
-
-    if (!tempAuth) return null;
-
-    const handleMethodSelect = (method) => {
-        tempAuth.method = method; // Update local ref of method
-        setView('verify');
-    };
-
-    // --- HANDLERS ---
-
-    const handleVerifySubmit = async () => {
-        if (!code && tempAuth.method !== 'passkey') return;
-        setLoading(true); setError(null);
-        try {
-            const res = await fetch(`${API_URL}/auth/2fa/verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: tempAuth.user_id, code })
-            });
-            if (res.ok) onVerified(await res.json());
-            else setError(t('2fa.error'));
-        } catch (e) { setError("Network Error"); }
-        setLoading(false);
     };
 
     const handlePasskey = async () => {
@@ -91,6 +62,40 @@ const TwoFactorAuth = () => {
         setLoading(false);
     };
 
+    // Auto-trigger passkey if method matches (only in verify view)
+    useEffect(() => {
+        // Use selectedMethod instead of tempAuth.method
+        if (view === 'verify' && selectedMethod === 'passkey') {
+            handlePasskey();
+        }
+    }, [view, selectedMethod]);
+
+    if (!tempAuth) return null;
+
+    const handleMethodSelect = (method) => {
+        setSelectedMethod(method);
+        setView('verify');
+    };
+
+    // --- HANDLERS ---
+
+    const handleVerifySubmit = async () => {
+        if (!code && selectedMethod !== 'passkey') return;
+        setLoading(true); setError(null);
+        try {
+            const res = await fetch(`${API_URL}/auth/2fa/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: tempAuth.user_id, code })
+            });
+            if (res.ok) onVerified(await res.json());
+            else setError(t('2fa.error'));
+        } catch { setError("Network Error"); }
+        setLoading(false);
+    };
+
+
+
     const handleEmergencyReset = async () => {
         if (!password) return;
         setLoading(true); setError(null);
@@ -111,7 +116,7 @@ const TwoFactorAuth = () => {
             } else {
                 setError(data.detail || "Reset failed");
             }
-        } catch (e) { setError("Network Error"); }
+        } catch { setError("Network Error"); }
         setLoading(false);
     };
 
@@ -134,7 +139,7 @@ const TwoFactorAuth = () => {
                 const err = await res.json();
                 setError(err.detail);
             }
-        } catch (e) { setError("Network Error"); }
+        } catch { setError("Network Error"); }
         setLoading(false);
     };
 
@@ -155,7 +160,7 @@ const TwoFactorAuth = () => {
                 const err = await res.json();
                 setError(err.detail);
             }
-        } catch (e) { setError("Network Error"); }
+        } catch { setError("Network Error"); }
         setLoading(false);
     };
 
@@ -216,19 +221,19 @@ const TwoFactorAuth = () => {
                 {view === 'verify' && (
                     <>
                         {renderHeader(
-                            tempAuth.method === 'totp' ? <Smartphone size={32} /> : tempAuth.method === 'email' ? <Mail size={32} /> : <Fingerprint size={32} />,
+                            selectedMethod === 'totp' ? <Smartphone size={32} /> : selectedMethod === 'email' ? <Mail size={32} /> : <Fingerprint size={32} />,
                             t('2fa.title'),
-                            tempAuth.method === 'passkey' ? t('2fa.desc_passkey') : t('2fa.desc_totp')
+                            selectedMethod === 'passkey' ? t('2fa.desc_passkey') : t('2fa.desc_totp')
                         )}
 
                         {error && <div className="bg-red-50 text-red-600 p-2 rounded mb-4 text-sm font-bold">{error}</div>}
 
-                        {tempAuth.method !== 'passkey' && (
+                        {selectedMethod !== 'passkey' && (
                             <input key="verify-code" className="w-full p-4 border rounded-lg bg-gray-50 mb-4 text-center text-2xl tracking-widest font-mono focus:ring-2 focus:ring-pink-500 focus:outline-none"
                                 placeholder="123456" maxLength={6} value={code} onChange={e => setCode(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleVerifySubmit()} />
                         )}
 
-                        {tempAuth.method === 'passkey' ? (
+                        {selectedMethod === 'passkey' ? (
                             <button onClick={handlePasskey} disabled={loading} className="w-full bg-black text-white py-4 rounded-lg font-bold hover:bg-gray-800 transition mb-2">{t('2fa.btn_passkey')}</button>
                         ) : (
                             <button onClick={handleVerifySubmit} disabled={loading} className="w-full bg-pink-600 text-white py-4 rounded-lg font-bold hover:bg-pink-700 transition">{loading ? "..." : t('2fa.btn_verify')}</button>
