@@ -114,7 +114,11 @@ Check out the repository here: **[Solumati Addon](https://github.com/FaserF/hass
 ### ⚙️ Configuration
 
 #### OAuth (Social Login)
-To enable login via GitHub, Google, or Microsoft, set the following environment variables in the Admin Console:
+#### OAuth (Social Login)
+Enable login via GitHub, Google, or Microsoft by configuring the client IDs and secrets in the Admin Console.
+
+➡️ **[Detailed OAuth Setup Guide](docs/OAUTH_SETUP.md)**
+
 *   `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`
 *   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
 *   `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`

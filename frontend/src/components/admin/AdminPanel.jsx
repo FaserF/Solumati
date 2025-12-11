@@ -355,7 +355,9 @@ const AdminPanel = () => {
                 return true;
             }
             else {
-                alert(t('admin.settings.save_error'));
+                const err = await res.json();
+                console.error("Save Error:", err);
+                alert(`Error: ${JSON.stringify(err.detail || err)}`);
                 return false;
             }
         } catch { alert("Network Error"); return false; }
