@@ -64,12 +64,8 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
             setStatus("disconnected");
             if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
             reconnectTimeout.current = setTimeout(() => {
-                // Determine if we should reconnect based on component mounted state or just call connect again
-                // We'll trust the callback
-                // But connectWebSocket changes if dependencies change. This is tricky with useCallback.
-                // Actually, just let it fail or use a ref for the connect function if needed.
-                // For now, simpler to just not auto-reconnect inside the strict hook or pass dependency carefully.
-                // We will rely on user refresh or a simpler reconnect.
+                console.log("Attempting Reconnect...");
+                connectWebSocket();
             }, 3000);
         };
 
@@ -88,19 +84,19 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     }, [fetchHistory, connectWebSocket]);
 
 
-
-    const sendMessage = () => {
-        if (!input.trim() || status !== "connected") return;
+    const sendMessage = (msgContent = null) => {
+        const text = msgContent || input;
+        if (!text.trim() || status !== "connected") return;
 
         const payload = {
             receiver_id: chatPartner.id,
-            content: input.trim()
+            content: text.trim()
         };
 
         ws.current.send(JSON.stringify(payload));
         // We will receive echo from server to update UI, or optimistically update.
         // Server echo is safer for ID sync.
-        setInput("");
+        if (!msgContent) setInput("");
     };
 
     const handleKeyPress = (e) => {
@@ -109,6 +105,13 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
 
     const isSupportChat = chatPartner.id === 3;
     const canWrite = !isSupportChat || (currentUser?.role === 'admin') || supportChatEnabled;
+
+    const ICEBREAKERS = [
+        t ? t('chat.icebreaker.1', "Hi! How is your day?") : "Hi! How is your day?",
+        t ? t('chat.icebreaker.2', "Software development is cool, right?") : "Software development is cool, right?",
+        t ? t('chat.icebreaker.3', "Do you like coffee?") : "Do you like coffee?",
+        t ? t('chat.icebreaker.4', "What are your hobbies?") : "What are your hobbies?"
+    ];
 
     return (
         <div className="chat-window">
@@ -122,6 +125,22 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
             </div>
 
             <div className="chat-messages">
+                {messages.length === 0 && canWrite && (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-2 p-4">
+                        <p className="text-sm italic mb-2">{t ? t('chat.start_convo', 'Start the conversation!') : 'Start the conversation!'}</p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {ICEBREAKERS.map((cur, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => sendMessage(cur)}
+                                    className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs hover:bg-blue-100 transition border border-blue-200"
+                                >
+                                    {cur}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 {messages.map((msg, idx) => {
                     const isMe = msg.sender_id === currentUser.id;
                     return (
@@ -142,10 +161,10 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyPress={handleKeyPress}
-                            placeholder={t ? t('chat.placeholder', "Type a message...") : "Type a message..."}
+                            placeholder={status === 'connected' ? (t ? t('chat.placeholder', "Type a message...") : "Type a message...") : "Connecting..."}
                             disabled={status !== "connected"}
                         />
-                        <button onClick={sendMessage} disabled={status !== "connected"}>{t ? t('btn.send', 'Send') : 'Send'}</button>
+                        <button onClick={() => sendMessage()} disabled={status !== "connected"}>{t ? t('btn.send', 'Send') : 'Send'}</button>
                     </>
                 ) : (
                     <div className="w-full text-center text-xs text-gray-400 italic py-2 bg-gray-50 rounded">

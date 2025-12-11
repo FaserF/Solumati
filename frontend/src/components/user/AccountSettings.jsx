@@ -214,13 +214,17 @@ const AccountSettings = () => {
         if (res.ok) {
             alert(t('alert.totp_enabled', "TOTP successfully enabled!"));
             setTotpSetup(null);
+            setSecurityState(prev => ({ ...prev, has_totp: true, current_method: 'totp' }));
         } else { alert(t('alert.invalid_code', "Invalid Code")); }
     };
 
     const enableEmail2FA = async () => {
         try {
             const res = await fetch(`${API_URL}/users/2fa/setup/email`, { method: 'POST', headers });
-            if (res.ok) alert(t('alert.email_2fa_enabled', "Email 2FA successfully enabled!"));
+            if (res.ok) {
+                alert(t('alert.email_2fa_enabled', "Email 2FA successfully enabled!"));
+                setSecurityState(prev => ({ ...prev, current_method: 'email' }));
+            }
             else {
                 const err = await res.json();
                 alert(t('alert.error', "Error: ") + err.detail);
@@ -244,7 +248,10 @@ const AccountSettings = () => {
             const verifyResp = await fetch(`${API_URL}/users/2fa/setup/webauthn/register/verify`, {
                 method: 'POST', headers, body: JSON.stringify({ credential: attResp })
             });
-            if (verifyResp.ok) alert(t('alert.passkey_success', "Passkey registered successfully!"));
+            if (verifyResp.ok) {
+                alert(t('alert.passkey_success', "Passkey registered successfully!"));
+                setSecurityState(prev => ({ ...prev, has_passkeys: true, current_method: 'passkey' }));
+            }
             else alert(t('alert.registration_failed', "Registration failed."));
         } catch (e) {
             console.error("Passkey Error:", e);

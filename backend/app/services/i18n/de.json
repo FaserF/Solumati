@@ -861,10 +861,6 @@
     "footer.imprint": "Impressum",
     "footer.privacy": "Datenschutz",
     "hero.tagline": "Finde dein perfektes Match",
-    "landing.download_ipa": "IPA herunterladen",
-    "landing.download_msix": "Windows-App herunterladen",
-    "landing.get_ios": "Für iOS laden",
-    "landing.get_windows": "Für Windows laden",
     "legal.company": "Unternehmen",
     "legal.contact": "Kontakt",
     "legal.imprint": "Impressum",
@@ -910,5 +906,10 @@
     "landing.get_ios": "Holen Sie sich die iOS App",
     "landing.download_ipa": "IPA herunterladen (AltStore)",
     "landing.get_windows": "Holen Sie sich die Windows App",
-    "landing.download_msix": "App herunterladen"
+    "landing.download_msix": "App herunterladen",
+    "chat.icebreaker.1": "Hi! Wie war dein Tag?",
+    "chat.icebreaker.2": "Softwareentwicklung ist cool, oder?",
+    "chat.icebreaker.3": "Magst du Kaffee?",
+    "chat.icebreaker.4": "Was sind deine Hobbys?",
+    "chat.start_convo": "Starte die Unterhaltung!"
 }

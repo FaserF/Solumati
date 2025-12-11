@@ -861,10 +861,6 @@
     "footer.imprint": "Imprint",
     "footer.privacy": "Privacy",
     "hero.tagline": "Find your perfect match",
-    "landing.download_ipa": "Download IPA",
-    "landing.download_msix": "Download Windows App",
-    "landing.get_ios": "Get for iOS",
-    "landing.get_windows": "Get for Windows",
     "legal.company": "Company",
     "legal.contact": "Contact",
     "legal.imprint": "Imprint",
@@ -910,5 +906,10 @@
     "landing.get_ios": "Get the iOS App",
     "landing.download_ipa": "Download IPA (AltStore)",
     "landing.get_windows": "Get the Windows App",
-    "landing.download_msix": "Download App"
+    "landing.download_msix": "Download App",
+    "chat.icebreaker.1": "Hi! How is your day?",
+    "chat.icebreaker.2": "Software development is cool, right?",
+    "chat.icebreaker.3": "Do you like coffee?",
+    "chat.icebreaker.4": "What are your hobbies?",
+    "chat.start_convo": "Start the conversation!"
 }

@@ -19,11 +19,17 @@ const TwoFactorAuth = () => {
     const [error, setError] = useState(null);
 
     // 2. Handle missing auth (redirect)
+    // 2. Handle missing auth (redirect)
     useEffect(() => {
-        //If we are already logged in (user exists), don't redirect to login even if tempAuth is null
-        if (!tempAuth && !user) {
-            navigate('/login');
-        } else if (tempAuth && tempAuth.available_methods && tempAuth.available_methods.length > 1) {
+        // If we have no tempAuth state (meaning direct access without login flow), redirect.
+        if (!tempAuth) {
+            // If user is already logged in, they shouldn't be here either -> Dashboard
+            if (user) navigate('/dashboard');
+            else navigate('/login');
+            return;
+        }
+
+        if (tempAuth.available_methods && tempAuth.available_methods.length > 1) {
             setView(v => v === 'verify' ? 'select_method' : v);
         }
     }, [tempAuth, user, navigate]);

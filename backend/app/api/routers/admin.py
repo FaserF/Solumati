@@ -43,7 +43,11 @@ def admin_update_user(user_id: int, update: schemas.UserAdminUpdate, db: Session
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user: raise HTTPException(404, "User not found")
 
-    if update.username and update.username != user.username: user.username = update.username
+    if update.username and update.username != user.username:
+        # PROTECT SYSTEM USERS
+        if user.id in [1, 3] or user.username in ["admin", "solumati_support"]:
+             raise HTTPException(403, "Cannot rename system accounts (Admin/Support).")
+        user.username = update.username
     if update.email and update.email != user.email: user.email = update.email
     if update.password: user.hashed_password = hash_password(update.password)
     if update.is_verified is not None: user.is_verified = update.is_verified
