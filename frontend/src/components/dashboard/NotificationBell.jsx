@@ -49,9 +49,11 @@ const NotificationBell = ({ user }) => {
 
     useEffect(() => {
         if (!user) return;
-        const t = setTimeout(() => fetchNotifications(), 0);
+        const t = setTimeout(() => {
+            fetchNotifications();
+            checkSubscription();
+        }, 0);
         const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-        checkSubscription();
 
         return () => {
             clearTimeout(t);
