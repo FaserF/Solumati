@@ -81,15 +81,15 @@ jobs:
         npm version ${{ env.NEW_VERSION }} --no-git-tag-version
         cd ..
 
-        # Update backend/config.py
-        sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/config.py
-        sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "${{ env.RELEASE_TYPE }}")/' backend/config.py
+        # Update backend/app/core/config.py
+        sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/app/core/config.py
+        sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "${{ env.RELEASE_TYPE }}")/' backend/app/core/config.py
 
         # Update frontend/src/config.js
         sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "${{ env.RELEASE_TYPE }}";/' frontend/src/config.js
 
         # Commit and Push
-        git add frontend/package.json backend/config.py frontend/src/config.js
+        git add frontend/package.json backend/app/core/config.py frontend/src/config.js
         git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]"
         git push
 
