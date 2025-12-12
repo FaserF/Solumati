@@ -7,25 +7,35 @@ export const useI18n = () => useContext(I18nContext);
 
 export const I18nProvider = ({ children }) => {
     const [i18n, setI18n] = useState({});
+    const [language, setLanguage] = useState(localStorage.getItem('app_lang') || navigator.language.split('-')[0] || 'en');
 
-    useEffect(() => {
-        // Fetch Translations
-        const browserLang = navigator.language;
-        const shortLang = browserLang.split('-')[0] || 'en';
-        console.log(`[I18n] Browser language detected: ${browserLang} -> Requesting: ${shortLang}`);
-
-        fetch(`${API_URL}/api/i18n/${shortLang}`)
+    const fetchTranslations = (lang) => {
+        console.log(`[I18n] Fetching translations for: ${lang}`);
+        fetch(`${API_URL}/api/i18n/${lang}`)
             .then(res => {
                 if (!res.ok) throw new Error(`Status ${res.status}`);
                 return res.json();
             })
             .then(data => {
                 setI18n(data.translations || {});
+                setLanguage(lang);
+                localStorage.setItem('app_lang', lang);
+                document.documentElement.lang = lang;
             })
             .catch(e => {
                 console.error("[I18n] Could not load translations.", e);
+                // Fallback to EN if failed
+                if (lang !== 'en') fetchTranslations('en');
             });
-    }, []);
+    };
+
+    useEffect(() => {
+        fetchTranslations(language);
+    }, []); // Only on mount, we use changeLanguage for updates
+
+    const changeLanguage = (lang) => {
+        fetchTranslations(lang);
+    };
 
     const t = (key, defaultText = "") => {
         // 1. Try Exact Match (Legacy flat keys like "app.title")
@@ -54,7 +64,7 @@ export const I18nProvider = ({ children }) => {
     };
 
     return (
-        <I18nContext.Provider value={{ t, i18n }}>
+        <I18nContext.Provider value={{ t, i18n, language, changeLanguage }}>
             {children}
         </I18nContext.Provider>
     );

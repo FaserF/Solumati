@@ -911,5 +911,18 @@
     "chat.icebreaker.2": "Software development is cool, right?",
     "chat.icebreaker.3": "Do you like coffee?",
     "chat.icebreaker.4": "What are your hobbies?",
-    "chat.start_convo": "Start the conversation!"
+    "chat.start_convo": "Start the conversation!",
+    "email.verify.subject": "Verify your Solumati Account",
+    "email.verify.title": "Verify your Account",
+    "email.verify.content": "Welcome to Solumati! Please verify your email address to activate your account.",
+    "email.verify.btn": "Verify Email",
+    "email.reset.subject": "Solumati Password Reset",
+    "email.reset.title": "Reset Password",
+    "email.reset.content": "Click the button below to reset your password. If you didn't request this, please ignore this email.",
+    "email.reset.btn": "Reset Password",
+    "email.export.subject": "Your Solumati Data Export",
+    "email.export.body": "Here is the data export you requested.",
+    "email.login_alert.subject": "New Login Detected",
+    "email.login_alert.title": "New Login Detected",
+    "email.login_alert.content": "We detected a new login to your Solumati account.<br><br><b>IP Address:</b> {ip}<br><b>Device:</b> {device}<br><b>Time:</b> {time}<br><br>If this was you, you can ignore this email."
 }

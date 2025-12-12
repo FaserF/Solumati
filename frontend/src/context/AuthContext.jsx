@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { API_URL } from '../config';
+import { useI18n } from './I18nContext';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
+    const { changeLanguage } = useI18n();
+
     // Initialize user from LocalStorage (Cache)
     const [user, setUser] = useState(() => {
         try {
@@ -45,14 +48,15 @@ export const AuthProvider = ({ children }) => {
         setTempAuth(null);
         setServerStatus('online');
 
-        // Apply Theme
+        // Apply Theme & Language
         if (normalizedData.app_settings) {
             try {
                 const s = typeof normalizedData.app_settings === 'string' ? JSON.parse(normalizedData.app_settings) : normalizedData.app_settings;
-                applyTheme(s.theme);
-            } catch (e) { console.error("Theme apply error", e); }
+                if (s.theme) applyTheme(s.theme);
+                if (s.language) changeLanguage(s.language);
+            } catch (e) { console.error("Settings apply error", e); }
         }
-    }, [applyTheme]);
+    }, [applyTheme, changeLanguage]);
 
     // Initial Session Restore & Background Sync
     useEffect(() => {

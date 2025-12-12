@@ -426,3 +426,92 @@ async def generate_dummy_data(db: Session):
     except Exception as e:
         logger.error(f"Failed to create dummy users: {e}")
         db.rollback()
+
+
+async def ensure_showcase_dummies(db: Session):
+    """
+    Ensures a small set of 'Showcase' dummy users exist for Guest Mode (role='test').
+    These are always created, even in production, to ensure Guests have something to see.
+    """
+    try:
+        # Check if we already have enough test users
+        existing_count = db.query(models.User).filter(models.User.role == 'test').count()
+        if existing_count >= 5:
+            logger.info(f"Showcase dummies exist ({existing_count}). Skipping generation.")
+            return
+
+        logger.info("Generating Showcase Dummies for Guest Mode...")
+        from app.services.questions_content import QUESTIONS_SKELETON
+        import random
+        import secrets
+
+        # Fixed set to be consistent
+        showcase_users = [
+            {"name": "Alice", "intent": "longterm", "desc": "Looking for something serious."},
+            {"name": "Bob", "intent": "casual", "desc": "Just here to meet new people."},
+            {"name": "Charlie", "intent": "speeddate", "desc": "Fast and furious!"},
+            {"name": "Diana", "intent": "friendship", "desc": "New in town, looking for friends."},
+            {"name": "Ethan", "intent": "longterm", "desc": "Ready to settle down."}
+        ]
+
+        async with httpx.AsyncClient() as client:
+            tasks = []
+            created_users = []
+
+            for u_def in showcase_users:
+                username = f"{u_def['name']}_Showcase"
+                email = f"{username.lower()}@solumati.local"
+
+                # Check if exists
+                if db.query(models.User).filter(models.User.email == email).first():
+                    continue
+
+                raw_pw = secrets.token_urlsafe(8)
+                hashed = hash_password(raw_pw)
+
+                # Generate Random Answers
+                user_answers = {}
+                for q in QUESTIONS_SKELETON:
+                    qid = str(q["id"])
+                    opt_count = q.get("option_count", 4)
+                    user_answers[qid] = random.randint(0, opt_count - 1)
+
+                user_data = {
+                    "email": email,
+                    "hashed_password": hashed,
+                    "real_name": f"{u_def['name']} (Demo)",
+                    "username": username,
+                    "about_me": f"{u_def['desc']}\n(This is a demo user for Guest Mode)",
+                    "is_active": True,
+                    "is_verified": True,
+                    "is_guest": False,
+                    "role": "test",
+                    "intent": u_def["intent"],
+                    "answers": json.dumps(user_answers),
+                    "created_at": datetime.utcnow(),
+                    "is_visible_in_matches": True
+                }
+
+                # Schedule Image Fetch
+                tasks.append(fetch_dummy_image(client, username))
+                created_users.append(user_data)
+
+            if not tasks:
+                return
+
+            logger.info(f"Fetching images for {len(tasks)} showcase users...")
+            image_paths = await asyncio.gather(*tasks)
+
+            for idx, udata in enumerate(created_users):
+                if image_paths[idx]:
+                    udata["image_url"] = image_paths[idx]
+
+                user = models.User(**udata)
+                db.add(user)
+
+            db.commit()
+            logger.info("Showcase dummies created successfully.")
+
+    except Exception as e:
+        logger.error(f"Failed to ensure showcase dummies: {e}")
+        db.rollback()

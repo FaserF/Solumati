@@ -72,8 +72,18 @@ def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, req
     if reg_config.require_verification and not new_user.is_verified:
         server_url = reg_config.server_domain.rstrip('/')
         link = f"{server_url}/verify?id={new_user.id}&code={secure_code}"
-        html = create_html_email("Verify your Account", "Welcome to Solumati!", link, "Verify Email", server_url, db)
-        background_tasks.add_task(send_mail_sync, user.email, "Verify your Solumati Account", html, db)
+
+        # Default to EN for new registration (or system default)
+        # Improvement: We could allow passing language in UserCreate
+        t = get_translations("en")
+
+        subject = f"[{PROJECT_NAME}] {t.get('email.verify.subject', 'Verify your Solumati Account')}"
+        title = t.get('email.verify.title', 'Verify your Account')
+        content = t.get('email.verify.content', 'Welcome to Solumati! Please verify your email address.')
+        btn_text = t.get('email.verify.btn', 'Verify Email')
+
+        html = create_html_email(title, content, link, btn_text, server_url, db)
+        background_tasks.add_task(send_mail_sync, user.email, subject, html, db)
 
     # Send registration notification to admin (if enabled)
     background_tasks.add_task(send_registration_notification, new_user)
@@ -483,48 +493,70 @@ async def export_user_data(user_id: int, method: str = "download", background_ta
         if zip_size > 12 * 1024 * 1024:
             raise HTTPException(413, "Export too large for email (Max 12MB). Please use download.")
 
-        # We need to attach the file.
-        # send_mail_sync / create_html_email helper might not support attachments directly?
-        # Checking services/utils.py ...
-        # Assuming we need to extend utils or implement raw email sending here.
-        # Let's inspect utils.py first? Or assume I can use a standard python mail helper.
-        # utils.send_mail_sync uses SMTP.
-        # I'll double check utils.py below. For now, I'll place a TODO or simple implementation.
+        # Get User Language
+        user_lang = "en"
+        try:
+            settings = json.loads(user.app_settings) if user.app_settings else {}
+            user_lang = settings.get("language", "en")
+        except:
+            pass
 
-        # Actually, let's inject the task to send mail with attachment.
-        # Since send_mail_sync likely doesn't support attachments (based on what I recall),
-        # I might need to improve it or write a custom sender here.
+        t = get_translations(user_lang)
+
+        # Prepare content
+        subject = f"[{PROJECT_NAME}] {t.get('email.export.subject', 'Your Data Export')}"
+        body_text = t.get('email.export.body', 'Here is the data export you requested.')
+
+        # Create HTML Body using template
+        html_body = create_html_email(
+            title=subject,
+            content=body_text,
+            server_domain=get_setting(db, "registration", {}).get("server_domain", ""),
+            db=db
+        )
 
         # Function to send mail with attachment
-        def send_export_mail(target_email, zip_data, filename):
+        def send_export_mail(target_email, zip_data, filename, subject, html_content):
             import smtplib
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
             from email.mime.application import MIMEApplication
 
-            nonlocal mail_conf
-            msg = MIMEMultipart()
-            msg['Subject'] = "Your Solumati Data Export"
-            msg['From'] = f"{mail_conf.get('sender_name', 'Solumati')} <{mail_conf.get('from_email')}>"
-            msg['To'] = target_email
-
-            text_body = "Here is the data export you requested."
-            msg.attach(MIMEText(text_body, 'plain'))
-
-            part = MIMEApplication(zip_data, Name=filename)
-            part['Content-Disposition'] = f'attachment; filename="{filename}"'
-            msg.attach(part)
-
+            # Re-fetch mail config inside task to be safe
+            from app.core.database import SessionLocal
+            db_task = SessionLocal()
             try:
+                mail_conf = get_setting(db_task, "mail", {})
+                if not mail_conf.get("enabled"):
+                     logger.warning("Mail disabled during export task.")
+                     return
+
+                msg = MIMEMultipart('alternative') # Changed to alternative for HTML/Text
+                msg['Subject'] = subject
+                msg['From'] = f"{mail_conf.get('sender_name', 'Solumati')} <{mail_conf.get('from_email')}>"
+                msg['To'] = target_email
+
+                # Attach HTML Body
+                msg.attach(MIMEText(html_content, 'html'))
+
+                # Attach file
+                part = MIMEApplication(zip_data, Name=filename)
+                part['Content-Disposition'] = f'attachment; filename="{filename}"'
+                msg.attach(part)
+
                 with smtplib.SMTP(mail_conf['smtp_host'], mail_conf['smtp_port']) as server:
                     if mail_conf.get('smtp_tls'): server.starttls()
                     if mail_conf.get('smtp_user') and mail_conf.get('smtp_password'):
                         server.login(mail_conf['smtp_user'], mail_conf['smtp_password'])
                     server.send_message(msg)
+
+                logger.info(f"Export email sent to {target_email}")
             except Exception as e:
                 logger.error(f"Failed to send export email: {e}")
+            finally:
+                db_task.close()
 
-        background_tasks.add_task(send_export_mail, user.email, zip_buffer.getvalue(), f"solumati_export_{user.username}.zip")
+        background_tasks.add_task(send_export_mail, user.email, zip_buffer.getvalue(), f"solumati_export_{user.username}.zip", subject, html_body)
         return {"status": "queued", "message": "Email will be sent shortly."}
 
     else:
@@ -532,6 +564,8 @@ async def export_user_data(user_id: int, method: str = "download", background_ta
 
 # --- Password Reset Flow ---
 from datetime import timedelta
+from app.services.i18n import translate, get_translations
+
 @router.post("/auth/password-reset/request")
 def request_password_reset(body: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     identifier = body.get("email") # Can be email or username now
@@ -570,8 +604,29 @@ def request_password_reset(body: dict, background_tasks: BackgroundTasks, db: Se
         server_url = reg_config.server_domain.rstrip('/')
         link = f"{server_url}?reset_token={token}"
 
-        html = create_html_email("Reset Password", "Click the button below to reset your password.", link, "Reset Password", server_url)
-        background_tasks.add_task(send_mail_sync, user.email, "Solumati Password Reset", html, db)
+        # Get User Language
+        user_lang = "en"
+        try:
+            settings = json.loads(user.app_settings) if user.app_settings else {}
+            user_lang = settings.get("language", "en")
+        except:
+            pass
+
+        # Use i18n for email content
+        # Note: translate() usually takes strict context, but our i18n.py implementation
+        # might default to request context or system default.
+        # We need a way to force language in translate() or get specific dictionary.
+        # i18n.py has get_translations(lang).
+
+        t = get_translations(user_lang)
+
+        subject = f"[{PROJECT_NAME}] {t.get('email.reset.subject', 'Password Reset')}"
+        title = t.get('email.reset.title', 'Reset Password')
+        content = t.get('email.reset.content', 'Click the button below to reset your password.')
+        btn_text = t.get('email.reset.btn', 'Reset Password')
+
+        html = create_html_email(title, content, link, btn_text, server_url)
+        background_tasks.add_task(send_mail_sync, user.email, subject, html, db)
     else:
         logger.info(f"Password reset requested for unknown identifier: {identifier}")
 

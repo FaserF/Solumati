@@ -10,7 +10,7 @@ from app.core.database import engine, Base, get_db, SessionLocal
 from app.db import models, schemas
 from app.core.logging_config import logger
 from app.core.config import CURRENT_VERSION, TEST_MODE, PROJECT_NAME
-from app.scripts.init_data import check_schema, ensure_guest_user, ensure_admin_user, ensure_support_user, generate_dummy_data, check_emergency_reset, fix_dummy_user_roles
+from app.scripts.init_data import check_schema, ensure_guest_user, ensure_admin_user, ensure_support_user, generate_dummy_data, check_emergency_reset, fix_dummy_user_roles, ensure_showcase_dummies
 from app.services.tasks import periodic_cleanup_task
 
 # Routers
@@ -58,6 +58,10 @@ async def startup_event():
         ensure_guest_user(db)
         ensure_support_user(db)
         check_emergency_reset(db)
+
+        # Always ensure showcase dummies are present for guest mode
+        await ensure_showcase_dummies(db)
+
         if TEST_MODE:
             logger.warning(f"TEST MODE ACTIVE: Generating Dummy Data...")
             await generate_dummy_data(db=db)

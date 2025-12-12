@@ -19,6 +19,7 @@
 ---
 
 ## ✨ Features
+> 📖 **[View Detailed Feature Documentation (v2025.12.2-b6)](docs/FEATURES.md)**
 
 *   🤖 **Unique Matching Algorithm:** Connects users based on deep compatibility calculations using weighted questions.
 *   💬 **Encrypted Chat:** End-to-end encrypted messaging with support for transient (guest) and persistent conversations.

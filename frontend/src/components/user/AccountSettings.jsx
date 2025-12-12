@@ -10,7 +10,7 @@ import { useI18n } from '../../context/I18nContext';
 const AccountSettings = () => {
     const { user, logout, applyTheme, theme } = useAuth(); // updateUser removed
     const { globalConfig } = useConfig();
-    const { t } = useI18n();
+    const { t, language, changeLanguage } = useI18n();
     const navigate = useNavigate();
 
     // Handlers
@@ -415,6 +415,33 @@ const AccountSettings = () => {
                 {/* === APP SETTINGS TAB === */}
                 {activeTab === 'app' && (
                     <div className="space-y-6">
+                        {/* Language Settings */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
+                            <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
+                                <Globe className="text-green-600" /> {t('settings.language_title', 'Language')}
+                            </h2>
+                            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                <button
+                                    onClick={() => {
+                                        changeLanguage('en');
+                                        saveAppPrefs({ language: 'en' });
+                                    }}
+                                    className={`flex-1 py-2 rounded-md text-sm font-bold transition flex items-center justify-center gap-2 ${language === 'en' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                >
+                                    🇬🇧 English
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        changeLanguage('de');
+                                        saveAppPrefs({ language: 'de' });
+                                    }}
+                                    className={`flex-1 py-2 rounded-md text-sm font-bold transition flex items-center justify-center gap-2 ${language === 'de' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                >
+                                    🇩🇪 Deutsch
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Theme Settings */}
                         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border dark:border-gray-700">
                             <h2 className="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
