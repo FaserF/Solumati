@@ -159,7 +159,11 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
             )
         )
     else:
-        query = query.filter(models.User.is_visible_in_matches == True)
+        # Normal users: Visible users only, AND NOT test users (double check)
+        query = query.filter(
+            models.User.is_visible_in_matches == True,
+            models.User.role != 'test'
+        )
 
     import random
 

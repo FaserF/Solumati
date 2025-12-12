@@ -122,20 +122,22 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                              await manager.send_personal_message(err, user.id)
                              continue
 
-                         # Email Forwarding
-                         support_email = support_conf.get("email_target", "")
-                         if support_email:
-                             from app.services.utils import send_mail_sync, create_html_email
-                             try:
-                                 subject = f"Support Request: {user.username}"
-                                 html_body = create_html_email(
-                                     title=f"New Message from {user.username}",
-                                     content=f"<p><b>User:</b> {user.username} (ID: {user.id})</p><p><b>Message:</b><br>{content}</p>"
-                                 )
-                                 # Send sync (might block slightly but acceptable for MVP support chat)
-                                 send_mail_sync(support_email, subject, html_body, db)
-                             except Exception as exc:
-                                 print(f"Error forwarding support email: {exc}")
+                         # Email Forwarding - BLOCKED FOR GUESTS
+                         # Guests can chat (sandbox) but we do not forward to email to prevent spam.
+                         if not user.is_guest:
+                             support_email = support_conf.get("email_target", "")
+                             if support_email:
+                                 from app.services.utils import send_mail_sync, create_html_email
+                                 try:
+                                     subject = f"Support Request: {user.username}"
+                                     html_body = create_html_email(
+                                         title=f"New Message from {user.username}",
+                                         content=f"<p><b>User:</b> {user.username} (ID: {user.id})</p><p><b>Message:</b><br>{content}</p>"
+                                     )
+                                     # Send sync (might block slightly but acceptable for MVP support chat)
+                                     send_mail_sync(support_email, subject, html_body, db)
+                                 except Exception as exc:
+                                     print(f"Error forwarding support email: {exc}")
 
                 # 1. Guest Restriction (Guest -> Can only chat with 'test' users)
                 if user.is_guest:

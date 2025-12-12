@@ -77,17 +77,16 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
 
     logo_svg = "" # Removed inline SVG
 
-    # Use hosted logo
-    logo_path = "/logo/windows11/Square150x150Logo.scale-100.png"
-    logo_full_url = f"{host_url}{logo_path}" if host_url and not host_url.endswith("/") else f"{host_url}/{logo_path.lstrip('/')}"
+    # Default to GitHub Raw URL (Always works, fallback)
+    github_logo = "https://raw.githubusercontent.com/FaserF/Solumati/refs/heads/main/frontend/public/logo/android-chrome-192x192.png"
+    logo_full_url = github_logo
 
-    # Fallback if host_url is missing or local
-    if not host_url or "localhost" in host_url or "127.0.0.1" in host_url:
-         # For local dev/test without public URL, the image might be broken in email clients.
-         # But usually we have a real domain in prod.
-         pass
-
-    # Build Support Link HTML for Footer
+    # Try to use Hosted Logo if we are on a real domain (not localhost)
+    if host_url and "localhost" not in host_url and "127.0.0.1" not in host_url:
+         logo_path = "/logo/android-chrome-192x192.png"
+         # Construct clean URL
+         base = host_url.rstrip('/')
+         logo_full_url = f"{base}{logo_path}"
     footer_support_link = ""
     if support_url:
         footer_support_link = f' • <a href="{support_url}">Support</a>'

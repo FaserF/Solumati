@@ -463,8 +463,14 @@ async def ensure_showcase_dummies(db: Session):
                 email = f"{username.lower()}@solumati.local"
 
                 # Check if exists
-                if db.query(models.User).filter(models.User.email == email).first():
-                    continue
+                existing_user = db.query(models.User).filter(models.User.email == email).first()
+                if existing_user:
+     # Ensure they are active but HIDDEN (so only Guest/Admin see them via role check)
+                     existing_user.is_active = True
+                     existing_user.is_visible_in_matches = False
+                     existing_user.role = "test" # Force role
+                     db.add(existing_user) # Mark for update
+                     continue
 
                 raw_pw = secrets.token_urlsafe(8)
                 hashed = hash_password(raw_pw)
@@ -489,25 +495,23 @@ async def ensure_showcase_dummies(db: Session):
                     "intent": u_def["intent"],
                     "answers": json.dumps(user_answers),
                     "created_at": datetime.utcnow(),
-                    "is_visible_in_matches": True
+                    "is_visible_in_matches": False # Hidden by default, visible only to Guest/Admin via role check
                 }
 
                 # Schedule Image Fetch
                 tasks.append(fetch_dummy_image(client, username))
                 created_users.append(user_data)
 
-            if not tasks:
-                return
+            if tasks:
+                 logger.info(f"Fetching images for {len(tasks)} showcase users...")
+                 image_paths = await asyncio.gather(*tasks)
 
-            logger.info(f"Fetching images for {len(tasks)} showcase users...")
-            image_paths = await asyncio.gather(*tasks)
+                 for idx, udata in enumerate(created_users):
+                     if image_paths[idx]:
+                         udata["image_url"] = image_paths[idx]
 
-            for idx, udata in enumerate(created_users):
-                if image_paths[idx]:
-                    udata["image_url"] = image_paths[idx]
-
-                user = models.User(**udata)
-                db.add(user)
+                     user = models.User(**udata)
+                     db.add(user)
 
             db.commit()
             logger.info("Showcase dummies created successfully.")
