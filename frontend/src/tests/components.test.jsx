@@ -33,7 +33,9 @@ vi.mock('../context/ConfigContext', () => ({
 
 vi.mock('../context/I18nContext', () => ({
     useI18n: () => ({
-        t: (key, defaultText) => defaultText || key
+        t: (key, defaultText) => defaultText || key,
+        changeLanguage: vi.fn(),
+        language: 'en'
     })
 }));
 
@@ -55,14 +57,14 @@ describe('Login Component', () => {
 
     it('renders email and password inputs', () => {
         render(<Login />);
-        expect(screen.getByPlaceholderText(/user \/ mail/i)).toBeDefined();
-        expect(screen.getByPlaceholderText(/••••••••/i)).toBeDefined();
+        expect(screen.getByPlaceholderText(/Username or Email/i)).toBeDefined();
+        expect(screen.getByPlaceholderText(/Password/i)).toBeDefined();
         expect(screen.getByText('btn.login')).toBeDefined();
     });
 
     it('updates inputs on change', () => {
         render(<Login />);
-        const emailInput = screen.getByPlaceholderText(/user \/ mail/i);
+        const emailInput = screen.getByPlaceholderText(/Username or Email/i);
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
         expect(emailInput.value).toBe('test@example.com');
     });

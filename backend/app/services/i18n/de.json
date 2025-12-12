@@ -213,6 +213,8 @@
     "settings.email_notif_matches_desc": "E-Mail bei neuen kompatiblen Matches",
     "settings.email_notif_messages": "Neue Nachrichten",
     "settings.email_notif_messages_desc": "E-Mail für ungelesene Nachrichten (Tageszusammenfassung)",
+    "register.complete_captcha": "Bitte CAPTCHA lösen",
+    "settings.language_title": "Sprache",
     "settings.display_title": "Darstellung",
     "settings.change_mail": "E-Mail Adresse ändern",
     "settings.change_pw": "Passwort ändern",

@@ -2,6 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthProvider } from '../context/AuthContext';
 
+// Mock I18nContext
+vi.mock('../context/I18nContext', () => ({
+    useI18n: () => ({
+        t: (k) => k,
+        changeLanguage: vi.fn(),
+        language: 'en'
+    })
+}));
+
 
 // Mock Fetch
 global.fetch = vi.fn();

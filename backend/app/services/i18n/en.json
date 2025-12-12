@@ -215,6 +215,8 @@
     "settings.email_notif_matches_desc": "Email when you get a new compatible match",
     "settings.email_notif_messages": "New Messages",
     "settings.email_notif_messages_desc": "Email for unread messages (daily digest)",
+    "register.complete_captcha": "Please complete CAPTCHA",
+    "settings.language_title": "Language",
     "settings.display_title": "Display",
     "settings.change_mail": "Change Email Address",
     "settings.change_pw": "Change Password",

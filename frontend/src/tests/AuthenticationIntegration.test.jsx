@@ -28,7 +28,9 @@ vi.mock('../context/ConfigContext', () => ({
 
 vi.mock('../context/I18nContext', () => ({
     useI18n: () => ({
-        t: (key, defaultText) => defaultText || key
+        t: (key, defaultText) => defaultText || key,
+        changeLanguage: vi.fn(),
+        language: 'en'
     })
 }));
 
@@ -67,8 +69,8 @@ describe('Authentication Integration Flow', () => {
 
         // Assert: We should see the Login form (nested route)
         // If <Outlet /> is missing, these will fail
-        expect(screen.getByPlaceholderText(/user \/ mail/i)).toBeDefined();
-        expect(screen.getByPlaceholderText(/••••••••/i)).toBeDefined();
+        expect(screen.getByPlaceholderText(/Username or Email/i)).toBeDefined();
+        expect(screen.getByPlaceholderText(/Password/i)).toBeDefined();
     });
 
     it('renders Register input fields when visiting /register inside AuthLayout', () => {
