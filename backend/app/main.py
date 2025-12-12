@@ -12,6 +12,7 @@ from app.core.logging_config import logger
 from app.core.config import CURRENT_VERSION, TEST_MODE, PROJECT_NAME
 from app.scripts.init_data import check_schema, ensure_guest_user, ensure_admin_user, ensure_support_user, generate_dummy_data, check_emergency_reset, fix_dummy_user_roles, ensure_showcase_dummies
 from app.services.tasks import periodic_cleanup_task
+from app.services.scheduler import start_scheduler
 
 # Routers
 from app.api.routers import auth, users, admin, system, oauth, chat, notifications, backup
