@@ -107,12 +107,21 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     const isSupportChat = chatPartner.id === 3;
     const canWrite = !isSupportChat || (currentUser?.role === 'admin') || supportChatEnabled;
 
-    const ICEBREAKERS = [
+    const ICEBREAKERS_USER = [
         t ? t('chat.icebreaker.1', "Hi! How is your day?") : "Hi! How is your day?",
         t ? t('chat.icebreaker.2', "Software development is cool, right?") : "Software development is cool, right?",
         t ? t('chat.icebreaker.3', "Do you like coffee?") : "Do you like coffee?",
         t ? t('chat.icebreaker.4', "What are your hobbies?") : "What are your hobbies?"
     ];
+
+    const ICEBREAKERS_SUPPORT = [
+        t ? t('chat.support.1', "I found a bug 🐛") : "I found a bug 🐛",
+        t ? t('chat.support.2', "I have a feature request 💡") : "I have a feature request 💡",
+        t ? t('chat.support.3', "Account help needed 🆘") : "Account help needed 🆘",
+        t ? t('chat.support.4', "General feedback 📣") : "General feedback 📣"
+    ];
+
+    const ICEBREAKERS = isSupportChat ? ICEBREAKERS_SUPPORT : ICEBREAKERS_USER;
 
     return (
         <div className="chat-window">

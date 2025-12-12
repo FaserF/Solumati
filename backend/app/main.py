@@ -59,6 +59,9 @@ async def startup_event():
         ensure_support_user(db)
         check_emergency_reset(db)
 
+        # Initialize Scheduler
+        start_scheduler()
+
         # Always ensure showcase dummies are present for guest mode
         await ensure_showcase_dummies(db)
 

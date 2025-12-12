@@ -75,17 +75,17 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
 
     github_url = "https://github.com/FaserF/Solumati"
 
-    # Inline SVG logo - works reliably in all email clients
-    logo_svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80" style="border-radius: 16px; background: white; padding: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <defs>
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-            </linearGradient>
-        </defs>
-        <circle cx="50" cy="50" r="45" fill="url(#grad1)"/>
-        <text x="50" y="65" font-size="40" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif">S</text>
-    </svg>'''
+    logo_svg = "" # Removed inline SVG
+
+    # Use hosted logo
+    logo_path = "/logo/windows11/Square150x150Logo.scale-100.png"
+    logo_full_url = f"{host_url}{logo_path}" if host_url and not host_url.endswith("/") else f"{host_url}/{logo_path.lstrip('/')}"
+
+    # Fallback if host_url is missing or local
+    if not host_url or "localhost" in host_url or "127.0.0.1" in host_url:
+         # For local dev/test without public URL, the image might be broken in email clients.
+         # But usually we have a real domain in prod.
+         pass
 
     # Build Support Link HTML for Footer
     footer_support_link = ""
@@ -160,7 +160,7 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
             <div class="email-container">
                 <div class="header">
                     <div class="logo-container">
-                        {logo_svg}
+                        <img src="{logo_full_url}" alt="{PROJECT_NAME}" width="80" height="80" style="border-radius: 12px; display: block;">
                     </div>
                     <p class="app-name">{PROJECT_NAME}</p>
                 </div>

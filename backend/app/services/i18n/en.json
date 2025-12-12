@@ -915,6 +915,10 @@
     "chat.icebreaker.2": "Software development is cool, right?",
     "chat.icebreaker.3": "Do you like coffee?",
     "chat.icebreaker.4": "What are your hobbies?",
+    "chat.support.1": "I found a bug 🐛",
+    "chat.support.2": "I have a feature request 💡",
+    "chat.support.3": "Account help needed 🆘",
+    "chat.support.4": "General feedback 📣",
     "chat.start_convo": "Start the conversation!",
     "email.verify.subject": "Verify your Solumati Account",
     "email.verify.title": "Verify your Account",
@@ -928,5 +932,15 @@
     "email.export.body": "Here is the data export you requested.",
     "email.login_alert.subject": "New Login Detected",
     "email.login_alert.title": "New Login Detected",
-    "email.login_alert.content": "We detected a new login to your Solumati account.<br><br><b>IP Address:</b> {ip}<br><b>Device:</b> {device}<br><b>Time:</b> {time}<br><br>If this was you, you can ignore this email."
+    "email.alert.login.desc": "We detected a new login to your {project_name} account.",
+    "email.2fa.subject": "Solumati Login Verification",
+    "email.2fa.title": "Your Verification Code",
+    "email.2fa.desc": "Here is your verification code to complete your login:",
+    "email.2fa.validity": "This code is valid for 10 minutes.",
+    "email.login_alert.content": "We detected a new login to your Solumati account.<br><br><b>IP Address:</b> {ip}<br><b>Device:</b> {device}<br><b>Time:</b> {time}<br><br>If this was you, you can ignore this email.",
+    "email.summary.subject": "Your Daily Summary",
+    "email.summary.title": "You have unread messages",
+    "email.summary.desc_single": "You have {count} unread message from 1 chat partner.",
+    "email.summary.desc_multi": "You have {count} unread messages from {senders} chat partners.",
+    "email.summary.btn": "Go to Chat"
 }

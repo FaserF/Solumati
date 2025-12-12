@@ -52,13 +52,41 @@ def generate_email_2fa_code(user: models.User, db: Session):
     # Send Mail
     reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", schemas.RegistrationConfig()))
 
-    html = f"""
-    <p>Your Solumati verification code is:</p>
-    <h1>{code}</h1>
-    <p>Valid for 10 minutes.</p>
+    # Determine User Language
+    # Default to 'en' if not set
+    lang = 'en'
+    if user.app_settings:
+        try:
+            s = json.loads(user.app_settings) if isinstance(user.app_settings, str) else user.app_settings
+            lang = s.get('language', 'en')
+        except:
+            pass
+
+    from app.services.i18n import get_translations
+    from app.services.utils import create_html_email
+
+    t = get_translations(lang)
+    project_name = PROJECT_NAME
+
+    subject = f"[{project_name}] {t.get('email.2fa.subject', 'Login Verification')}"
+    title = t.get('email.2fa.title', 'Your Verification Code')
+    desc = t.get('email.2fa.desc', 'Here is your verification code:')
+    validity = t.get('email.2fa.validity', 'Valid for 10 minutes.')
+
+    # Custom Content HTML with bigger code
+    content_html = f"""
+    <p>{desc}</p>
+    <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0; text-align: center;">
+        <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #8b5cf6;">{code}</span>
+    </div>
+    <p style="color: #6b7280; font-size: 14px;">{validity}</p>
     """
 
-    send_mail_sync(user.email, "Solumati Login Verification", html, db)
+    # We use create_html_email but pass our pre-formatted HTML as 'content'
+    server_url = reg_config.server_domain if reg_config.server_domain else ""
+    html = create_html_email(title, content_html, action_url=None, action_text=None, server_domain=server_url, db=db)
+
+    send_mail_sync(user.email, subject, html, db)
     logger.info(f"Sent Email 2FA code to {user.email}")
 
 
