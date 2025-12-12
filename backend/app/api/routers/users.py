@@ -12,6 +12,7 @@ from typing import List
 from app.core.database import get_db
 from app.db import models, schemas
 from app.core.security import hash_password
+from app.core.config import PROJECT_NAME
 from app.services.utils import get_setting, create_html_email, send_mail_sync, generate_unique_username, calculate_compatibility, send_registration_notification, send_password_changed_notification, send_email_changed_notification
 from app.services.captcha import verify_captcha_sync
 from app.api.dependencies import get_current_user_from_header

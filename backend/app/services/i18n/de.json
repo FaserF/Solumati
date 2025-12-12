@@ -33,6 +33,8 @@
     "login.btn_google": "Anmelden mit Google",
     "login.btn_microsoft": "Anmelden mit Microsoft",
     "login.or_email": "oder mit E-Mail",
+    "login.placeholder_id": "Benutzername oder E-Mail",
+    "login.placeholder_pw": "Passwort",
     "login.forgot_pw": "Passwort vergessen?",
     "btn.login_passkey": "Mit Passkey anmelden",
     "label.email": "E-Mail",

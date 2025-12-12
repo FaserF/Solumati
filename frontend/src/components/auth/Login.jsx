@@ -177,7 +177,7 @@ const Login = () => {
                     <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">{t('label.email_user', 'Email or Username')}</label>
                     <input
                         className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
-                        placeholder="user / mail@example.com"
+                        placeholder={t('login.placeholder_id', 'Username or Email')}
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleLogin()}
@@ -188,7 +188,7 @@ const Login = () => {
                     <input
                         className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
                         type="password"
-                        placeholder="••••••••"
+                        placeholder={t('login.placeholder_pw', 'Password')}
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleLogin()}

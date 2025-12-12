@@ -9,32 +9,32 @@ export const I18nProvider = ({ children }) => {
     const [i18n, setI18n] = useState({});
     const [language, setLanguage] = useState(localStorage.getItem('app_lang') || navigator.language.split('-')[0] || 'en');
 
-    const fetchTranslations = (lang) => {
-        console.log(`[I18n] Fetching translations for: ${lang}`);
-        fetch(`${API_URL}/api/i18n/${lang}`)
-            .then(res => {
-                if (!res.ok) throw new Error(`Status ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                setI18n(data.translations || {});
-                setLanguage(lang);
-                localStorage.setItem('app_lang', lang);
-                document.documentElement.lang = lang;
-            })
-            .catch(e => {
-                console.error("[I18n] Could not load translations.", e);
-                // Fallback to EN if failed
-                if (lang !== 'en') fetchTranslations('en');
-            });
-    };
-
     useEffect(() => {
+        const fetchTranslations = (lang) => {
+            console.log(`[I18n] Fetching translations for: ${lang}`);
+            fetch(`${API_URL}/api/i18n/${lang}`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`Status ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    setI18n(data.translations || {});
+                    // Note: setLanguage is not needed here as 'language' state is the trigger
+                    localStorage.setItem('app_lang', lang);
+                    document.documentElement.lang = lang;
+                })
+                .catch(e => {
+                    console.error("[I18n] Could not load translations.", e);
+                    // Fallback to EN if failed
+                    if (lang !== 'en') setLanguage('en');
+                });
+        };
+
         fetchTranslations(language);
-    }, []); // Only on mount, we use changeLanguage for updates
+    }, [language]);
 
     const changeLanguage = (lang) => {
-        fetchTranslations(lang);
+        setLanguage(lang);
     };
 
     const t = (key, defaultText = "") => {
