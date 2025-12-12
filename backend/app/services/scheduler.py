@@ -14,7 +14,12 @@ logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler()
 
+
 def start_scheduler():
+    if scheduler.running:
+        logger.info("Scheduler already running.")
+        return
+
     # Run every day at 08:00 AM
     trigger = CronTrigger(hour=8, minute=0)
     scheduler.add_job(send_daily_message_summaries, trigger, id='daily_summary', replace_existing=True)
