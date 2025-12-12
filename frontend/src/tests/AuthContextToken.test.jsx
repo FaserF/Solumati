@@ -24,6 +24,18 @@ describe('AuthContext Token Handling', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
+
+        // Mock matchMedia
+        window.matchMedia = vi.fn().mockImplementation(query => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: vi.fn(), // deprecated
+            removeListener: vi.fn(), // deprecated
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
+        }));
     });
 
     it('should NOT attempt to fetch user if token is "undefined" string', async () => {
@@ -61,7 +73,8 @@ describe('AuthContext Token Handling', () => {
     it('should fetch user if token is valid', async () => {
         localStorage.setItem('token', '123_valid_token');
 
-        global.fetch.mockResolvedValueOnce({
+        // Use mockResolvedValue (not Once) to avoid crash if called multiple times (e.g. strict mode)
+        global.fetch.mockResolvedValue({
             ok: true,
             json: async () => ({ user_id: 123, username: 'TestUser', role: 'user' }),
         });
