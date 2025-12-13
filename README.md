@@ -120,8 +120,8 @@ Check out the repository here: **[Solumati Addon](https://github.com/FaserF/hass
 | :--- | :---: | :---: |
 | **Frontend** | 59 | 8175 |
 | **Backend** | 50 | 6496 |
-| **Config & Docs** | 25 | 2579 |
-| **Total** | **134** | **17250** |
+| **Config & Docs** | 28 | 2867 |
+| **Total** | **137** | **17538** |
 <!-- STATS_END -->
 
 #### OAuth (Social Login)
