@@ -289,11 +289,25 @@ jobs:
           git status
 
           # Check if there are any changes to commit
-          if git diff --staged --quiet; then
+          if git diff --staged --quiet && git diff --quiet; then
             echo "No changes to commit"
           else
-            # Commit all staged changes
+            # Commit all changes - ensure we capture everything
             git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
+
+            # Double-check: stage and commit any remaining changes that might have been missed
+          git add -A
+          if ! git diff --staged --quiet || ! git diff --quiet; then
+            echo "Found additional changes after commit, committing them..."
+            git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} (additional changes) [skip ci]" || echo "No additional changes to commit"
+          fi
+
+            # Verify working directory is clean before pull
+            if ! git diff --quiet || ! git diff --cached --quiet; then
+              echo "Error: Working directory still has uncommitted changes"
+              git status
+              exit 1
+            fi
 
             # Pull again with rebase to handle any concurrent changes
             git pull --rebase origin main
