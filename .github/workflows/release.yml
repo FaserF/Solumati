@@ -88,8 +88,11 @@ jobs:
         # Update frontend/src/config.js
         sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "${{ env.RELEASE_TYPE }}";/' frontend/src/config.js
 
+        # Update README Statistics
+        python3 scripts/update_readme_stats.py
+
         # Commit and Push
-        git add frontend/package.json backend/app/core/config.py frontend/src/config.js
+        git add frontend/package.json backend/app/core/config.py frontend/src/config.js README.md
         git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]"
         git push
 

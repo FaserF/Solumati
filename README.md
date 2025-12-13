@@ -114,6 +114,16 @@ Check out the repository here: **[Solumati Addon](https://github.com/FaserF/hass
 
 ### ⚙️ Configuration
 
+#### 📊 Project Statistics
+<!-- STATS_START -->
+| Category | Files | Lines of Code |
+| :--- | :---: | :---: |
+| **Frontend** | 59 | 8175 |
+| **Backend** | 50 | 5648 |
+| **Config & Docs** | 24 | 2541 |
+| **Total** | **133** | **16364** |
+<!-- STATS_END -->
+
 #### OAuth (Social Login)
 Enable login via GitHub, Google, or Microsoft by configuring the client IDs and secrets in the Admin Console.
 
