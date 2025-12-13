@@ -20,7 +20,7 @@ jobs:
       - name: Link Checker (Lychee)
         uses: lycheeverse/lychee-action@v1.10.0
         with:
-          args: --verbose --no-progress '*.md' 'docs/**/*.md' 'frontend/src/**/*.jsx' --exclude-mail
+          args: --config lychee.toml --exclude-all-private
           fail: true
 
   # 2. BACKEND INTEGRITY

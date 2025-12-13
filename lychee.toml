@@ -1,0 +1,45 @@
+################################################################################
+# Lychee Link Checker Configuration
+# This file implements a "Domain Whitelist" strategy to prevent excessive
+# pings to external websites.
+################################################################################
+
+# 1. VISIBILITY & FORMATTING
+verbose = true
+progress = true
+format = "markdown"
+
+# 2. CHECK SCOPE
+# Check all markdown files, HTML, and source code
+include = [
+    "*.md",
+    "docs/**/*.md",
+    "frontend/src/**/*.jsx"
+]
+
+# 3. EXCLUSIONS (Whitelist Implementation)
+# We exclude EVERYTHING that does not match our trusted domains.
+# - (?!...) is a negative lookahead.
+# - We allow:
+#   - github.com/FaserF (Our Repositories)
+#   - raw.githubusercontent.com/FaserF (Our Assets)
+#   - localhost / 127.0.0.1 (Local Dev)
+#
+# All other http/https links are IGNORED.
+exclude = [
+    # Whitelist Logic: Exclude any URL that does NOT start with these patterns
+    '^(http|https)://(?!github\.com/FaserF|raw\.githubusercontent\.com/FaserF|localhost|127\.0\.0\.1).*',
+
+    # Specific Ignores (for templates/placeholders that might slip through or match trusted domains)
+    '.*(\$|\%7B).*',       # Variables ${...}
+    'https://solumati.com' # Placeholder
+]
+
+# 4. NETWORK & RETRY
+timeout = 10
+retry = 3
+max_retries = 3
+
+# 5. ACCEPTANCE
+# We accept 429 (Too Many Requests) as valid to avoid failing builds on transient issues
+accept = [200, 204, 429]
