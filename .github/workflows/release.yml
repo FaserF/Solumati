@@ -265,6 +265,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Pull latest changes first to avoid conflicts
+          git pull --rebase origin main || true
+
           # Update frontend/package.json
           cd frontend
           # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
@@ -279,8 +282,14 @@ jobs:
           # Update frontend/src/config.js
           sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "dev";/' frontend/src/config.js
 
-          # Commit and Push (with rebase to handle concurrent changes from release job)
-          git add frontend/package.json backend/app/core/config.py frontend/src/config.js
-          git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
-          git pull --rebase origin main
-          git push origin main
+          # Stage all changes (including any files modified by npm version, like package-lock.json)
+          git add -A
+
+          # Check if there are any changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            # Commit and Push
+            git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
+            git push origin main
+          fi
