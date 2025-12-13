@@ -353,6 +353,7 @@
         "scripts/": {
             "generate_version.py": null,
             "sync_i18n.py": null,
+            "update_readme_stats.py": null,
             "update_repo_meta.py": null
         },
         "secret.key": null,
