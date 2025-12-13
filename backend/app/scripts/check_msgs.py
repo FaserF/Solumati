@@ -1,6 +1,9 @@
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import sys
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from app.core.database import SessionLocal
 from app.db.models import Message, User
@@ -12,12 +15,16 @@ try:
 
     msgs = db.query(Message).order_by(Message.timestamp.desc()).limit(5).all()
     for m in msgs:
-        print(f"ID: {m.id}, Sender: {m.sender_id}, Receiver: {m.receiver_id}, Time: {m.timestamp}")
+        print(
+            f"ID: {m.id}, Sender: {m.sender_id}, Receiver: {m.receiver_id}, Time: {m.timestamp}"
+        )
 
     print("\nUsers:")
     users = db.query(User).all()
     for u in users:
-        print(f"ID: {u.id}, Role: {u.role}, Guest: {u.is_guest}, Username: {u.username}")
+        print(
+            f"ID: {u.id}, Role: {u.role}, Guest: {u.is_guest}, Username: {u.username}"
+        )
 
 except Exception as e:
     print(f"Error: {e}")

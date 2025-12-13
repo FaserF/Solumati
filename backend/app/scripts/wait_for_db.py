@@ -5,11 +5,11 @@
 
 import os
 import socket
-import time
 import sys
+import time
 
-DB_HOST = os.getenv('DB_HOST', 'db')
-DB_PORT = int(os.getenv('DB_PORT', os.getenv('DATABASE_PORT', '5432')))
+DB_HOST = os.getenv("DB_HOST", "db")
+DB_PORT = int(os.getenv("DB_PORT", os.getenv("DATABASE_PORT", "5432")))
 RETRY_INTERVAL = 2
 
 print(f"Waiting for database {DB_HOST}:{DB_PORT} to become available...")
@@ -25,5 +25,7 @@ while True:
     except Exception:
         sock.close()
         elapsed = int(time.time() - start)
-        print(f"Database not ready yet (elapsed {elapsed}s). Retrying in {RETRY_INTERVAL}s...")
+        print(
+            f"Database not ready yet (elapsed {elapsed}s). Retrying in {RETRY_INTERVAL}s..."
+        )
         time.sleep(RETRY_INTERVAL)

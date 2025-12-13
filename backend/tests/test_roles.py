@@ -1,21 +1,31 @@
+import os
+import sys
+
 import pytest
 from fastapi.testclient import TestClient
-import sys
-import os
 
 # Ensure backend path is in sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.main import app
-from app.api.dependencies import require_admin, require_moderator_or_admin, get_current_user_from_header
+from app.api.dependencies import (get_current_user_from_header, require_admin,
+                                  require_moderator_or_admin)
 from app.db import models
+from app.main import app
 
 # client = TestClient(app)
 
+
 # Helper to mock user
 def mock_user_dep(role="user", id=1):
-    user = models.User(id=id, username=f"mock_{role}", role=role, email=f"{role}@test.com", is_active=True)
+    user = models.User(
+        id=id,
+        username=f"mock_{role}",
+        role=role,
+        email=f"{role}@test.com",
+        is_active=True,
+    )
     return lambda: user
+
 
 # --- GUEST TESTS ---
 def test_guest_access_denied(client):
@@ -40,6 +50,7 @@ def test_guest_access_denied(client):
     if require_admin in app.dependency_overrides:
         del app.dependency_overrides[require_admin]
 
+
 # --- TEST USER TESTS ---
 def test_test_user_access_denied(client):
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="test")
@@ -53,6 +64,7 @@ def test_test_user_access_denied(client):
     del app.dependency_overrides[get_current_user_from_header]
     if require_admin in app.dependency_overrides:
         del app.dependency_overrides[require_admin]
+
 
 # --- USER TESTS ---
 def test_standard_user_access_denied(client):
@@ -68,9 +80,12 @@ def test_standard_user_access_denied(client):
     if require_admin in app.dependency_overrides:
         del app.dependency_overrides[require_admin]
 
+
 # --- MODERATOR TESTS ---
 def test_moderator_access(client):
-    app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="moderator")
+    app.dependency_overrides[get_current_user_from_header] = mock_user_dep(
+        role="moderator"
+    )
 
     # Mod CANNOT access full user list (Admin only)
     response = client.get("/admin/users", headers={"X-User-ID": "1"})
@@ -87,6 +102,7 @@ def test_moderator_access(client):
     if require_admin in app.dependency_overrides:
         del app.dependency_overrides[require_admin]
 
+
 # --- ADMIN TESTS ---
 def test_admin_access(client):
     app.dependency_overrides[get_current_user_from_header] = mock_user_dep(role="admin")
@@ -102,6 +118,7 @@ def test_admin_access(client):
     del app.dependency_overrides[get_current_user_from_header]
     if require_admin in app.dependency_overrides:
         del app.dependency_overrides[require_admin]
+
 
 # --- GUEST MATCH VISIBILITY ---
 def test_guest_match_visibility(client):
@@ -130,33 +147,58 @@ def test_guest_match_visibility(client):
     # But the user asked for CI test.
     # Let's assume we can just inject dependency usage.
 
-    pass # Placeholder if too complex without DB Access code here.
+    pass  # Placeholder if too complex without DB Access code here.
     # Ideally checking `users.py` logic directly.
 
     # Let's write a targeted test that mocks the DB session result!
     # That validates the logic in `get_matches`.
 
+
 from unittest.mock import MagicMock
+
 from app.api.routers import users as users_router
+
 
 def test_guest_logic_unit():
     # Mock DB Session
     mock_db = MagicMock()
 
     # Mock Guest User (ID 0)
-    guest_user = models.User(id=0, role="guest", answers=[3,3,3,3], intent="casual", is_active=True)
+    guest_user = models.User(
+        id=0, role="guest", answers=[3, 3, 3, 3], intent="casual", is_active=True
+    )
     mock_db.query.return_value.filter.return_value.first.return_value = guest_user
 
     # Mock Query Results
     # 1 Dummy, 1 Real
-    dummy = models.User(id=10, username="Dummy", role="test", about_me="Full Info", image_url="/img.jpg", answers=[3,3,3,3], intent="casual", is_active=True, is_visible_in_matches=True)
-    real = models.User(id=11, username="RealUser", role="user", about_me="Real Info", image_url="/real.jpg", answers=[3,3,3,3], intent="casual", is_active=True, is_visible_in_matches=True)
+    dummy = models.User(
+        id=10,
+        username="Dummy",
+        role="test",
+        about_me="Full Info",
+        image_url="/img.jpg",
+        answers=[3, 3, 3, 3],
+        intent="casual",
+        is_active=True,
+        is_visible_in_matches=True,
+    )
+    real = models.User(
+        id=11,
+        username="RealUser",
+        role="user",
+        about_me="Real Info",
+        image_url="/real.jpg",
+        answers=[3, 3, 3, 3],
+        intent="casual",
+        is_active=True,
+        is_visible_in_matches=True,
+    )
 
     # filter().filter()...all()
     # We need to mock the chain.
     # db.query(User).filter(...).filter(...)...all()
     mock_query = mock_db.query.return_value
-    mock_query.filter.return_value = mock_query # Chaining
+    mock_query.filter.return_value = mock_query  # Chaining
     mock_query.all.return_value = [dummy, real]
 
     # Call get_matches directly
@@ -173,6 +215,6 @@ def test_guest_logic_unit():
 
     # Check Real (Should be obfuscated)
     real_res = next(r for r in res if r.user_id == 11)
-    assert real_res.username == "R..." # First char + ...
-    assert real_res.about_me != "Real Info" # Should be replaced
+    assert real_res.username == "R..."  # First char + ...
+    assert real_res.about_me != "Real Info"  # Should be replaced
     assert "RESTRICTED_VIEW" in real_res.match_details

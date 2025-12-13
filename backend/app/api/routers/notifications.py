@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
 import json
 import logging
+from datetime import datetime
+from typing import List
 
+from app.api.dependencies import get_current_user_from_header
 from app.core.database import get_db
 from app.db import models, schemas
-from app.api.dependencies import get_current_user_from_header
 from app.services.utils import get_setting
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 # Try to import pywebpush, if not available, push will fail but app won't crash
 try:
-    from pywebpush import webpush, WebPushException
+    from pywebpush import WebPushException, webpush
+
     HAS_WEBPUSH = True
 except ImportError:
     HAS_WEBPUSH = False
@@ -26,28 +27,56 @@ router = APIRouter()
 # But VAPID keys must be consistent.
 # We will use the 'SystemSetting' to store them if generated.
 
+
 @router.get("/notifications", response_model=List[schemas.NotificationDisplay])
-def get_notifications(user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+def get_notifications(
+    user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
     """Get all notifications for current user."""
-    return db.query(models.Notification).filter(
-        models.Notification.user_id == user.id
-    ).order_by(models.Notification.created_at.desc()).limit(50).all()
+    return (
+        db.query(models.Notification)
+        .filter(models.Notification.user_id == user.id)
+        .order_by(models.Notification.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
 
 @router.put("/notifications/{notif_id}/read")
-def mark_notification_read(notif_id: int, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
-    notif = db.query(models.Notification).filter(models.Notification.id == notif_id, models.Notification.user_id == user.id).first()
-    if not notif: raise HTTPException(404, "Not found")
+def mark_notification_read(
+    notif_id: int,
+    user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
+    notif = (
+        db.query(models.Notification)
+        .filter(
+            models.Notification.id == notif_id, models.Notification.user_id == user.id
+        )
+        .first()
+    )
+    if not notif:
+        raise HTTPException(404, "Not found")
     notif.is_read = True
     db.commit()
     return {"status": "ok"}
 
+
 @router.delete("/notifications/clear")
-def clear_all_notifications(user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
-    db.query(models.Notification).filter(models.Notification.user_id == user.id).delete()
+def clear_all_notifications(
+    user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
+    db.query(models.Notification).filter(
+        models.Notification.user_id == user.id
+    ).delete()
     db.commit()
     return {"status": "cleared"}
 
+
 # --- PUSH NOTIFICATIONS ---
+
 
 @router.get("/notifications/vapid-public-key")
 def get_vapid_public_key(db: Session = Depends(get_db)):
@@ -68,8 +97,13 @@ def get_vapid_public_key(db: Session = Depends(get_db)):
 
     return {"publicKey": keys_json.get("public") if keys_json else None}
 
+
 @router.post("/notifications/subscribe")
-def subscribe_push(sub: schemas.PushSubscription, user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+def subscribe_push(
+    sub: schemas.PushSubscription,
+    user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
     """Save the Web Push Subscription for the user."""
     # We store it in user.push_subscription AND user.app_settings
     # Actually models.User has 'push_subscription' column now (implied from earlier view, wait, I saw it in models.py view? Yes, line 95)
@@ -77,6 +111,7 @@ def subscribe_push(sub: schemas.PushSubscription, user: models.User = Depends(ge
     user.push_subscription = json.dumps(sub.dict())
     db.commit()
     return {"status": "subscribed"}
+
 
 # --- INTERNAL HELPER (Not Route) ---
 def send_push_to_user(db: Session, user_id: int, title: str, body: str, url: str = "/"):
@@ -86,7 +121,8 @@ def send_push_to_user(db: Session, user_id: int, title: str, body: str, url: str
     """
     # 1. DB Notification
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user: return
+    if not user:
+        return
 
     notif = models.Notification(
         user_id=user_id,
@@ -94,35 +130,32 @@ def send_push_to_user(db: Session, user_id: int, title: str, body: str, url: str
         message=body,
         type="system",
         link=url,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     db.add(notif)
     db.commit()
 
     # 2. Web Push
-    if not HAS_WEBPUSH: return
+    if not HAS_WEBPUSH:
+        return
 
-    if not user.push_subscription: return
+    if not user.push_subscription:
+        return
 
     keys = get_setting(db, "push_keys", {})
-    if not keys or not keys.get("private_key"): return # Use private_key instead of private to be exact? keys_json usually has "privateKey"
+    if not keys or not keys.get("private_key"):
+        return  # Use private_key instead of private to be exact? keys_json usually has "privateKey"
 
     try:
         subscription_info = json.loads(user.push_subscription)
 
-        payload = json.dumps({
-            "title": title,
-            "body": body,
-            "url": url
-        })
+        payload = json.dumps({"title": title, "body": body, "url": url})
 
         webpush(
             subscription_info=subscription_info,
             data=payload,
             vapid_private_key=keys["private_key"],
-            vapid_claims={
-                "sub": "mailto:admin@solumati.com"
-            }
+            vapid_claims={"sub": "mailto:admin@solumati.com"},
         )
         logger.info(f"Push sent to user {user_id}")
     except WebPushException as ex:

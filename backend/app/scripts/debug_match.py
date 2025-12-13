@@ -1,11 +1,13 @@
-
 import json
+import os
 import random
 import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from app.services.utils import calculate_compatibility
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 from app.services.questions_content import QUESTIONS_SKELETON
+from app.services.utils import calculate_compatibility
 
 # Simulate Guest Data (from init_data.py)
 guest_answers = json.dumps({str(i): 1 for i in range(1, 51)})
@@ -19,14 +21,18 @@ for i in range(5):
         cnt = q.get("option_count", 3)
         dummy_answers[str(q["id"])] = random.randint(0, cnt - 1)
 
-    dummies.append({
-        "answers": json.dumps(dummy_answers),
-        "intent": random.choice(["casual", "longterm", "friendship"])
-    })
+    dummies.append(
+        {
+            "answers": json.dumps(dummy_answers),
+            "intent": random.choice(["casual", "longterm", "friendship"]),
+        }
+    )
 
 print("Guest Answers:", guest_answers)
 print("-" * 20)
 
 for i, d in enumerate(dummies):
-    score = calculate_compatibility(guest_answers, d["answers"], guest_intent, d["intent"])
+    score = calculate_compatibility(
+        guest_answers, d["answers"], guest_intent, d["intent"]
+    )
     print(f"Dummy {i} ({d['intent']}): Score = {score['score']}%")

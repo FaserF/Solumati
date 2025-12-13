@@ -1,8 +1,10 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.api.routers.chat import encrypt_message, decrypt_message
+from app.api.routers.chat import decrypt_message, encrypt_message
+
 
 def test_encryption_correctness():
     original = "Hello World! Secret Message"
@@ -14,6 +16,7 @@ def test_encryption_correctness():
     decrypted = decrypt_message(encrypted)
     assert decrypted == original
     print("Encryption/Decryption cycle: PASS")
+
 
 if __name__ == "__main__":
     try:
