@@ -1,7 +1,6 @@
 ################################################################################
 # Lychee Link Checker Configuration
-# This file implements a "Domain Whitelist" strategy to prevent excessive
-# pings to external websites.
+# This file configures link validation for CI/CD pipelines.
 ################################################################################
 
 # 1. VISIBILITY & FORMATTING
@@ -12,22 +11,42 @@
 # (see .github/workflows/ci-main.yml)
 
 
-# 3. EXCLUSIONS (Whitelist Implementation)
-# We exclude EVERYTHING that does not match our trusted domains.
-# - (?!...) is a negative lookahead.
-# - We allow:
-#   - github.com/FaserF (Our Repositories)
-#   - raw.githubusercontent.com/FaserF (Our Assets)
-#   - localhost / 127.0.0.1 (Local Dev)
-#
-# All other http/https links are IGNORED.
+# 3. EXCLUSIONS
+# Exclude URLs that commonly fail checks or are placeholders
 exclude = [
-    # Whitelist Logic: Exclude any URL that does NOT start with these patterns
-    '^(http|https)://(?!github\.com/FaserF|raw\.githubusercontent\.com/FaserF|localhost|127\.0\.0\.1).*',
+    # Template variables and placeholders (JS template literals)
+    '.*\$\{.*\}.*',           # Variables like ${VAR}
+    '.*%7B.*%7D.*',           # URL-encoded variables
+    '.*\$\{.*',               # Incomplete template literals
 
-    # Specific Ignores (for templates/placeholders that might slip through or match trusted domains)
-    '.*(\$|\%7B).*',       # Variables ${...}
-    'https://solumati.com' # Placeholder
+    # Placeholder domains
+    '^https?://solumati\.com',
+    '^https?://example\.com',
+    '^https?://your-domain\.com',
+
+    # Auth-required portals (return 403 without login)
+    '^https?://dash\.cloudflare\.com',
+    '^https?://portal\.azure\.com',
+    '^https?://console\.cloud\.google\.com',
+
+    # External APIs (may rate-limit or block CI without auth)
+    '^https?://api\.qrserver\.com',
+    '^https?://api\.github\.com',
+
+    # Dynamic release tag URLs (these are runtime-generated and may not exist yet)
+    '.*/releases/tag/v?\$',
+    '.*/releases/tag/$',
+
+    # Local development URLs (may not be reachable in CI)
+    '^https?://localhost',
+    '^https?://127\.0\.0\.1',
+    '^https?://0\.0\.0\.0',
+
+    # Mail links
+    '^mailto:',
+
+    # File links (local references)
+    '^file://'
 ]
 
 # 4. NETWORK & RETRY
