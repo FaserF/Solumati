@@ -73,7 +73,9 @@ jobs:
 
         # Update frontend/package.json
         cd frontend
-        npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+        # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
+        NPM_VERSION=$(echo "${{ env.NEW_VERSION }}" | sed -E 's/([0-9])([ab])/\1-\2/' | sed 's/\.dev/-dev/')
+        npm version $NPM_VERSION --no-git-tag-version
         cd ..
 
         # Update backend/app/core/config.py
@@ -169,8 +171,6 @@ jobs:
           # The current released version is in CURRENT_RELEASE (e.g. 2025.12.1)
           echo "Released Version: $CURRENT_RELEASE"
 
-          # We want to bump patch and add .dev suffix (e.g. 2025.12.1 -> 2025.12.2.dev0)
-
           # Use the script to generate the next dev version properly
           NEXT_DEV=$(python3 scripts/generate_version.py --current "$CURRENT_RELEASE" --type dev)
 
@@ -187,7 +187,9 @@ jobs:
 
           # Update frontend/package.json
           cd frontend
-          npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+          # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
+          NPM_VERSION=$(echo "${{ env.NEW_VERSION }}" | sed -E 's/([0-9])([ab])/\1-\2/' | sed 's/\.dev/-dev/')
+          npm version $NPM_VERSION --no-git-tag-version
           cd ..
 
           # Update backend/app/core/config.py
