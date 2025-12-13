@@ -1,0 +1,144 @@
+name: Cleanup Old Releases
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'  # Weekly, Sundays at 4:00 AM UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (only log, do not delete)'
+        required: false
+        default: 'false'
+        type: boolean
+      keep_nightlies:
+        description: 'Number of nightly releases to keep'
+        required: false
+        default: '3'
+        type: string
+      keep_betas:
+        description: 'Number of beta releases to keep'
+        required: false
+        default: '5'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup old pre-releases
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const dryRun = '${{ inputs.dry_run }}' === 'true';
+            const keepNightlies = parseInt('${{ inputs.keep_nightlies }}') || 3;
+            const keepBetas = parseInt('${{ inputs.keep_betas }}') || 5;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            console.log(`🧹 Release Cleanup Configuration:`);
+            console.log(`   - Keep last ${keepNightlies} nightly releases`);
+            console.log(`   - Keep last ${keepBetas} beta releases`);
+            console.log(`   - Keep ALL stable releases`);
+            console.log(`   - Dry run: ${dryRun}`);
+            console.log('');
+
+            // Get all releases
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner,
+              repo,
+            });
+
+            // Categorize releases
+            const stableReleases = [];
+            const betaReleases = [];
+            const nightlyReleases = [];
+            const devReleases = [];
+
+            for (const release of releases) {
+              const tag = release.tag_name;
+
+              if (tag.includes('nightly') || tag.includes('.dev')) {
+                nightlyReleases.push(release);
+              } else if (tag.includes('b') && /b\d+/.test(tag)) {
+                betaReleases.push(release);
+              } else if (tag.includes('a') && /a\d+/.test(tag)) {
+                // Alpha releases - treat like beta
+                betaReleases.push(release);
+              } else if (tag.includes('dev')) {
+                devReleases.push(release);
+              } else {
+                stableReleases.push(release);
+              }
+            }
+
+            // Sort by created_at descending (newest first)
+            const sortByDate = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+            nightlyReleases.sort(sortByDate);
+            betaReleases.sort(sortByDate);
+            devReleases.sort(sortByDate);
+
+            console.log(`📊 Release counts:`);
+            console.log(`   - Stable: ${stableReleases.length} (keeping all)`);
+            console.log(`   - Beta/Alpha: ${betaReleases.length} (keeping ${keepBetas})`);
+            console.log(`   - Nightly/Dev: ${nightlyReleases.length + devReleases.length} (keeping ${keepNightlies})`);
+            console.log('');
+
+            // Determine which to delete
+            const toDelete = [];
+
+            // Delete old nightlies (keep first N)
+            const nightlyDevCombined = [...nightlyReleases, ...devReleases].sort(sortByDate);
+            if (nightlyDevCombined.length > keepNightlies) {
+              toDelete.push(...nightlyDevCombined.slice(keepNightlies));
+            }
+
+            // Delete old betas (keep first N)
+            if (betaReleases.length > keepBetas) {
+              toDelete.push(...betaReleases.slice(keepBetas));
+            }
+
+            console.log(`🗑️ Releases to delete: ${toDelete.length}`);
+
+            let deletedCount = 0;
+            let freedBytes = 0;
+
+            for (const release of toDelete) {
+              // Calculate size of assets
+              const assetSize = release.assets.reduce((sum, asset) => sum + asset.size, 0);
+              freedBytes += assetSize;
+
+              if (dryRun) {
+                console.log(`   [DRY RUN] Would delete: ${release.tag_name} (${release.name}) - ${(assetSize / 1024 / 1024).toFixed(2)} MB`);
+              } else {
+                console.log(`   🗑️ Deleting: ${release.tag_name} (${release.name}) - ${(assetSize / 1024 / 1024).toFixed(2)} MB`);
+
+                // Delete the release
+                await github.rest.repos.deleteRelease({
+                  owner,
+                  repo,
+                  release_id: release.id,
+                });
+
+                // Delete the associated tag
+                try {
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `tags/${release.tag_name}`,
+                  });
+                  console.log(`      ✓ Deleted tag: ${release.tag_name}`);
+                } catch (e) {
+                  console.log(`      ⚠️ Could not delete tag: ${release.tag_name}`);
+                }
+
+                deletedCount++;
+              }
+            }
+
+            console.log(`\n✅ Summary:`);
+            console.log(`   - Deleted: ${deletedCount} releases`);
+            console.log(`   - Space freed: ${(freedBytes / 1024 / 1024).toFixed(2)} MB`);
+            console.log(`   - Stable releases preserved: ${stableReleases.length}`);

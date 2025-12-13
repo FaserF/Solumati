@@ -96,12 +96,32 @@ jobs:
         # Get the new commit SHA
         echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Generate Changelog
-      id: changelog
+    - name: Find Last Stable Tag
+      id: last_stable
+      if: inputs.release_type == 'stable'
+      run: |
+        # Find the last stable tag (no 'a', 'b', 'dev', 'nightly' suffix)
+        LAST_STABLE=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -vE '[ab][0-9]|dev|nightly' | sort -V | tail -1)
+        echo "Last stable tag: $LAST_STABLE"
+        echo "last_stable=$LAST_STABLE" >> $GITHUB_OUTPUT
+
+    - name: Generate Changelog (Stable)
+      id: changelog_stable
+      if: inputs.release_type == 'stable'
       uses: orhun/git-cliff-action@v4
       with:
         config: cliff.toml
-        args: --verbose
+        args: --verbose --unreleased --tag v${{ env.NEW_VERSION }} ${{ steps.last_stable.outputs.last_stable && format('--since-tag {0}', steps.last_stable.outputs.last_stable) || '' }}
+      env:
+        OUTPUT: CHANGELOG.md
+
+    - name: Generate Changelog (Pre-release)
+      id: changelog_prerelease
+      if: inputs.release_type != 'stable'
+      uses: orhun/git-cliff-action@v4
+      with:
+        config: cliff.toml
+        args: --verbose --latest
       env:
         OUTPUT: CHANGELOG.md
 
