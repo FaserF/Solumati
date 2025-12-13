@@ -1,21 +1,22 @@
 # i18n.py
 # Enhanced with logging to debug path resolution issues.
 
-import os
 import json
 import locale
-from functools import lru_cache
 import logging
+import os
+from functools import lru_cache
 
 # Configure local logger for this module
 logger = logging.getLogger(__name__)
 
 # The directory where translation JSON files are located.
 # Note: In Docker, this usually resolves to /app/i18n if i18n.py is in /app.
-I18N_DIR = os.path.join(os.path.dirname(__file__), 'i18n')
-DEFAULT_LANG = 'en'
+I18N_DIR = os.path.join(os.path.dirname(__file__), "i18n")
+DEFAULT_LANG = "en"
 
 logger.info(f"I18N Directory resolved to: {I18N_DIR}")
+
 
 def load_translations(lang_code):
     """Load translation dictionary for given lang_code from JSON file."""
@@ -25,7 +26,7 @@ def load_translations(lang_code):
 
     if os.path.exists(filename):
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 logger.info(f"Successfully loaded translations for {lang_code}")
                 return data
@@ -34,13 +35,13 @@ def load_translations(lang_code):
             return {}
 
     # Try language only part like 'de' from 'de_DE'
-    short = lang_code.split('_')[0]
+    short = lang_code.split("_")[0]
     filename_short = os.path.join(I18N_DIR, f"{short}.json")
 
     if filename_short != filename and os.path.exists(filename_short):
         logger.debug(f"Attempting fallback load from: {filename_short}")
         try:
-            with open(filename_short, 'r', encoding='utf-8') as f:
+            with open(filename_short, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 logger.info(f"Successfully loaded fallback translations for {short}")
                 return data
@@ -48,7 +49,9 @@ def load_translations(lang_code):
             logger.error(f"Error reading JSON for {short}: {e}")
             return {}
 
-    logger.warning(f"No translation file found for {lang_code} or {short} in {I18N_DIR}")
+    logger.warning(
+        f"No translation file found for {lang_code} or {short} in {I18N_DIR}"
+    )
     # List available files to help debug
     try:
         available = os.listdir(I18N_DIR)
@@ -62,10 +65,10 @@ def load_translations(lang_code):
 def detect_system_language():
     """Detect preferred language using environment and system settings. Returns a lang code like 'en' or 'de'."""
     # Respect LANG env if provided (works in containers when forwarded)
-    lang_env = os.getenv('LANG') or os.getenv('LANGUAGE')
+    lang_env = os.getenv("LANG") or os.getenv("LANGUAGE")
     if lang_env:
         # LANG may contain encoding; e.g. de_DE.UTF-8
-        lang = lang_env.split('.')[0]
+        lang = lang_env.split(".")[0]
         return lang
     try:
         loc = locale.getdefaultlocale()[0]
@@ -81,8 +84,8 @@ def normalize_lang_code(lang_code: str) -> str:
     """Normalize a language code to its short form (e.g. 'de_DE.UTF-8' -> 'de')."""
     if not lang_code:
         return DEFAULT_LANG
-    lang = lang_code.split('.')[0]
-    return (lang.split('_')[0]) if '_' in lang or '-' in lang else lang
+    lang = lang_code.split(".")[0]
+    return (lang.split("_")[0]) if "_" in lang or "-" in lang else lang
 
 
 def get_available_languages():
@@ -90,7 +93,7 @@ def get_available_languages():
     langs = []
     try:
         for fname in os.listdir(I18N_DIR):
-            if fname.endswith('.json'):
+            if fname.endswith(".json"):
                 langs.append(os.path.splitext(fname)[0])
     except Exception:
         pass
@@ -118,7 +121,14 @@ def translate(key: str, **kwargs):
     except Exception:
         return text
 
+
 # Re-export a simple module-level translator '_' for backward compatibility
 _ = translate
 
-__all__ = ['load_translations', 'detect_system_language', 'get_translations', 'get_available_languages', '_']
+__all__ = [
+    "load_translations",
+    "detect_system_language",
+    "get_translations",
+    "get_available_languages",
+    "_",
+]

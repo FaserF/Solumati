@@ -1,6 +1,7 @@
-import pytest
 import os
 import sys
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,19 +9,21 @@ from sqlalchemy.orm import sessionmaker
 # Add backend to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.main import app
-from app.core.database import Base, get_db
-from app.api.dependencies import get_current_user_from_header
-from app.db import models
-from app.core.config import TEST_MODE
-
 from unittest.mock import patch
+
+from app.api.dependencies import get_current_user_from_header
+from app.core.config import TEST_MODE
+from app.core.database import Base, get_db
+from app.db import models
+from app.main import app
+
 
 @pytest.fixture(scope="module")
 def test_db():
     # Use in-memory SQLite for tests
     SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
     from sqlalchemy.pool import StaticPool
+
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
         connect_args={"check_same_thread": False},
@@ -29,10 +32,11 @@ def test_db():
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     # Patch the main app's engine and SessionLocal to use our test DB
-    with patch("app.main.engine", engine), \
-         patch("app.main.SessionLocal", TestingSessionLocal), \
-         patch("app.core.database.engine", engine), \
-         patch("app.core.database.SessionLocal", TestingSessionLocal):
+    with patch("app.main.engine", engine), patch(
+        "app.main.SessionLocal", TestingSessionLocal
+    ), patch("app.core.database.engine", engine), patch(
+        "app.core.database.SessionLocal", TestingSessionLocal
+    ):
 
         # Create tables
         Base.metadata.create_all(bind=engine)
@@ -40,6 +44,7 @@ def test_db():
         yield TestingSessionLocal
 
         Base.metadata.drop_all(bind=engine)
+
 
 @pytest.fixture(scope="module")
 def client(test_db):
@@ -57,8 +62,10 @@ def client(test_db):
     with TestClient(app) as c:
         yield c
 
+
 import secrets
 import string
+
 
 @pytest.fixture
 def test_password():
@@ -67,7 +74,7 @@ def test_password():
         secrets.choice(string.ascii_uppercase),
         secrets.choice(string.ascii_lowercase),
         secrets.choice(string.digits),
-        secrets.choice("!@#$%^&*")
+        secrets.choice("!@#$%^&*"),
     ]
     # Fill the rest with random choices from all allowed characters
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
@@ -76,7 +83,8 @@ def test_password():
 
     # Shuffle to avoid predictable pattern
     secrets.SystemRandom().shuffle(password_chars)
-    return ''.join(password_chars)
+    return "".join(password_chars)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_txt_files():
@@ -87,6 +95,7 @@ def cleanup_txt_files():
     target_pattern = os.path.join(backend_dir, "*.txt")
 
     import glob
+
     print(f"DEBUG: Conftest file: {os.path.abspath(__file__)}")
     print(f"DEBUG: Backend dir: {backend_dir}")
     print(f"DEBUG: Pattern: {target_pattern}")

@@ -1,33 +1,44 @@
 import json
-from datetime import datetime
+import logging
 import random
 import smtplib
-import logging
-from email.mime.text import MIMEText
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formataddr
-from sqlalchemy.orm import Session
-from app.db import models, schemas
+
 from app.core.config import PROJECT_NAME
+from app.db import models, schemas
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
 
 # --- Settings Helpers ---
 def get_setting(db: Session, key: str, default):
     try:
-        setting = db.query(models.SystemSetting).filter(models.SystemSetting.key == key).first()
+        setting = (
+            db.query(models.SystemSetting)
+            .filter(models.SystemSetting.key == key)
+            .first()
+        )
         if setting:
             return json.loads(setting.value)
-        if hasattr(default, 'dict'):
+        if hasattr(default, "dict"):
             return default.dict()
         return default
     except Exception as e:
         logger.error(f"DB Error in get_setting: {e}. DB Type: {type(db)}")
         return default
 
+
 def save_setting(db: Session, key: str, value: dict):
     try:
-        setting = db.query(models.SystemSetting).filter(models.SystemSetting.key == key).first()
+        setting = (
+            db.query(models.SystemSetting)
+            .filter(models.SystemSetting.key == key)
+            .first()
+        )
         if not setting:
             setting = models.SystemSetting(key=key, value=json.dumps(value))
             db.add(setting)
@@ -38,9 +49,18 @@ def save_setting(db: Session, key: str, value: dict):
         logger.error(f"DB Error in save_setting: {e}")
         db.rollback()
 
+
 # --- HTML Email Helper ---
-def create_html_email(title: str, content: str, action_url: str = None, action_text: str = None, server_domain: str = "", db: Session = None):
-    if server_domain.endswith("/"): server_domain = server_domain[:-1]
+def create_html_email(
+    title: str,
+    content: str,
+    action_url: str = None,
+    action_text: str = None,
+    server_domain: str = "",
+    db: Session = None,
+):
+    if server_domain.endswith("/"):
+        server_domain = server_domain[:-1]
 
     # Determine host URL with fallback chain
     host_url = server_domain if server_domain else None
@@ -53,12 +73,15 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
             reg_config = get_setting(db, "registration", {})
             if not host_url:
                 host_url = reg_config.get("server_domain", "")
-                if host_url and host_url.endswith("/"): host_url = host_url[:-1]
+                if host_url and host_url.endswith("/"):
+                    host_url = host_url[:-1]
 
             # Fetch Support & Legal Config
-            support_conf = get_setting(db, "support_page", schemas.SupportPageConfig().dict())
+            support_conf = get_setting(
+                db, "support_page", schemas.SupportPageConfig().dict()
+            )
             if isinstance(support_conf, dict):
-                 support_enabled = support_conf.get("enabled", True)
+                support_enabled = support_conf.get("enabled", True)
 
             legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
             if isinstance(legal_conf, dict):
@@ -75,7 +98,7 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
 
     github_url = "https://github.com/FaserF/Solumati"
 
-    logo_svg = "" # Removed inline SVG
+    logo_svg = ""  # Removed inline SVG
 
     # Default to GitHub Raw URL (Always works, fallback)
     github_logo = "https://raw.githubusercontent.com/FaserF/Solumati/refs/heads/main/frontend/public/logo/android-chrome-192x192.png"
@@ -83,10 +106,10 @@ def create_html_email(title: str, content: str, action_url: str = None, action_t
 
     # Try to use Hosted Logo if we are on a real domain (not localhost)
     if host_url and "localhost" not in host_url and "127.0.0.1" not in host_url:
-         logo_path = "/logo/android-chrome-192x192.png"
-         # Construct clean URL
-         base = host_url.rstrip('/')
-         logo_full_url = f"{base}{logo_path}"
+        logo_path = "/logo/android-chrome-192x192.png"
+        # Construct clean URL
+        base = host_url.rstrip("/")
+        logo_full_url = f"{base}{logo_path}"
     footer_support_link = ""
     if support_url:
         footer_support_link = f' • <a href="{support_url}">Support</a>'
@@ -203,11 +226,11 @@ def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
             logger.info(f"Mail sending blocked for local/dummy domain: {to_email}")
             return
 
-        msg = MIMEMultipart('alternative')
-        msg['From'] = formataddr((config.sender_name, config.from_email))
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(html_body, 'html'))
+        msg = MIMEMultipart("alternative")
+        msg["From"] = formataddr((config.sender_name, config.from_email))
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(html_body, "html"))
 
         if config.smtp_ssl:
             server = smtplib.SMTP_SSL(config.smtp_host, config.smtp_port)
@@ -223,17 +246,25 @@ def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
 
+
 # --- Core Logic Helpers ---
+
 
 # Helper to get dynamic support phrase
 def get_support_contact_html(db: Session, server_domain: str = "") -> str:
     support_phrase = "please contact support immediately"
     try:
-        support_conf = get_setting(db, "support_page", schemas.SupportPageConfig().dict())
+        support_conf = get_setting(
+            db, "support_page", schemas.SupportPageConfig().dict()
+        )
         legal_conf = get_setting(db, "legal", schemas.LegalConfig().dict())
 
-        support_enabled = isinstance(support_conf, dict) and support_conf.get("enabled", True)
-        contact_email = legal_conf.get("contact_email", "") if isinstance(legal_conf, dict) else ""
+        support_enabled = isinstance(support_conf, dict) and support_conf.get(
+            "enabled", True
+        )
+        contact_email = (
+            legal_conf.get("contact_email", "") if isinstance(legal_conf, dict) else ""
+        )
 
         if support_enabled and server_domain:
             return f'<a href="{server_domain}/support">contact support</a> immediately'
@@ -242,6 +273,7 @@ def get_support_contact_html(db: Session, server_domain: str = "") -> str:
     except:
         pass
     return support_phrase
+
 
 def generate_unique_username(db: Session, real_name: str) -> str:
     base = real_name.strip() if real_name else "User"
@@ -253,7 +285,9 @@ def generate_unique_username(db: Session, real_name: str) -> str:
             return candidate
         suffix += 1
 
+
 from app.services.questions_content import QUESTIONS, get_question_by_id
+
 
 def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) -> dict:
     """
@@ -265,12 +299,20 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
     # For now, let's keep it simple: strict filter was old way, new way soft filter.
     intent_score = 100
     if intent_a and intent_b and intent_a != intent_b:
-        intent_score = 40 # Mismatch penalty
+        intent_score = 40  # Mismatch penalty
 
     # 2. Parse Answers
     try:
-        ans_a = json.loads(answers_a_raw) if isinstance(answers_a_raw, str) else (answers_a_raw or {})
-        ans_b = json.loads(answers_b_raw) if isinstance(answers_b_raw, str) else (answers_b_raw or {})
+        ans_a = (
+            json.loads(answers_a_raw)
+            if isinstance(answers_a_raw, str)
+            else (answers_a_raw or {})
+        )
+        ans_b = (
+            json.loads(answers_b_raw)
+            if isinstance(answers_b_raw, str)
+            else (answers_b_raw or {})
+        )
 
     except:
         return {"score": 0, "details": [], "common": []}
@@ -289,7 +331,8 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
         if qid_str in ans_b:
             val_b = ans_b[qid_str]
             question = get_question_by_id(qid)
-            if not question: continue
+            if not question:
+                continue
 
             weight = question.get("weight", 5)
             total_weight += weight
@@ -303,11 +346,11 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
 
             if val_a == val_b:
                 earned_weight += weight
-                details.append(f"Matched on: {question['category']}") # Summary
+                details.append(f"Matched on: {question['category']}")  # Summary
 
     # Calculate Score
     if total_weight == 0:
-        final_score = intent_score if intent_score < 100 else 50 # Default if no data
+        final_score = intent_score if intent_score < 100 else 50  # Default if no data
     else:
         match_percentage = (earned_weight / total_weight) * 100
         # Combine with intent score (Intent is 30% of total?)
@@ -315,8 +358,9 @@ def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) ->
 
     return {
         "score": round(final_score),
-        "details": list(set(details)) # Unique categories matched
+        "details": list(set(details)),  # Unique categories matched
     }
+
 
 def send_login_notification(email: str, ip: str, user_agent: str, user=None):
     """
@@ -327,12 +371,13 @@ def send_login_notification(email: str, ip: str, user_agent: str, user=None):
     # Create a new database session for this task since it runs in the background
     # and the original dependency session might be closed.
     from app.core.database import SessionLocal
+
     db = SessionLocal()
     try:
         # Check user preference if user object is provided
         if user:
             prefs = get_user_email_preferences(user)
-            if not prefs.get('login_alerts', True):
+            if not prefs.get("login_alerts", True):
                 # logger.info(f"Login notification skipped for {email} - disabled by user preference")
                 return
 
@@ -356,16 +401,20 @@ def send_login_notification(email: str, ip: str, user_agent: str, user=None):
     finally:
         db.close()
 
+
 def send_registration_notification(new_user, db_session=None):
     """
     Sends a notification email to the admin when a new user registers.
     This function is intended to be run as a background task.
     """
     from app.core.database import SessionLocal
+
     db = db_session if db_session else SessionLocal()
     try:
         # Check if registration notifications are enabled
-        reg_notif_config = get_setting(db, "registration_notification", {"enabled": False, "email_target": ""})
+        reg_notif_config = get_setting(
+            db, "registration_notification", {"enabled": False, "email_target": ""}
+        )
         if not reg_notif_config.get("enabled", False):
             return
 
@@ -413,10 +462,14 @@ def send_registration_notification(new_user, db_session=None):
             action_url=admin_url,
             action_text="Open Admin Panel" if admin_url else None,
             server_domain=server_domain,
-            db=db
+            db=db,
         )
-        send_mail_sync(target_email, f"[{PROJECT_NAME}] New User: {new_user.username}", html, db)
-        logger.info(f"Registration notification sent to {target_email} for user {new_user.username}")
+        send_mail_sync(
+            target_email, f"[{PROJECT_NAME}] New User: {new_user.username}", html, db
+        )
+        logger.info(
+            f"Registration notification sent to {target_email} for user {new_user.username}"
+        )
     except Exception as e:
         logger.error(f"Error in send_registration_notification: {e}")
     finally:
@@ -430,20 +483,30 @@ def get_user_email_preferences(user) -> dict:
     Returns default preferences if not configured.
     """
     import json
+
     try:
         # Parse app_settings JSON string
         settings = {}
-        if hasattr(user, 'app_settings') and user.app_settings:
-            settings = json.loads(user.app_settings) if isinstance(user.app_settings, str) else user.app_settings
-        email_prefs = settings.get('email_notifications', {})
+        if hasattr(user, "app_settings") and user.app_settings:
+            settings = (
+                json.loads(user.app_settings)
+                if isinstance(user.app_settings, str)
+                else user.app_settings
+            )
+        email_prefs = settings.get("email_notifications", {})
         return {
-            'login_alerts': email_prefs.get('login_alerts', True),
-            'security_alerts': email_prefs.get('security_alerts', True),
-            'new_matches': email_prefs.get('new_matches', True),
-            'new_messages': email_prefs.get('new_messages', False)
+            "login_alerts": email_prefs.get("login_alerts", True),
+            "security_alerts": email_prefs.get("security_alerts", True),
+            "new_matches": email_prefs.get("new_matches", True),
+            "new_messages": email_prefs.get("new_messages", False),
         }
     except:
-        return {'login_alerts': True, 'security_alerts': True, 'new_matches': True, 'new_messages': False}
+        return {
+            "login_alerts": True,
+            "security_alerts": True,
+            "new_matches": True,
+            "new_messages": False,
+        }
 
 
 def send_password_changed_notification(user, db_session=None):
@@ -452,11 +515,12 @@ def send_password_changed_notification(user, db_session=None):
     This function is intended to be run as a background task.
     """
     from app.core.database import SessionLocal
+
     db = db_session if db_session else SessionLocal()
     try:
         # Check user preference
         prefs = get_user_email_preferences(user)
-        if not prefs.get('security_alerts', True):
+        if not prefs.get("security_alerts", True):
             return
 
         # Determine Support String
@@ -480,7 +544,7 @@ def send_password_changed_notification(user, db_session=None):
             action_url=reset_url,
             action_text="Reset Password" if reset_url else None,
             server_domain=server_domain,
-            db=db
+            db=db,
         )
         send_mail_sync(user.email, f"[{PROJECT_NAME}] {title}", html, db)
         logger.info(f"Password changed notification sent to {user.email}")
@@ -498,6 +562,7 @@ def send_email_changed_notification(old_email: str, new_email: str, db_session=N
     This function is intended to be run as a background task.
     """
     from app.core.database import SessionLocal
+
     db = db_session if db_session else SessionLocal()
     try:
         # Determine Support String
@@ -531,6 +596,7 @@ def send_account_deactivated_notification(user, reason: str = None, db_session=N
     This function is intended to be run as a background task.
     """
     from app.core.database import SessionLocal
+
     db = db_session if db_session else SessionLocal()
     try:
         # Determine Support String
@@ -565,21 +631,27 @@ def is_profile_complete(user: models.User) -> bool:
     2. Has a custom 'about_me' (not default)
     3. Has meaningful answers (answers is not empty dict/list and not dummy)
     """
-    if not user.image_url: return False
-    if user.about_me == "Ich bin neu hier!": return False
+    if not user.image_url:
+        return False
+    if user.about_me == "Ich bin neu hier!":
+        return False
 
     # Check Answers
     try:
         # Answers are stored as JSON string in DB
         if isinstance(user.answers, str):
             import json
+
             ans = json.loads(user.answers)
         else:
             ans = user.answers
 
-        if not ans: return False
-        if isinstance(ans, dict) and not ans: return False
-        if isinstance(ans, list) and not ans: return False
+        if not ans:
+            return False
+        if isinstance(ans, dict) and not ans:
+            return False
+        if isinstance(ans, list) and not ans:
+            return False
 
         # Check for dummy answers [3,3,3,3]
         # Or just generally check if it looks like a real set of answers
@@ -590,7 +662,8 @@ def is_profile_complete(user: models.User) -> bool:
         # BUT explicitly reject the known dummy [3,3,3,3] if checking logic demands it.
         # User said: "Account ist erstellt... muss ggf. verifiziert werden... darf keine Personen sehen solange er nicht Fragen beantwortet hat."
         # If [3,3,3,3] means "No questions answered", return False.
-        if ans == [3, 3, 3, 3]: return False
+        if ans == [3, 3, 3, 3]:
+            return False
 
     except:
         return False

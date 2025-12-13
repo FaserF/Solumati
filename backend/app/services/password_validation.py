@@ -1,9 +1,11 @@
-import re
 import hashlib
-import httpx
 import logging
+import re
+
+import httpx
 
 logger = logging.getLogger(__name__)
+
 
 def validate_password_complexity(password: str) -> None:
     """
@@ -29,6 +31,7 @@ def validate_password_complexity(password: str) -> None:
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
         raise ValueError("Password must contain at least one special character.")
 
+
 def check_pwned_password(password: str) -> None:
     """
     Checks if the password has been leaked using Have I Been Pwned API (k-anonymity).
@@ -40,28 +43,30 @@ def check_pwned_password(password: str) -> None:
         suffix = sha1_password[5:]
 
         url = f"https://api.pwnedpasswords.com/range/{prefix}"
-        headers = {
-            "User-Agent": "Solumati-Password-Check"
-        }
+        headers = {"User-Agent": "Solumati-Password-Check"}
 
         # Use a short timeout to fail open if API is slow
         with httpx.Client(timeout=3.0) as client:
             response = client.get(url, headers=headers)
 
         if response.status_code != 200:
-            logger.warning(f"HIBP API returned status {response.status_code}. Skipping leak check.")
+            logger.warning(
+                f"HIBP API returned status {response.status_code}. Skipping leak check."
+            )
             return
 
         # Response format: SUFFIX:COUNT
-        hashes = (line.split(':') for line in response.text.splitlines())
+        hashes = (line.split(":") for line in response.text.splitlines())
         for h, count in hashes:
             if h == suffix:
-                raise ValueError(f"This password has been exposed in a data breach (seen {count} times). Please choose a different one.")
+                raise ValueError(
+                    f"This password has been exposed in a data breach (seen {count} times). Please choose a different one."
+                )
 
     except httpx.RequestError as e:
         logger.warning(f"HIBP API Request failed: {e}. Skipping leak check.")
     except ValueError:
-        raise # Re-raise security validation errors
+        raise  # Re-raise security validation errors
     except Exception as e:
         logger.error(f"Unexpected error in password leak check: {e}")
         # Fail open: ensure user can still register if our check fails technically

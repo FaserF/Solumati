@@ -1,14 +1,15 @@
-import sys
+import argparse
 import os
 import secrets
-import argparse
+import sys
 
 # Add parent dir to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import SessionLocal
-from app.db import models
 from app.core.security import hash_password
+from app.db import models
+
 
 def reset_admin_password(username: str):
     db = SessionLocal()
@@ -18,8 +19,10 @@ def reset_admin_password(username: str):
             print(f"Error: User '{username}' not found.")
             return
 
-        if user.role != 'admin':
-            print(f"Warning: User '{username}' is not an admin (Role: {user.role}). Proceeding anyway...")
+        if user.role != "admin":
+            print(
+                f"Warning: User '{username}' is not an admin (Role: {user.role}). Proceeding anyway..."
+            )
 
         # Generate random password
         new_password = secrets.token_urlsafe(12)
@@ -40,12 +43,15 @@ def reset_admin_password(username: str):
     finally:
         db.close()
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Solumati Admin Management Tool")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Command: reset-password
-    reset_parser = subparsers.add_parser("reset-password", help="Reset an admin's password")
+    reset_parser = subparsers.add_parser(
+        "reset-password", help="Reset an admin's password"
+    )
     reset_parser.add_argument("username", help="Username of the admin to reset")
 
     args = parser.parse_args()

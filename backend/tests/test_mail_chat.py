@@ -1,32 +1,42 @@
+import os
+import sys
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
-import sys
-import os
-from datetime import datetime
 
 # Ensure backend path is in sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.main import app
-from app.api.dependencies import require_admin, get_current_user_from_header
+from app.api.dependencies import get_current_user_from_header, require_admin
 from app.core.database import get_db
 from app.db import models
+from app.main import app
 
 # client = TestClient(app)
 
+
 # Helper to mock user
 def mock_user_dep(role="admin", id=1):
-    user = models.User(id=id, username=f"mock_{role}", role=role, email=f"{role}@test.com", is_active=True)
+    user = models.User(
+        id=id,
+        username=f"mock_{role}",
+        role=role,
+        email=f"{role}@test.com",
+        is_active=True,
+    )
     return lambda: user
+
 
 # --- MAIL TESTS ---
 def test_admin_send_test_mail(client):
     # Setup Admin Mock
     app.dependency_overrides[require_admin] = mock_user_dep(role="admin")
 
-    with patch("app.services.utils.send_mail_sync") as mock_send_mail, \
-         patch("app.services.utils.create_html_email", return_value="<html>Test</html>") as mock_create_html:
+    with patch("app.services.utils.send_mail_sync") as mock_send_mail, patch(
+        "app.services.utils.create_html_email", return_value="<html>Test</html>"
+    ) as mock_create_html:
 
         payload = {"target_email": "test@example.com"}
         response = client.post("/admin/settings/test-mail", json=payload)
@@ -39,6 +49,7 @@ def test_admin_send_test_mail(client):
         mock_send_mail.assert_called()
 
     app.dependency_overrides = {}
+
 
 # --- CHAT TESTS ---
 def test_get_conversations_mock_db(client):
@@ -56,8 +67,12 @@ def test_get_conversations_mock_db(client):
     # To mock this chain: mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value
 
     msg1 = models.Message(
-        id=10, sender_id=2, receiver_id=1, content="encrypted_hello",
-        timestamp=datetime.now(), is_read=False
+        id=10,
+        sender_id=2,
+        receiver_id=1,
+        content="encrypted_hello",
+        timestamp=datetime.now(),
+        is_read=False,
     )
 
     # Mock the chain
@@ -69,13 +84,15 @@ def test_get_conversations_mock_db(client):
 
     # The endpoint then queries Users for partner IDs [2]
     # db.query(User).filter(...).all()
-    partner_user = models.User(id=2, username="partner", real_name="Partner Real", image_url=None)
+    partner_user = models.User(
+        id=2, username="partner", real_name="Partner Real", image_url=None
+    )
 
     # For the second query (Users), we need to handle that `query` satisfies both Message and User calls.
     # Side effect for `query(Model)`?
     def query_side_effect(model):
         if model == models.Message:
-            return mock_query # Return the chain starter for Messages
+            return mock_query  # Return the chain starter for Messages
         elif model == models.User:
             # Create a new mock chain for User
             u_query = MagicMock()
@@ -94,6 +111,6 @@ def test_get_conversations_mock_db(client):
     assert len(data) == 1
     assert data[0]["partner_id"] == 2
     assert data[0]["last_message"] == "Hello World"
-    assert data[0]["unread_count"] == 1 # Since is_read=False and receiver=me
+    assert data[0]["unread_count"] == 1  # Since is_read=False and receiver=me
 
     app.dependency_overrides = {}
