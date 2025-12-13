@@ -12,8 +12,9 @@ on:
         - stable
         - beta
         - nightly
+        - dev
       version_override:
-        description: 'Manual version (leave empty for auto-increment, e.g. 2025.12.3-b1). Do not add v in front.'
+        description: 'Manual version (leave empty for auto-increment, e.g. 2025.12.3b1). Do not add v in front.'
         required: false
         default: ''
         type: string
@@ -44,20 +45,14 @@ jobs:
         # Get current version from frontend/package.json (Source of Truth)
         current=$(jq -r .version frontend/package.json)
 
-        # Use input release type (stable/beta/nightly)
+        # Use input release type (stable/beta/nightly/dev)
         RELEASE_TYPE="${{ inputs.release_type }}"
 
         # Check for manual version override
         if [ -n "${{ inputs.version_override }}" ]; then
           new_version="${{ inputs.version_override }}"
-          # Add suffix for non-stable releases if not present
-          if [ "$RELEASE_TYPE" == "beta" ] && [[ ! "$new_version" =~ -b ]]; then
-            new_version="${new_version}-b1"
-          elif [ "$RELEASE_TYPE" == "nightly" ] && [[ ! "$new_version" =~ -n ]]; then
-            new_version="${new_version}-n1"
-          fi
         else
-          # Auto-generate version
+          # Auto-generate version using the refined script
           new_version=$(python3 scripts/generate_version.py --current "$current" --type $RELEASE_TYPE)
         fi
 
@@ -174,14 +169,10 @@ jobs:
           # The current released version is in CURRENT_RELEASE (e.g. 2025.12.1)
           echo "Released Version: $CURRENT_RELEASE"
 
-          # We want to bump patch and add -d1 suffix
-          # We can use the script with a special flag or just do it manually here for simplicity,
-          # but utilizing the script is safer if it supports it.
-          # The script bump_version logic: if stable 2025.12.1 -> bump_version(stable) -> 2025.12.2
+          # We want to bump patch and add .dev suffix (e.g. 2025.12.1 -> 2025.12.2.dev0)
 
-          # Let's use the script to get next stable, then append -d1
-          NEXT_STABLE=$(python3 scripts/generate_version.py --current "$CURRENT_RELEASE" --type stable)
-          NEXT_DEV="${NEXT_STABLE}-d1"
+          # Use the script to generate the next dev version properly
+          NEXT_DEV=$(python3 scripts/generate_version.py --current "$CURRENT_RELEASE" --type dev)
 
           echo "Next Dev Version: $NEXT_DEV"
           echo "next_dev=$NEXT_DEV" >> $GITHUB_OUTPUT
