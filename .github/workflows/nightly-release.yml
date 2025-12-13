@@ -12,6 +12,10 @@ permissions:
 jobs:
   nightly-release:
     runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
+      version: ${{ steps.version.outputs.version }}
+      commit_sha: ${{ steps.commit.outputs.commit_sha }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -78,22 +82,79 @@ jobs:
           npm version ${{ env.NEW_VERSION }} --no-git-tag-version --allow-same-version
           cd ..
 
-          # Update backend/config.py
+          # Update backend/app/core/config.py
           # Replace version
-          sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/config.py
+          sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/app/core/config.py
           # Replace release type
-          sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "nightly")/' backend/config.py
+          sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "nightly")/' backend/app/core/config.py
 
           # Update frontend/src/config.js
           sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "nightly";/' frontend/src/config.js
 
           # Commit and Push
-          git add frontend/package.json backend/config.py frontend/src/config.js
+          git add frontend/package.json backend/app/core/config.py frontend/src/config.js
           git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]"
           git push
 
           # Get the new commit SHA
           echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Generate Initial Release Body
+        if: steps.check_changes.outputs.has_changes == 'true'
+        id: release_body
+        run: |
+          INITIAL_BODY="## Nightly Release v${{ env.NEW_VERSION }}
+
+This is an automated nightly build. Use with caution.
+
+## 📥 Downloads
+
+<div style=\"background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;\">
+  <div style=\"margin-bottom: 16px;\">
+    <div style=\"display: inline-block; margin: 8px;\">
+      <div style=\"background: #2196f3; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9em;\">
+        ⏳ Build Status: Building...
+      </div>
+    </div>
+  </div>
+  <div style=\"display: flex; flex-wrap: wrap; gap: 8px; align-items: center;\">
+    <div style=\"display: inline-block; margin: 8px;\">
+      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
+        <span style=\"font-size: 1.2em;\">🤖</span>
+        <span>Android APK</span>
+        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+      </div>
+    </div>
+    <div style=\"display: inline-block; margin: 8px;\">
+      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
+        <span style=\"font-size: 1.2em;\">🪟</span>
+        <span>Windows MSIX</span>
+        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+      </div>
+    </div>
+    <div style=\"display: inline-block; margin: 8px;\">
+      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
+        <span style=\"font-size: 1.2em;\">🍎</span>
+        <span>iOS IPA</span>
+        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+      </div>
+    </div>
+    <div style=\"display: inline-block; margin: 8px;\">
+      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
+        <span style=\"font-size: 1.2em;\">🐳</span>
+        <span>Docker Image</span>
+        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+      </div>
+    </div>
+  </div>
+  <div style=\"margin-top: 16px; font-size: 0.9em; color: #666;\">
+    <p><strong>Last updated:</strong> $(date -u +'%Y-%m-%d %H:%M:%S') UTC</p>
+    <p><em>Build artifacts are automatically uploaded as they become available.</em></p>
+  </div>
+</div>
+"
+          echo "$INITIAL_BODY" > RELEASE_BODY.md
+          echo "body_path=RELEASE_BODY.md" >> $GITHUB_OUTPUT
 
       - name: Create Nightly Release
         if: steps.check_changes.outputs.has_changes == 'true'
@@ -102,6 +163,99 @@ jobs:
           tag_name: v${{ env.NEW_VERSION }}
           name: Nightly v${{ env.NEW_VERSION }}
           target_commitish: ${{ steps.commit.outputs.commit_sha }}
+          body_path: ${{ steps.release_body.outputs.body_path }}
           draft: false
           prerelease: true
-          generate_release_notes: true
+
+  # Build jobs for nightly release
+  build-push-docker:
+    needs: nightly-release
+    if: needs.nightly-release.outputs.has_changes == 'true'
+    uses: ./.github/workflows/docker-publish.yml
+    with:
+      version: ${{ needs.nightly-release.outputs.version }}
+    permissions:
+      contents: read
+      packages: write
+
+  build-android:
+    needs: nightly-release
+    if: needs.nightly-release.outputs.has_changes == 'true'
+    uses: ./.github/workflows/android-release.yml
+    with:
+      tag_name: v${{ needs.nightly-release.outputs.version }}
+      ref: ${{ needs.nightly-release.outputs.commit_sha }}
+    secrets: inherit
+    continue-on-error: true
+
+  build-ios:
+    needs: nightly-release
+    if: needs.nightly-release.outputs.has_changes == 'true'
+    uses: ./.github/workflows/ios-release.yml
+    with:
+      tag_name: v${{ needs.nightly-release.outputs.version }}
+      ref: ${{ needs.nightly-release.outputs.commit_sha }}
+    secrets: inherit
+    continue-on-error: true
+
+  build-windows:
+    needs: nightly-release
+    if: needs.nightly-release.outputs.has_changes == 'true'
+    uses: ./.github/workflows/windows-release.yml
+    with:
+      tag_name: v${{ needs.nightly-release.outputs.version }}
+      ref: ${{ needs.nightly-release.outputs.commit_sha }}
+    secrets: inherit
+    continue-on-error: true
+
+  # Monitor and update release buttons
+  update-release-buttons:
+    needs: [nightly-release, build-push-docker, build-android, build-ios, build-windows]
+    if: always() && needs.nightly-release.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          pip install PyGithub
+
+      - name: Determine Overall Build Status
+        id: build_status
+        run: |
+          STATUS="success"
+          if [ "${{ needs.build-android.result }}" == "failure" ] || \
+             [ "${{ needs.build-ios.result }}" == "failure" ] || \
+             [ "${{ needs.build-windows.result }}" == "failure" ] || \
+             [ "${{ needs.build-push-docker.result }}" == "failure" ]; then
+            STATUS="failure"
+          elif [ "${{ needs.build-android.result }}" == "cancelled" ] || \
+               [ "${{ needs.build-ios.result }}" == "cancelled" ] || \
+               [ "${{ needs.build-windows.result }}" == "cancelled" ] || \
+               [ "${{ needs.build-push-docker.result }}" == "cancelled" ]; then
+            STATUS="cancelled"
+          elif [ "${{ needs.build-android.result }}" != "success" ] || \
+               [ "${{ needs.build-ios.result }}" != "success" ] || \
+               [ "${{ needs.build-windows.result }}" != "success" ] || \
+               [ "${{ needs.build-push-docker.result }}" != "success" ]; then
+            STATUS="running"
+          fi
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "Build Status: $STATUS"
+
+      - name: Update Release Notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TAG_NAME: v${{ needs.nightly-release.outputs.version }}
+          BUILD_STATUS: ${{ steps.build_status.outputs.status }}
+        run: |
+          python .github/scripts/update-release-buttons.py

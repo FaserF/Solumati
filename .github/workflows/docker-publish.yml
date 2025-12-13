@@ -67,3 +67,32 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ steps.get_version.outputs.VERSION }}
+
+  # Update Release with Docker download buttons
+  update-release:
+    needs: build-and-push
+    if: always() && github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          pip install PyGithub
+
+      - name: Update Release Notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          BUILD_STATUS: ${{ needs.build-and-push.result == 'success' && 'success' || 'failure' }}
+        run: |
+          python .github/scripts/update-release-buttons.py

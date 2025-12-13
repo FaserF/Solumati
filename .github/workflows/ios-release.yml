@@ -105,3 +105,24 @@ jobs:
         with:
           name: solumati-ios
           path: ${{ steps.rename.outputs.ipa_path }}
+
+      - name: Update Release with Download Buttons
+        if: github.event_name == 'release' || inputs.tag_name != ''
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        if: github.event_name == 'release' || inputs.tag_name != ''
+        run: |
+          pip install PyGithub
+
+      - name: Update Release Notes
+        if: github.event_name == 'release' || inputs.tag_name != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TAG_NAME: ${{ inputs.tag_name }}
+          BUILD_STATUS: success
+        run: |
+          python .github/scripts/update-release-buttons.py
