@@ -5,8 +5,6 @@
 ################################################################################
 
 # 1. VISIBILITY & FORMATTING
-verbose = true
-progress = true
 format = "markdown"
 
 # 2. CHECK SCOPE
