@@ -90,7 +90,7 @@ jobs:
               console.log("❌ Quality Gate Failed!");
 
               try {
-                  // Fetch the specific jobs that failed to give better feedback
+                  // Fetch the specific jobs that failed
                   const { data: runJobs } = await github.rest.actions.listJobsForWorkflowRun({
                      owner: context.repo.owner,
                      repo: context.repo.repo,
@@ -100,8 +100,22 @@ jobs:
                   let failedJobs = runJobs.jobs.filter(j => j.conclusion === 'failure');
                   let message = "❌ **Checks Failed**\n\nThe automation detected issues in the following QA checks:\n\n";
 
-                  failedJobs.forEach(job => {
-                      // job.name is now human readable (e.g. "Link Checker")
+                  // --- AI ERROR SUMMARY GENERATION ---
+                  let aiSummary = "\n## 🤖 AI Error Summary\n_Copy the block below and paste it to your AI assistant to get fixes._\n\n```text\n";
+                  aiSummary += "================================================================================\n";
+                  aiSummary += "                       CI FAILURE REPORT                                      \n";
+                  aiSummary += "================================================================================\n";
+                  aiSummary += `REPOSITORY: ${context.repo.owner}/${context.repo.repo}\n`;
+                  aiSummary += `PR NUMBER:  ${pr.number}\n`;
+                  aiSummary += `TIMESTAMP:  ${new Date().toISOString()}\n\n`;
+                  aiSummary += "INSTRUCTIONS FOR AI:\n";
+                  aiSummary += "The following errors were detected in the CI pipeline. Please analyze them and\n";
+                  aiSummary += "provide the corrected code or instructions to fix these issues.\n\n";
+
+                  let hasAnnotations = false;
+
+                  // Use for...of to allow await inside loop
+                  for (const job of failedJobs) {
                       message += `### 🔴 [${job.name}](${job.html_url})\n`;
                       if(job.steps) {
                           job.steps.filter(s => s.conclusion === 'failure').forEach(step => {
@@ -109,9 +123,62 @@ jobs:
                           });
                       }
                       message += "\n";
-                  });
 
-                  message += "---\n> **Action Required**:\n> 1. Click the links above to see the error details.\n> 2. Fix the issues locally.\n> 3. Push your changes.";
+                      aiSummary += "--------------------------------------------------------------------------------\n";
+                      aiSummary += `JOB FAILURE: ${job.name}\n`;
+                      aiSummary += "--------------------------------------------------------------------------------\n";
+
+                      // List Failed Steps
+                      if(job.steps) {
+                          const failedSteps = job.steps.filter(s => s.conclusion === 'failure');
+                          if (failedSteps.length > 0) {
+                             aiSummary += "FAILED STEPS:\n";
+                             failedSteps.forEach(step => {
+                                 aiSummary += `  - ${step.name}\n`;
+                             });
+                             aiSummary += "\n";
+                          }
+                      }
+
+                      // Fetch Annotations
+                      try {
+                        const { data: annotations } = await github.rest.checks.listAnnotations({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            check_run_id: job.id
+                        });
+
+                        if (annotations.length > 0) {
+                            hasAnnotations = true;
+                            aiSummary += "ANNOTATIONS (Specific Line Errors):\n";
+                            annotations.forEach(ann => {
+                                aiSummary += `  [FILE] ${ann.path}:${ann.start_line}:${ann.start_column || 0}\n`;
+                                aiSummary += `  [TYPE] ${ann.annotation_level} | ${ann.title || 'Error'}\n`;
+                                aiSummary += `  [DESC] ${ann.message}\n`;
+                                if (ann.raw_details) {
+                                    aiSummary += `  [DTLS] ${ann.raw_details}\n`;
+                                }
+                                aiSummary += "  ---\n";
+                            });
+                        } else {
+                            aiSummary += "NO DIRECT ANNOTATIONS FOUND.\n";
+                            aiSummary += "(The error might be a general crash or timeout. Check the full logs via the links above.)\n";
+                        }
+                      } catch (annErr) {
+                          aiSummary += `ERROR FETCHING ANNOTATIONS: ${annErr}\n`;
+                      }
+                      aiSummary += "\n"; // Spacing between jobs
+                  }
+
+                  aiSummary += "================================================================================\n";
+                  aiSummary += "END OF REPORT\n";
+                  aiSummary += "```\n";
+
+                  // Only append if we actually found something meaningful or if jobs failed
+                  // (Always append if jobs failed, which is true here)
+                  message += aiSummary;
+
+                  message += "\n---\n> **Action Required**:\n> 1. Copy the report above.\n> 2. Paste it to your AI coding assistant.\n> 3. Apply the suggested fixes.";
 
                   await github.rest.issues.addLabels({
                     owner: context.repo.owner,
@@ -134,7 +201,7 @@ jobs:
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: pr.number,
-                    body: "❌ **Checks Failed**\n\nThe automation detected issues. Please check the 'PR Quality Gate' action logs for details."
+                    body: "❌ **Checks Failed**\n\nThe automation detected issues. Please check the 'Main CI' action logs for details."
                   });
               }
             }
