@@ -1,23 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import JSONResponse, Response
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from typing import List, Dict, Any
 import json
 import logging
 from datetime import datetime
+from typing import Any, Dict, List
 
-# Local modules
-from app.core.database import get_db, Base
 from app.api.dependencies import require_admin
+# Local modules
+from app.core.database import Base, get_db
 from app.db import models, schemas
 from app.services.utils import get_setting, save_setting
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse, Response
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/backup", tags=["admin"])
 
 # --- Helper: Serialize/Deserialize ---
+
 
 def serialize_model(instance):
     """Converts a SQLAlchemy model instance to a dictionary."""
@@ -30,6 +31,7 @@ def serialize_model(instance):
             data[column.name] = val
     return data
 
+
 def get_model_class(tablename):
     """Finds the model class by tablename."""
     for mapper in Base.registry.mappers:
@@ -37,17 +39,21 @@ def get_model_class(tablename):
             return mapper.class_
     return None
 
+
 # --- Endpoints ---
 
+
 @router.get("/settings/export")
-def export_settings(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+def export_settings(
+    db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)
+):
     """Exports all system settings as JSON."""
     settings = db.query(models.SystemSetting).all()
     export_data = {
         "export_type": "settings",
         "timestamp": datetime.utcnow().isoformat(),
         "version": "1.0",
-        "data": [serialize_model(s) for s in settings]
+        "data": [serialize_model(s) for s in settings],
     }
 
     # Create file response
@@ -57,11 +63,16 @@ def export_settings(db: Session = Depends(get_db), current_admin: models.User = 
     return Response(
         content=json_str,
         media_type="application/json",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
+
 @router.post("/settings/import")
-async def import_settings(file: UploadFile = File(...), db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+async def import_settings(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(require_admin),
+):
     """Imports system settings from JSON."""
     try:
         content = await file.read()
@@ -77,7 +88,16 @@ async def import_settings(file: UploadFile = File(...), db: Session = Depends(ge
             key = item.get("key")
             value = item.get("value")
             if key:
-                save_setting(db, key, json.loads(value) if isinstance(value, str) and (value.startswith('{') or value.startswith('[')) else value)
+                save_setting(
+                    db,
+                    key,
+                    (
+                        json.loads(value)
+                        if isinstance(value, str)
+                        and (value.startswith("{") or value.startswith("["))
+                        else value
+                    ),
+                )
                 count += 1
 
         logger.info(f"Admin {current_admin.username} imported {count} settings.")
@@ -91,7 +111,9 @@ async def import_settings(file: UploadFile = File(...), db: Session = Depends(ge
 
 
 @router.get("/database/export")
-def export_database(db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+def export_database(
+    db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)
+):
     """
     Exports ALL database tables to a JSON structure.
     This is a logical backup suitable for migration between instances.
@@ -99,7 +121,7 @@ def export_database(db: Session = Depends(get_db), current_admin: models.User = 
     export_data = {
         "export_type": "full_database",
         "timestamp": datetime.utcnow().isoformat(),
-        "tables": {}
+        "tables": {},
     }
 
     # Iterate over all registered models in Base
@@ -116,17 +138,26 @@ def export_database(db: Session = Depends(get_db), current_admin: models.User = 
         rows = db.query(model).all()
         export_data["tables"][tablename] = [serialize_model(row) for row in rows]
 
-    json_str = json.dumps(export_data, indent=2) # Might be large, better to stream? valid for reasonable usage.
-    filename = f"solumati_full_backup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+    json_str = json.dumps(
+        export_data, indent=2
+    )  # Might be large, better to stream? valid for reasonable usage.
+    filename = (
+        f"solumati_full_backup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+    )
 
     return Response(
         content=json_str,
         media_type="application/json",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
+
 @router.post("/database/import")
-async def import_database(file: UploadFile = File(...), db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)):
+async def import_database(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(require_admin),
+):
     """
     Imports a full database backup.
     WARNING: This wipes existing data or merges?
@@ -138,7 +169,9 @@ async def import_database(file: UploadFile = File(...), db: Session = Depends(ge
         data = json.loads(content)
 
         if data.get("export_type") != "full_database":
-            raise HTTPException(400, "Invalid file type. Expected full_database export.")
+            raise HTTPException(
+                400, "Invalid file type. Expected full_database export."
+            )
 
         tables_data = data.get("tables", {})
 
@@ -148,8 +181,8 @@ async def import_database(file: UploadFile = File(...), db: Session = Depends(ge
         # SystemSettings is independent.
 
         # Actually, best generic way: Disable FK checks.
-        is_sqlite = 'sqlite' in str(db.get_bind().url)
-        is_postgres = 'postgresql' in str(db.get_bind().url)
+        is_sqlite = "sqlite" in str(db.get_bind().url)
+        is_postgres = "postgresql" in str(db.get_bind().url)
 
         try:
             if is_sqlite:
@@ -168,29 +201,38 @@ async def import_database(file: UploadFile = File(...), db: Session = Depends(ge
 
             # Deletion List (Manual implementation of dependency order to be safe)
             tables_to_clear = [
-               "reports", "messages", "notifications", "linked_accounts", "users", "system_settings"
+                "reports",
+                "messages",
+                "notifications",
+                "linked_accounts",
+                "users",
+                "system_settings",
             ]
 
             # Or use metadata sorted tables
             for table in reversed(Base.metadata.sorted_tables):
-                 db.execute(text(f"DELETE FROM {table.name}"))
+                db.execute(text(f"DELETE FROM {table.name}"))
 
             # Insert Phase
             for tablename, rows in tables_data.items():
                 model = get_model_class(tablename)
                 if not model:
-                     logger.warning(f"Skipping unknown table in backup: {tablename}")
-                     continue
+                    logger.warning(f"Skipping unknown table in backup: {tablename}")
+                    continue
 
                 for row_data in rows:
                     # Fix DateTime strings back to objects
                     for col in model.__table__.columns:
-                        if isinstance(col.type, (schemas.DateTime, models.DateTime)) and row_data.get(col.name):
-                             # Basic ISO parsing
-                             try:
-                                 row_data[col.name] = datetime.fromisoformat(row_data[col.name])
-                             except:
-                                 pass # Keep as string if fail? SQLAlchemy might handle it.
+                        if isinstance(
+                            col.type, (schemas.DateTime, models.DateTime)
+                        ) and row_data.get(col.name):
+                            # Basic ISO parsing
+                            try:
+                                row_data[col.name] = datetime.fromisoformat(
+                                    row_data[col.name]
+                                )
+                            except:
+                                pass  # Keep as string if fail? SQLAlchemy might handle it.
 
                     obj = model(**row_data)
                     db.add(obj)
@@ -199,20 +241,22 @@ async def import_database(file: UploadFile = File(...), db: Session = Depends(ge
 
             # Fix sequences in Postgres (Important for ID auto-increment)
             if is_postgres:
-                 for table in Base.metadata.sorted_tables:
-                     if table.primary_key:
-                         pk_col = list(table.primary_key.columns)[0].name
-                         seq_fix = f"SELECT setval(pg_get_serial_sequence('{table.name}', '{pk_col}'), COALESCE(MAX({pk_col}), 1)) FROM {table.name};"
-                         try:
-                             db.execute(text(seq_fix))
-                         except Exception as e:
-                             logger.warning(f"Could not reset sequence for {table.name}: {e}")
+                for table in Base.metadata.sorted_tables:
+                    if table.primary_key:
+                        pk_col = list(table.primary_key.columns)[0].name
+                        seq_fix = f"SELECT setval(pg_get_serial_sequence('{table.name}', '{pk_col}'), COALESCE(MAX({pk_col}), 1)) FROM {table.name};"
+                        try:
+                            db.execute(text(seq_fix))
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not reset sequence for {table.name}: {e}"
+                            )
 
         finally:
-             if is_sqlite:
-                 db.execute(text("PRAGMA foreign_keys = ON;"))
-             elif is_postgres:
-                 db.execute(text("SET session_replication_role = 'origin';"))
+            if is_sqlite:
+                db.execute(text("PRAGMA foreign_keys = ON;"))
+            elif is_postgres:
+                db.execute(text("SET session_replication_role = 'origin';"))
 
         logger.info(f"Admin {current_admin.username} restored database from backup.")
         return {"status": "success", "message": "Database restored successfully."}

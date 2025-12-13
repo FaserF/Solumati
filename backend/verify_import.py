@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 # Add current directory to sys.path to mimic uvicorn running from backend/
 # uvicorn adds the current working directory to sys.path
@@ -11,10 +11,12 @@ print(f"Path: {sys.path[:3]}")
 try:
     # Attempt to find the app package
     import app
+
     print(f"Found app package: {app}")
 
     # Attempt to import main
     import app.main
+
     print("Successfully imported app.main")
 
 except ImportError as e:

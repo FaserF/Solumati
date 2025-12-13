@@ -1,17 +1,19 @@
+import os
+import sys
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-import sys
-import os
-from datetime import datetime
 
 # Ensure backend path is in sys.path if running from root or backend/tests
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.main import app
 from app.api.dependencies import require_admin
 from app.db import models
+from app.main import app
 
 # client = TestClient(app)
+
 
 def test_registration_with_list_answers(client, test_password):
     """
@@ -25,7 +27,7 @@ def test_registration_with_list_answers(client, test_password):
         "password": test_password,
         "real_name": "Test User",
         "intent": "longterm",
-        "answers": [3, 3, 3, 3] # This should now be accepted
+        "answers": [3, 3, 3, 3],  # This should now be accepted
     }
 
     response = client.post("/users/", json=payload)
@@ -34,13 +36,16 @@ def test_registration_with_list_answers(client, test_password):
     assert data["email"] == email
     assert "id" in data
 
+
 def test_admin_create_user_defaults(client, test_password):
     """
     Verifies that creating a user via Admin Panel (which might omit answers/intent) works
     due to default values being applied.
     """
     # Mock Admin Dependency
-    mock_admin = models.User(id=999, username="admin_mock", role="admin", email="admin@mock.com")
+    mock_admin = models.User(
+        id=999, username="admin_mock", role="admin", email="admin@mock.com"
+    )
     app.dependency_overrides[require_admin] = lambda: mock_admin
 
     timestamp = datetime.now().timestamp()
@@ -48,7 +53,7 @@ def test_admin_create_user_defaults(client, test_password):
         "username": f"new_admin_user_{timestamp}",
         "email": f"new_admin_user_{timestamp}@test.com",
         "password": test_password,
-        "role": "user"
+        "role": "user",
         # answers and intent are OMITTED, should default
     }
 
@@ -59,6 +64,7 @@ def test_admin_create_user_defaults(client, test_password):
 
     assert response.status_code == 200, f"Admin create failed: {response.text}"
     assert response.json()["status"] == "success"
+
 
 def test_match_gating_incomplete_profile(client, test_password):
     """
@@ -73,7 +79,7 @@ def test_match_gating_incomplete_profile(client, test_password):
         "password": test_password,
         "real_name": "Incomplete User",
         "intent": "longterm",
-        "answers": [3, 3, 3, 3] # Incomplete/Dummy answers
+        "answers": [3, 3, 3, 3],  # Incomplete/Dummy answers
     }
     reg_response = client.post("/users/", json=payload)
     assert reg_response.status_code == 200
@@ -104,5 +110,7 @@ def test_match_gating_incomplete_profile(client, test_password):
     response = client.get(f"/matches/{user_id}")
 
     # EXPECTATION: 403 Forbidden because profile is incomplete
-    assert response.status_code == 403, f"Expected 403 for incomplete profile, got {response.status_code}"
+    assert (
+        response.status_code == 403
+    ), f"Expected 403 for incomplete profile, got {response.status_code}"
     assert "Profile Incomplete" in response.text

@@ -1,15 +1,17 @@
-from pydantic import BaseModel, field_validator, EmailStr
-from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
-from email_validator import validate_email, EmailNotValidError
+from typing import Any, Dict, List, Optional, Union
+
 from app.core.config import PROJECT_NAME
+from email_validator import EmailNotValidError, validate_email
+from pydantic import BaseModel, EmailStr, field_validator
+
 
 class UserBase(BaseModel):
     email: str
     intent: Optional[str] = None
     real_name: Optional[str] = None
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email_address(cls, v: str) -> str:
         if v.endswith("@solumati.local"):
@@ -26,10 +28,12 @@ class UserCreate(UserBase):
     answers: Optional[Union[Dict[str, int], List[int]]] = {}
     captcha_token: Optional[str] = None
 
+
 class UserLogin(BaseModel):
     login: str
     password: str
     captcha_token: Optional[str] = None
+
 
 class UserDisplay(UserBase):
     id: int
@@ -46,7 +50,7 @@ class UserDisplay(UserBase):
     deactivation_reason: Optional[str] = None
     ban_reason_text: Optional[str] = None
     banned_until: Optional[datetime] = None
-    two_factor_method: Optional[str] = 'none'
+    two_factor_method: Optional[str] = "none"
 
     # 2FA Status
     has_totp: bool = False
@@ -55,7 +59,7 @@ class UserDisplay(UserBase):
     # New fields
     app_settings: Optional[str] = None
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email_address(cls, v: str) -> str:
         # In Admin Display, we should not crash if email is invalid in DB.
@@ -65,10 +69,12 @@ class UserDisplay(UserBase):
     class Config:
         from_attributes = True
 
+
 class UserUpdate(BaseModel):
     about_me: Optional[str] = None
     intent: Optional[str] = None
     answers: Optional[Union[Dict[str, int], List[int]]] = None
+
 
 class UserAdminUpdate(BaseModel):
     username: Optional[str] = None
@@ -79,6 +85,7 @@ class UserAdminUpdate(BaseModel):
     two_factor_method: Optional[str] = None
     role: Optional[str] = None
 
+
 class LinkedAccountDisplay(BaseModel):
     provider: str
     email: Optional[str] = None
@@ -87,17 +94,22 @@ class LinkedAccountDisplay(BaseModel):
     class Config:
         from_attributes = True
 
+
 class UserCreateAdmin(BaseModel):
     username: str
     email: str
     password: str
     role: str = "user"
 
+
 class UserSettingsUpdate(BaseModel):
     notifications_enabled: Optional[bool] = None
     theme: Optional[str] = None
     push_subscription: Optional[Dict[str, Any]] = None
-    email_notifications: Optional[Dict[str, bool]] = None  # e.g., {"login_alerts": true, "security_alerts": true}
+    email_notifications: Optional[Dict[str, bool]] = (
+        None  # e.g., {"login_alerts": true, "security_alerts": true}
+    )
+
 
 class MatchResult(BaseModel):
     user_id: int
@@ -107,12 +119,12 @@ class MatchResult(BaseModel):
     score: float
     match_details: List[str] = []
 
+
 class AdminPunishAction(BaseModel):
     action: str
     reason_type: Optional[str] = "AdminDeactivation"
     custom_reason: Optional[str] = None
     duration_hours: Optional[int] = None
-
 
 
 class MailConfig(BaseModel):
@@ -126,14 +138,17 @@ class MailConfig(BaseModel):
     sender_name: Optional[str] = "Solumati"
     from_email: Optional[str] = None
 
+
 class NotificationBase(BaseModel):
     title: str
     message: str
     type: str = "system"
     link: Optional[str] = None
 
+
 class NotificationCreate(NotificationBase):
     user_id: int
+
 
 class NotificationDisplay(NotificationBase):
     id: int
@@ -143,9 +158,11 @@ class NotificationDisplay(NotificationBase):
     class Config:
         from_attributes = True
 
+
 class PushSubscription(BaseModel):
     endpoint: str
     keys: Dict[str, str]
+
 
 class RegistrationConfig(BaseModel):
     enabled: bool = True
@@ -156,6 +173,7 @@ class RegistrationConfig(BaseModel):
     allowed_domains: Optional[str] = None
     blocked_domains: Optional[str] = None
     allow_password_registration: bool = True
+
 
 class LegalConfig(BaseModel):
     enabled_imprint: bool = True
@@ -170,34 +188,42 @@ class LegalConfig(BaseModel):
     register_number: str = ""
     vat_id: str = ""
 
+
 # --- OAuth Dynamic Config ---
+
 
 class OAuthProviderConfig(BaseModel):
     enabled: bool = False
     client_id: Optional[str] = ""
     client_secret: Optional[str] = ""
 
+
 class OAuthConfig(BaseModel):
     github: OAuthProviderConfig = OAuthProviderConfig()
     google: OAuthProviderConfig = OAuthProviderConfig()
     microsoft: OAuthProviderConfig = OAuthProviderConfig()
+
 
 class OAuthProviders(BaseModel):
     github: bool = False
     google: bool = False
     microsoft: bool = False
 
+
 class SupportChatConfig(BaseModel):
     enabled: bool = False
     email_target: Optional[str] = ""
+
 
 class SupportPageConfig(BaseModel):
     enabled: bool = True
     contact_info: Optional[str] = ""
 
+
 class RegistrationNotificationConfig(BaseModel):
     enabled: bool = False
     email_target: Optional[str] = ""
+
 
 class CaptchaConfig(BaseModel):
     enabled: bool = False
@@ -207,10 +233,12 @@ class CaptchaConfig(BaseModel):
     failed_attempts_threshold: int = 5
     lockout_minutes: int = 10
 
+
 class CaptchaPublicConfig(BaseModel):
     enabled: bool = False
     provider: str = "cloudflare"
     site_key: Optional[str] = None
+
 
 class PublicConfig(BaseModel):
     registration_enabled: bool
@@ -228,6 +256,7 @@ class PublicConfig(BaseModel):
     mail_enabled: bool = False
     captcha: CaptchaPublicConfig = CaptchaPublicConfig()
 
+
 class SystemSettings(BaseModel):
     mail: MailConfig
     registration: RegistrationConfig
@@ -235,11 +264,14 @@ class SystemSettings(BaseModel):
     oauth: OAuthConfig = OAuthConfig()
     support_chat: SupportChatConfig = SupportChatConfig()
     support_page: SupportPageConfig = SupportPageConfig()
-    registration_notification: RegistrationNotificationConfig = RegistrationNotificationConfig()
+    registration_notification: RegistrationNotificationConfig = (
+        RegistrationNotificationConfig()
+    )
     captcha: CaptchaConfig = CaptchaConfig()
     assetlinks: List[Dict[str, Any]] = []
     maintenance_mode: bool = False
-    update_channel: str = "stable" # stable, beta, alpha
+    update_channel: str = "stable"  # stable, beta, alpha
+
 
 class SystemDiagnostics(BaseModel):
     current_version: str
@@ -254,6 +286,7 @@ class SystemDiagnostics(BaseModel):
     database_connected: bool
     api_reachable: bool
 
+
 class ChangelogRelease(BaseModel):
     tag_name: str
     name: Optional[str]
@@ -261,18 +294,23 @@ class ChangelogRelease(BaseModel):
     published_at: Optional[str]
     html_url: Optional[str]
 
+
 # --- 2FA SCHEMAS ---
+
 
 class TotpSetupResponse(BaseModel):
     secret: str
     uri: str
 
+
 class TotpVerifyRequest(BaseModel):
     token: str
+
 
 class TwoFactorAuthRequest(BaseModel):
     user_id: int
     code: Optional[str] = None
+
 
 class TwoFactorLoginResponse(BaseModel):
     require_2fa: bool
@@ -289,22 +327,28 @@ class TwoFactorLoginResponse(BaseModel):
     image_url: Optional[str] = None
     intent: Optional[str] = None
 
+
 # WebAuthn DTOs
 class WebAuthnRegistrationOptions(BaseModel):
     options: Dict[str, Any]
 
+
 class WebAuthnRegistrationResponse(BaseModel):
     credential: Dict[str, Any]
 
+
 class WebAuthnAuthOptions(BaseModel):
     options: Dict[str, Any]
+
 
 class WebAuthnAuthResponse(BaseModel):
     credential: Dict[str, Any]
     user_id: int
 
+
 class ReportCreate(BaseModel):
     reason: str
+
 
 class ReportDisplay(BaseModel):
     id: int
@@ -316,6 +360,7 @@ class ReportDisplay(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class UserPublicDisplay(BaseModel):
     id: int

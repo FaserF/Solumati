@@ -1,22 +1,25 @@
+import os
+import sys
+from datetime import datetime
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock
-import sys
-import os
-from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.main import app
 from app.api.dependencies import get_current_user_from_header
 from app.core.database import get_db
 from app.db import models
+from app.main import app
 
 # client = TestClient(app)
+
 
 def mock_user_dep(id=1, email="notif@test.com"):
     user = models.User(id=id, email=email, role="user", is_active=True)
     return lambda: user
+
 
 def test_get_notifications_empty(client):
     mock_db = MagicMock()
@@ -24,7 +27,9 @@ def test_get_notifications_empty(client):
     app.dependency_overrides[get_db] = lambda: mock_db
 
     # Mock query returning empty list
-    mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
 
     response = client.get("/notifications", headers={"X-User-ID": "1"})
     # Note: Router prefix is usually included?
@@ -42,16 +47,17 @@ def test_get_notifications_empty(client):
     # If main.py mounts it at /api, then it's /api/notifications
 
     # Wait, check main.py...
-    pass # Can't check main.py here inside writing file. Assuming path based on convention.
+    pass  # Can't check main.py here inside writing file. Assuming path based on convention.
     # If path is wrong, test will fail 404.
 
     # Let's assume /api/notifications is correct route for `get_notifications`.
 
-    assert response.status_code == 200 # If 404, path is wrong.
+    assert response.status_code == 200  # If 404, path is wrong.
     assert response.json() == []
 
     del app.dependency_overrides[get_current_user_from_header]
     del app.dependency_overrides[get_db]
+
 
 def test_mark_notification_read(client):
     mock_db = MagicMock()

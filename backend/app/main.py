@@ -1,21 +1,25 @@
+import asyncio
+import logging
+import os
+
+# Routers
+from app.api.routers import (admin, auth, backup, chat, notifications, oauth,
+                             system, users)
+from app.core.config import CURRENT_VERSION, PROJECT_NAME, TEST_MODE
+# Local modules
+from app.core.database import Base, SessionLocal, engine, get_db
+from app.core.logging_config import logger
+from app.db import models, schemas
+from app.scripts.init_data import (check_emergency_reset, check_schema,
+                                   ensure_admin_user, ensure_guest_user,
+                                   ensure_showcase_dummies,
+                                   ensure_support_user, fix_dummy_user_roles,
+                                   generate_dummy_data)
+from app.services.scheduler import start_scheduler
+from app.services.tasks import periodic_cleanup_task
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import logging
-import os
-import asyncio
-
-# Local modules
-from app.core.database import engine, Base, get_db, SessionLocal
-from app.db import models, schemas
-from app.core.logging_config import logger
-from app.core.config import CURRENT_VERSION, TEST_MODE, PROJECT_NAME
-from app.scripts.init_data import check_schema, ensure_guest_user, ensure_admin_user, ensure_support_user, generate_dummy_data, check_emergency_reset, fix_dummy_user_roles, ensure_showcase_dummies
-from app.services.tasks import periodic_cleanup_task
-from app.services.scheduler import start_scheduler
-
-# Routers
-from app.api.routers import auth, users, admin, system, oauth, chat, notifications, backup
 
 # --- App Initialization ---
 app = FastAPI(title=PROJECT_NAME, version=CURRENT_VERSION)
@@ -33,6 +37,7 @@ app.add_middleware(
 os.makedirs("static/images", exist_ok=True)
 os.makedirs("static/images/dummies", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # --- Startup Event ---
 # --- Startup Event ---
@@ -78,11 +83,13 @@ async def startup_event():
     # Allow cleaner shutdown of background tasks if any
     app.state.cleanup_task = asyncio.create_task(periodic_cleanup_task())
 
+
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("Shutting down...")
-    if hasattr(app.state, 'cleanup_task'):
+    if hasattr(app.state, "cleanup_task"):
         app.state.cleanup_task.cancel()
+
 
 app.include_router(auth.router)
 app.include_router(users.router)

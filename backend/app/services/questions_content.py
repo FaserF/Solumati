@@ -16,7 +16,6 @@ QUESTIONS_SKELETON = [
     {"id": 8, "category": "Family", "weight": 8, "option_count": 3},
     {"id": 9, "category": "Beliefs", "weight": 4, "option_count": 3},
     {"id": 10, "category": "Values", "weight": 5, "option_count": 3},
-
     # --- Personality & Temperament ---
     {"id": 11, "category": "Personality", "weight": 8, "option_count": 4},
     {"id": 12, "category": "Personality", "weight": 5, "option_count": 3},
@@ -28,7 +27,6 @@ QUESTIONS_SKELETON = [
     {"id": 18, "category": "Personality", "weight": 5, "option_count": 3},
     {"id": 19, "category": "Personality", "weight": 4, "option_count": 3},
     {"id": 20, "category": "Personality", "weight": 6, "option_count": 3},
-
     # --- Lifestyle & Habits ---
     {"id": 21, "category": "Lifestyle", "weight": 15, "option_count": 4},
     {"id": 22, "category": "Lifestyle", "weight": 5, "option_count": 3},
@@ -40,7 +38,6 @@ QUESTIONS_SKELETON = [
     {"id": 28, "category": "Lifestyle", "weight": 5, "option_count": 3},
     {"id": 29, "category": "Lifestyle", "weight": 4, "option_count": 3},
     {"id": 30, "category": "Values", "weight": 6, "option_count": 3},
-
     # --- Interests & Hobbies ---
     {"id": 31, "category": "Interests", "weight": 5, "option_count": 5},
     {"id": 32, "category": "Interests", "weight": 3, "option_count": 3},
@@ -52,7 +49,6 @@ QUESTIONS_SKELETON = [
     {"id": 38, "category": "Interests", "weight": 3, "option_count": 3},
     {"id": 39, "category": "Interests", "weight": 1, "option_count": 6},
     {"id": 40, "category": "Lifestyle", "weight": 4, "option_count": 3},
-
     # --- Relationships & Sex ---
     {"id": 41, "category": "Relationships", "weight": 8, "option_count": 5},
     {"id": 42, "category": "Relationships", "weight": 20, "option_count": 3},
@@ -63,8 +59,9 @@ QUESTIONS_SKELETON = [
     {"id": 47, "category": "Beliefs", "weight": 4, "option_count": 3},
     {"id": 48, "category": "Relationships", "weight": 6, "option_count": 4},
     {"id": 49, "category": "Relationships", "weight": 10, "option_count": 2},
-    {"id": 50, "category": "Relationships", "weight": 8, "option_count": 2}
+    {"id": 50, "category": "Relationships", "weight": 8, "option_count": 2},
 ]
+
 
 def get_questions(lang=None):
     """
@@ -89,6 +86,7 @@ def get_questions(lang=None):
 
     return final_questions
 
+
 def get_question_by_id(qid: int, lang=None):
     questions = get_questions(lang)
     for q in questions:
@@ -96,5 +94,6 @@ def get_question_by_id(qid: int, lang=None):
             return q
     return None
 
+
 # Export a default version (English) for import compatibility (e.g. tests, utils imports)
-QUESTIONS = get_questions('en')
+QUESTIONS = get_questions("en")

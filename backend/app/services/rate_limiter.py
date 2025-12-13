@@ -2,11 +2,12 @@
 Rate limiter for tracking failed login attempts per IP.
 Uses in-memory storage with automatic cleanup.
 """
-import time
-import threading
-from typing import Dict, Tuple
-from dataclasses import dataclass, field
+
 import logging
+import threading
+import time
+from dataclasses import dataclass, field
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +37,17 @@ class RateLimiter:
 
         with self._lock:
             expired_ips = [
-                ip for ip, record in self._attempts.items()
+                ip
+                for ip, record in self._attempts.items()
                 if now - record.last_attempt > max_age
             ]
             for ip in expired_ips:
                 del self._attempts[ip]
             self._last_cleanup = now
             if expired_ips:
-                logger.debug(f"Rate limiter cleanup: removed {len(expired_ips)} old entries")
+                logger.debug(
+                    f"Rate limiter cleanup: removed {len(expired_ips)} old entries"
+                )
 
     def record_failed_attempt(self, ip: str) -> int:
         """
@@ -56,19 +60,21 @@ class RateLimiter:
         with self._lock:
             if ip not in self._attempts:
                 self._attempts[ip] = AttemptRecord(
-                    count=1,
-                    first_attempt=now,
-                    last_attempt=now
+                    count=1, first_attempt=now, last_attempt=now
                 )
             else:
                 record = self._attempts[ip]
                 record.count += 1
                 record.last_attempt = now
 
-            logger.info(f"Failed login attempt from {ip}: count={self._attempts[ip].count}")
+            logger.info(
+                f"Failed login attempt from {ip}: count={self._attempts[ip].count}"
+            )
             return self._attempts[ip].count
 
-    def check_rate_limit(self, ip: str, threshold: int = 5, lockout_minutes: int = 10) -> Tuple[bool, int, int]:
+    def check_rate_limit(
+        self, ip: str, threshold: int = 5, lockout_minutes: int = 10
+    ) -> Tuple[bool, int, int]:
         """
         Check if an IP is rate limited.
 
@@ -94,7 +100,9 @@ class RateLimiter:
                 # Lock the IP
                 record.locked_until = now + (lockout_minutes * 60)
                 remaining = lockout_minutes * 60
-                logger.warning(f"IP {ip} locked for {lockout_minutes} minutes after {record.count} failed attempts")
+                logger.warning(
+                    f"IP {ip} locked for {lockout_minutes} minutes after {record.count} failed attempts"
+                )
                 return (True, record.count, remaining)
 
             return (False, record.count, 0)
