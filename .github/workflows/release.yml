@@ -160,8 +160,68 @@ jobs:
       ref: ${{ needs.release.outputs.commit_sha }}
     secrets: inherit
 
-  build-windows:
+  check-windows-build-status:
     needs: release
+    runs-on: ubuntu-latest
+    # Skip this check if this release workflow was manually triggered
+    if: github.event_name != 'workflow_dispatch'
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - name: Check last automatic Windows build status
+        id: check
+        run: |
+          # Get the last workflow run triggered by workflow_call (automatic, from release.yml)
+          # We exclude workflow_dispatch (manual) runs
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/windows-release.yml/runs?per_page=20")
+
+          # Check if we found any runs
+          TOTAL_COUNT=$(echo "$RESPONSE" | jq -r '.total_count // 0')
+          if [ "$TOTAL_COUNT" -eq "0" ]; then
+            echo "No previous runs found. Building Windows."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Find the last automatic run (workflow_call event, not workflow_dispatch)
+          LAST_RUN=$(echo "$RESPONSE" | jq -r '.workflow_runs[] | select(.event == "workflow_call") | .id' | head -n 1)
+
+          if [ -z "$LAST_RUN" ] || [ "$LAST_RUN" == "null" ]; then
+            echo "No previous automatic runs found. Building Windows."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Get the status of the last automatic run
+          RUN_DETAILS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/$LAST_RUN")
+          RUN_STATUS=$(echo "$RUN_DETAILS" | jq -r '.conclusion')
+          RUN_STATE=$(echo "$RUN_DETAILS" | jq -r '.status')
+
+          echo "Last automatic Windows build run ID: $LAST_RUN"
+          echo "Last automatic Windows build status: $RUN_STATUS (state: $RUN_STATE)"
+
+          # If the run is still in progress, allow building
+          if [ "$RUN_STATE" != "completed" ]; then
+            echo "Last automatic run is still in progress. Building Windows."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          elif [ "$RUN_STATUS" == "success" ]; then
+            echo "Last automatic run was successful. Building Windows."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "Last automatic run failed (status: $RUN_STATUS). Skipping Windows build."
+            echo "Build will be skipped until manually triggered and successful."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
+
+  build-windows:
+    needs: [release, check-windows-build-status]
+    # Always build if manually triggered, otherwise check the status from check-windows-build-status
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (needs.check-windows-build-status.result == 'success' && needs.check-windows-build-status.outputs.should_build == 'true') ||
+      (needs.check-windows-build-status.result == 'skipped')
     uses: ./.github/workflows/windows-release.yml
     with:
       tag_name: v${{ needs.release.outputs.new_version }}
