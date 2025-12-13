@@ -8,12 +8,9 @@
 
 
 # 2. CHECK SCOPE
-# Check all markdown files, HTML, and source code
-include = [
-    "*.md",
-    "docs/**/*.md",
-    "frontend/src/**/*.jsx"
-]
+# File patterns are specified via command-line arguments in the GitHub workflow
+# (see .github/workflows/ci-main.yml)
+
 
 # 3. EXCLUSIONS (Whitelist Implementation)
 # We exclude EVERYTHING that does not match our trusted domains.
