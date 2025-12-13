@@ -2,7 +2,7 @@ name: PR Assistant
 
 on:
   workflow_run:
-    workflows: ["PR Quality Gate"]
+    workflows: ["Main CI"]
     types:
       - completed
   pull_request_target:

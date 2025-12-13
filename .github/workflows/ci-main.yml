@@ -1,0 +1,76 @@
+name: Main CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. INTELLIGENT CHANGE DETECTION
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docker: ${{ steps.filter.outputs.docker }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/backend-ci.yml'
+              - 'requirements.txt'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/frontend-ci.yml'
+            docker:
+              - 'docker-compose.yml'
+              - 'Dockerfile'
+              - '.github/workflows/docker-ci.yml'
+              - 'backend/**'
+            e2e:
+              - 'frontend/**'
+              - 'backend/**'
+              - '.github/workflows/e2e-tests.yml'
+
+  # 2. SUB-WORKFLOWS (Conditional)
+
+  link-check:
+    name: Link Checker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: lycheeverse/lychee-action@v1.10.0
+        with:
+          args: --config lychee.toml --exclude-all-private
+          fail: true
+
+  backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    uses: ./.github/workflows/backend-ci.yml
+
+  frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    uses: ./.github/workflows/frontend-ci.yml
+
+  docker:
+    needs: changes
+    if: ${{ needs.changes.outputs.docker == 'true' }}
+    uses: ./.github/workflows/docker-ci.yml
+
+  e2e:
+    needs: [changes, backend, frontend]
+    # Run E2E if backend OR frontend changed
+    if: ${{ needs.changes.outputs.e2e == 'true' }}
+    uses: ./.github/workflows/e2e-tests.yml

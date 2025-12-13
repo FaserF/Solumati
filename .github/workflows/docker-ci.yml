@@ -1,18 +1,7 @@
 name: Docker Integration Test
 
-on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'backend/**'
-      - 'docker-compose.yml'
-      - '.github/workflows/docker-ci.yml'
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'backend/**'
-      - 'docker-compose.yml'
-      - '.github/workflows/docker-ci.yml'
+  workflow_call:
+  workflow_dispatch:
 
 concurrency:
   group: docker-${{ github.ref }}
