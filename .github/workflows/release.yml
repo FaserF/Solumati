@@ -144,9 +144,11 @@ jobs:
           CHANGELOG="## Release v${{ env.NEW_VERSION }}\n\nInitial release."
         fi
 
-        # Add placeholder for download buttons (will be updated by build jobs)
-        cat > /tmp/release_body.txt << 'EOF'
-## 📥 Downloads
+        # Generate download buttons HTML using Python to avoid YAML parsing issues
+        python3 << 'PYTHON_SCRIPT'
+        from datetime import datetime
+
+        downloads_html = """## 📥 Downloads
 
 <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;">
   <div style="margin-bottom: 16px;">
@@ -187,11 +189,15 @@ jobs:
     </div>
   </div>
   <div style="margin-top: 16px; font-size: 0.9em; color: #666;">
-    <p><strong>Last updated:</strong> $(date -u +'%Y-%m-%d %H:%M:%S') UTC</p>
+    <p><strong>Last updated:</strong> {timestamp} UTC</p>
     <p><em>Build artifacts are automatically uploaded as they become available.</em></p>
   </div>
-</div>
-EOF
+</div>""".format(timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
+        with open('/tmp/release_body.txt', 'w', encoding='utf-8') as f:
+            f.write(downloads_html)
+        PYTHON_SCRIPT
+
         INITIAL_BODY="$CHANGELOG
 
 $(cat /tmp/release_body.txt)"
