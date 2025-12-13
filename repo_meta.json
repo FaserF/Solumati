@@ -204,6 +204,7 @@
     "structure": {
         ".gitattributes": null,
         ".gitignore": null,
+        "CHANGELOG.md": null,
         "LICENSE.md": null,
         "README.md": null,
         "backend/": {
