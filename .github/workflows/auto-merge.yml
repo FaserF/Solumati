@@ -27,4 +27,21 @@ jobs:
           echo "Processing PR: $PR_URL"
           echo "Author Association: ${{ github.event.pull_request.author_association }}"
 
-          gh pr merge "$PR_URL" --auto --squash
+          # Try to enable auto-merge, but handle cases where it's not available
+          set +e
+          ERROR_OUTPUT=$(gh pr merge "$PR_URL" --auto --squash 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Auto-merge enabled successfully"
+          else
+            if echo "$ERROR_OUTPUT" | grep -q "Protected branch rules not configured"; then
+              echo "⚠️  Auto-merge is not available: Protected branch rules not configured for this branch"
+              echo "This is expected if branch protection doesn't allow auto-merge. The PR will need manual merge."
+              exit 0
+            else
+              echo "❌ Failed to enable auto-merge: $ERROR_OUTPUT"
+              exit $EXIT_CODE
+            fi
+          fi

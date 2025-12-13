@@ -145,54 +145,56 @@ jobs:
         fi
 
         # Add placeholder for download buttons (will be updated by build jobs)
-        INITIAL_BODY="$CHANGELOG
-
+        cat > /tmp/release_body.txt << 'EOF'
 ## 📥 Downloads
 
-<div style=\"background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;\">
-  <div style=\"margin-bottom: 16px;\">
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #2196f3; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9em;\">
+<div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;">
+  <div style="margin-bottom: 16px;">
+    <div style="display: inline-block; margin: 8px;">
+      <div style="background: #2196f3; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9em;">
         ⏳ Build Status: Building...
       </div>
     </div>
   </div>
-  <div style=\"display: flex; flex-wrap: wrap; gap: 8px; align-items: center;\">
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🤖</span>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+    <div style="display: inline-block; margin: 8px;">
+      <div style="background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;">
+        <span style="font-size: 1.2em;">🤖</span>
         <span>Android APK</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+        <span style="font-size: 0.85em; opacity: 0.7;">(⏳ Building)</span>
       </div>
     </div>
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🪟</span>
+    <div style="display: inline-block; margin: 8px;">
+      <div style="background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;">
+        <span style="font-size: 1.2em;">🪟</span>
         <span>Windows MSIX</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+        <span style="font-size: 0.85em; opacity: 0.7;">(⏳ Building)</span>
       </div>
     </div>
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🍎</span>
+    <div style="display: inline-block; margin: 8px;">
+      <div style="background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;">
+        <span style="font-size: 1.2em;">🍎</span>
         <span>iOS IPA</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+        <span style="font-size: 0.85em; opacity: 0.7;">(⏳ Building)</span>
       </div>
     </div>
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🐳</span>
+    <div style="display: inline-block; margin: 8px;">
+      <div style="background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;">
+        <span style="font-size: 1.2em;">🐳</span>
         <span>Docker Image</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
+        <span style="font-size: 0.85em; opacity: 0.7;">(⏳ Building)</span>
       </div>
     </div>
   </div>
-  <div style=\"margin-top: 16px; font-size: 0.9em; color: #666;\">
+  <div style="margin-top: 16px; font-size: 0.9em; color: #666;">
     <p><strong>Last updated:</strong> $(date -u +'%Y-%m-%d %H:%M:%S') UTC</p>
     <p><em>Build artifacts are automatically uploaded as they become available.</em></p>
   </div>
 </div>
-"
+EOF
+        INITIAL_BODY="$CHANGELOG
+
+$(cat /tmp/release_body.txt)"
         echo "$INITIAL_BODY" > RELEASE_BODY.md
         echo "body_path=RELEASE_BODY.md" >> $GITHUB_OUTPUT
 
