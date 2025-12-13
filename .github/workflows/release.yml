@@ -285,11 +285,19 @@ jobs:
           # Stage all changes (including any files modified by npm version, like package-lock.json)
           git add -A
 
+          # Show status for debugging
+          git status
+
           # Check if there are any changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            # Commit and Push
+            # Commit all staged changes
             git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
+
+            # Pull again with rebase to handle any concurrent changes
+            git pull --rebase origin main
+
+            # Push the changes
             git push origin main
           fi
