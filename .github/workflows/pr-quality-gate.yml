@@ -11,6 +11,7 @@ concurrency:
 jobs:
   # 1. INTELLIGENT LINK CHECKER
   link-check:
+    name: Link Checker
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,6 +25,7 @@ jobs:
 
   # 2. BACKEND INTEGRITY
   backend-check:
+    name: Backend Integrity
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +46,7 @@ jobs:
 
   # 3. FRONTEND INTEGRITY
   frontend-check:
+    name: Frontend Integrity
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
