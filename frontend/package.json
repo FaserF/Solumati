@@ -1,7 +1,7 @@
 {
     "name": "solumati-frontend",
     "private": true,
-    "version": "2025.12.2-b0",
+    "version": "2025.12.3-b0",
     "type": "module",
     "scripts": {
         "dev": "vite",
