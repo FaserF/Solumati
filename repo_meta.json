@@ -127,60 +127,6 @@
             }
         },
         "api_routes": {
-            "admin.py": [
-                "GET /roles (get_system_roles)",
-                "GET /users (admin_get_users)",
-                "PUT /users/{user_id} (admin_update_user)",
-                "POST /users (admin_create_user)",
-                "PUT /users/{user_id}/punish (admin_punish_user)",
-                "POST /users/{user_id}/reset-2fa (admin_reset_2fa)",
-                "GET /settings (get_admin_settings)",
-                "PUT /settings (update_admin_settings)",
-                "POST /settings/test-mail (send_test_mail)",
-                "GET /diagnostics (get_diagnostics)",
-                "POST /update/trigger (trigger_update)",
-                "GET /changelog (get_changelog)",
-                "GET /reports (get_reports)",
-                "DELETE /reports/{report_id} (delete_report)"
-            ],
-            "auth.py": [
-                "POST /login (login)",
-                "POST /auth/2fa/verify (verify_2fa_login)",
-                "POST /users/2fa/setup/totp (setup_totp)",
-                "POST /users/2fa/verify/totp (verify_totp_setup)",
-                "POST /users/2fa/setup/email (setup_email_2fa)",
-                "POST /users/2fa/disable (disable_2fa)",
-                "DELETE /users/2fa/methods/{method} (remove_2fa_method)",
-                "POST /users/2fa/setup/webauthn/register/options (webauthn_register_options)",
-                "POST /users/2fa/setup/webauthn/register/verify (webauthn_register_verify)",
-                "POST /auth/2fa/webauthn/options (webauthn_auth_options)",
-                "POST /auth/2fa/webauthn/verify (webauthn_auth_verify)",
-                "POST /auth/2fa/send-email-code (send_email_2fa_code_endpoint)"
-            ],
-            "backup.py": [
-                "GET /settings/export (export_settings)",
-                "GET /database/export (export_database)"
-            ],
-            "chat.py": [
-                "GET /chat/history/{other_user_id} (get_chat_history)",
-                "GET /chat/conversations (get_conversations)"
-            ],
-            "notifications.py": [
-                "GET /notifications (get_notifications)",
-                "PUT /notifications/{notif_id}/read (mark_notification_read)",
-                "DELETE /notifications/clear (clear_all_notifications)",
-                "GET /notifications/vapid-public-key (get_vapid_public_key)",
-                "POST /notifications/subscribe (subscribe_push)"
-            ],
-            "oauth.py": [
-                "GET /connections (get_connections)",
-                "DELETE /connections/{provider} (delete_connection)"
-            ],
-            "system.py": [
-                "GET /public-config (get_public_config)",
-                "GET /public/legal (get_public_legal)",
-                "GET /.well-known/assetlinks.json (get_assetlinks)"
-            ],
             "users.py": [
                 "POST /users/ (create_user)",
                 "POST /verify (verify_email)",
@@ -197,6 +143,60 @@
                 "DELETE /users/{user_id} (delete_own_account)",
                 "POST /auth/password-reset/request (request_password_reset)",
                 "POST /auth/password-reset/confirm (confirm_password_reset)"
+            ],
+            "auth.py": [
+                "POST /login (login)",
+                "POST /auth/2fa/verify (verify_2fa_login)",
+                "POST /users/2fa/setup/totp (setup_totp)",
+                "POST /users/2fa/verify/totp (verify_totp_setup)",
+                "POST /users/2fa/setup/email (setup_email_2fa)",
+                "POST /users/2fa/disable (disable_2fa)",
+                "DELETE /users/2fa/methods/{method} (remove_2fa_method)",
+                "POST /users/2fa/setup/webauthn/register/options (webauthn_register_options)",
+                "POST /users/2fa/setup/webauthn/register/verify (webauthn_register_verify)",
+                "POST /auth/2fa/webauthn/options (webauthn_auth_options)",
+                "POST /auth/2fa/webauthn/verify (webauthn_auth_verify)",
+                "POST /auth/2fa/send-email-code (send_email_2fa_code_endpoint)"
+            ],
+            "chat.py": [
+                "GET /chat/history/{other_user_id} (get_chat_history)",
+                "GET /chat/conversations (get_conversations)"
+            ],
+            "backup.py": [
+                "GET /settings/export (export_settings)",
+                "GET /database/export (export_database)"
+            ],
+            "admin.py": [
+                "GET /roles (get_system_roles)",
+                "GET /users (admin_get_users)",
+                "PUT /users/{user_id} (admin_update_user)",
+                "POST /users (admin_create_user)",
+                "PUT /users/{user_id}/punish (admin_punish_user)",
+                "POST /users/{user_id}/reset-2fa (admin_reset_2fa)",
+                "GET /settings (get_admin_settings)",
+                "PUT /settings (update_admin_settings)",
+                "POST /settings/test-mail (send_test_mail)",
+                "GET /diagnostics (get_diagnostics)",
+                "POST /update/trigger (trigger_update)",
+                "GET /changelog (get_changelog)",
+                "GET /reports (get_reports)",
+                "DELETE /reports/{report_id} (delete_report)"
+            ],
+            "notifications.py": [
+                "GET /notifications (get_notifications)",
+                "PUT /notifications/{notif_id}/read (mark_notification_read)",
+                "DELETE /notifications/clear (clear_all_notifications)",
+                "GET /notifications/vapid-public-key (get_vapid_public_key)",
+                "POST /notifications/subscribe (subscribe_push)"
+            ],
+            "oauth.py": [
+                "GET /connections (get_connections)",
+                "DELETE /connections/{provider} (delete_connection)"
+            ],
+            "system.py": [
+                "GET /public-config (get_public_config)",
+                "GET /public/legal (get_public_legal)",
+                "GET /.well-known/assetlinks.json (get_assetlinks)"
             ]
         },
         "key_modules": {}
@@ -253,17 +253,10 @@
                     "utils.py": null
                 }
             },
-            "app.log": null,
             "frontend_package.json": null,
-            "i18n/": {},
             "manage.py": null,
-            "middleware/": {},
             "requirements.txt": null,
-            "routers/": {},
             "secret.key": null,
-            "static/": {
-                "images/": {}
-            },
             "tests/": {
                 "check_i18n.py": null,
                 "conftest.py": null,
@@ -359,6 +352,7 @@
         "renovate.json": null,
         "scripts/": {
             "generate_version.py": null,
+            "sync_i18n.py": null,
             "update_repo_meta.py": null
         },
         "secret.key": null,
