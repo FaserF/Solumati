@@ -1,0 +1,95 @@
+name: Retract Last Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type 'RETRACT' to confirm deletion of the latest release."
+        required: true
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  retract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Safety Check
+        if: ${{ inputs.confirmation != 'RETRACT' }}
+        run: |
+          echo "❌ You must type 'RETRACT' in the confirmation box."
+          exit 1
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Identify Latest Release
+        id: last_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Fetch the latest release tag
+          LAST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "::error::No release found to retract."
+            exit 1
+          fi
+
+          echo "Found latest release: $LAST_TAG"
+          echo "tag=$LAST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Delete Release & Tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.last_release.outputs.tag }}
+        run: |
+          echo "💣 Deleting Release and Tag for $TAG..."
+
+          # Delete the Release and the Tag remotely
+          gh release delete "$TAG" --yes --cleanup-tag
+
+          echo "✅ Remote Release & Tag deleted."
+
+          # Delete the tag locally to ensure git-cliff doesn't see it
+          git tag -d "$TAG" || echo "Local tag not found (expected)"
+
+      - name: Regenerate Changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          # Update CHANGELOG.md fully based on remaining tags
+          args: --output CHANGELOG.md
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Commit Updated Changelog
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.md
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changelog changes detected."
+          else
+            git commit -m "chore(cleanup): retract release ${{ steps.last_release.outputs.tag }} and update changelog"
+            git push
+            echo "✅ Changelog updated (Release entry removed)."
+          fi
+
+      - name: ⚠️ Action Required for Docker Images
+        run: |
+          TAG="${{ steps.last_release.outputs.tag }}"
+          # Remove 'v' prefix for image tag if standard
+          IMAGE_TAG="${TAG#v}"
+
+          echo "::warning title=Docker Images Not Deleted::For safety and permission reasons, Docker images were NOT deleted automatically."
+          echo ""
+          echo "Please manually delete the tags associated with $TAG from your container registry:"
+          echo "🔗 https://github.com/${{ github.repository }}/pkgs/container/solumati"
+          echo ""
+          echo "This ensures you don't accidentally break systems attempting to pull this specific version."
