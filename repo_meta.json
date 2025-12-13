@@ -1,0 +1,368 @@
+{
+    "repository_info": {
+        "name": "Solumati - Find Your Match \u2764\ufe0f",
+        "description": "**Solumati** is a modern, open-source dating platform designed to bring people together. Whether you're looking for true love, a casual fling, or just new friends, Solumati helps you connect with people nearby in a transparent and secure environment."
+    },
+    "technology_stack": {
+        "frontend": [
+            "lucide-react (^0.561.0)",
+            "react (^19.0.0)",
+            "react-router-dom (^7.0.0)",
+            "vite (^7.0.0)"
+        ],
+        "backend": [
+            "fastapi==0.124.4",
+            "sqlalchemy==2.0.45",
+            "pydantic==2.12.5",
+            "pydantic-settings==2.12.0",
+            "pytest==9.0.2",
+            "fastapi-sso==0.18.0"
+        ],
+        "dev_ops": [
+            "Docker Compose",
+            "GitHub Actions"
+        ]
+    },
+    "architecture": {
+        "database_schema": {
+            "Report": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'reports'",
+                    "id = Column(Integer, primary_key=True, index=True)",
+                    "reporter_id = Column(Integer, ForeignKey('users.id'))",
+                    "reported_id = Column(Integer, ForeignKey('users.id'))",
+                    "reason = Column(Text, nullable=False)",
+                    "status = Column(String, default='open')",
+                    "created_at = Column(DateTime, default=datetime.utcnow)",
+                    "reporter = relationship('User', foreign_keys=[reporter_id])",
+                    "reported = relationship('User', foreign_keys=[reported_id])"
+                ]
+            },
+            "LinkedAccount": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'linked_accounts'",
+                    "id = Column(Integer, primary_key=True, index=True)",
+                    "user_id = Column(Integer, ForeignKey('users.id'))",
+                    "provider = Column(String)",
+                    "provider_user_id = Column(String)",
+                    "email = Column(String)",
+                    "created_at = Column(DateTime, default=datetime.utcnow)",
+                    "user = relationship('User', back_populates='linked_accounts')"
+                ]
+            },
+            "User": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'users'",
+                    "id = Column(Integer, primary_key=True, index=True)",
+                    "email = Column(String, unique=True, index=True)",
+                    "hashed_password = Column(String)",
+                    "real_name = Column(String)",
+                    "username = Column(String, unique=True, index=True)",
+                    "about_me = Column(Text, default='Ich bin neu hier!')",
+                    "image_url = Column(String, nullable=True)",
+                    "role = Column(String, default='user')",
+                    "is_active = Column(Boolean, default=True)",
+                    "is_verified = Column(Boolean, default=False)",
+                    "verification_code = Column(String, nullable=True)",
+                    "reset_token = Column(String, nullable=True)",
+                    "reset_token_expires = Column(DateTime, nullable=True)",
+                    "is_visible_in_matches = Column(Boolean, default=True)",
+                    "intent = Column(String)",
+                    "answers = Column(Text, default='{}')",
+                    "is_guest = Column(Boolean, default=False)",
+                    "created_at = Column(DateTime, default=datetime.utcnow)",
+                    "last_login = Column(DateTime, nullable=True)",
+                    "deactivation_reason = Column(String, nullable=True)",
+                    "ban_reason_text = Column(Text, nullable=True)",
+                    "deactivated_at = Column(DateTime, nullable=True)",
+                    "banned_until = Column(DateTime, nullable=True)",
+                    "two_factor_method = Column(String, default='none')",
+                    "totp_secret = Column(String, nullable=True)",
+                    "email_2fa_code = Column(String, nullable=True)",
+                    "email_2fa_expires = Column(DateTime, nullable=True)",
+                    "webauthn_credentials = Column(Text, nullable=True, default='[]')",
+                    "webauthn_challenge = Column(String, nullable=True)",
+                    "app_settings = Column(Text, default='{\"notifications_enabled\": false, \"theme\": \"system\"}')",
+                    "push_subscription = Column(Text, nullable=True)",
+                    "linked_accounts = relationship('LinkedAccount', back_populates='user', cascade='all, delete-orphan')"
+                ]
+            },
+            "Message": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'messages'",
+                    "id = Column(Integer, primary_key=True, index=True)",
+                    "sender_id = Column(Integer, ForeignKey('users.id'))",
+                    "receiver_id = Column(Integer, ForeignKey('users.id'))",
+                    "content = Column(String)",
+                    "timestamp = Column(DateTime, default=datetime.utcnow)",
+                    "is_final_contact = Column(Boolean, default=False)",
+                    "is_read = Column(Boolean, default=False)"
+                ]
+            },
+            "Notification": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'notifications'",
+                    "id = Column(Integer, primary_key=True, index=True)",
+                    "user_id = Column(Integer, ForeignKey('users.id'))",
+                    "title = Column(String)",
+                    "message = Column(Text)",
+                    "type = Column(String)",
+                    "link = Column(String, nullable=True)",
+                    "is_read = Column(Boolean, default=False)",
+                    "created_at = Column(DateTime, default=datetime.utcnow)"
+                ]
+            },
+            "SystemSetting": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'system_settings'",
+                    "key = Column(String, primary_key=True, index=True)",
+                    "value = Column(Text)"
+                ]
+            }
+        },
+        "api_routes": {
+            "admin.py": [
+                "GET /roles (get_system_roles)",
+                "GET /users (admin_get_users)",
+                "PUT /users/{user_id} (admin_update_user)",
+                "POST /users (admin_create_user)",
+                "PUT /users/{user_id}/punish (admin_punish_user)",
+                "POST /users/{user_id}/reset-2fa (admin_reset_2fa)",
+                "GET /settings (get_admin_settings)",
+                "PUT /settings (update_admin_settings)",
+                "POST /settings/test-mail (send_test_mail)",
+                "GET /diagnostics (get_diagnostics)",
+                "POST /update/trigger (trigger_update)",
+                "GET /changelog (get_changelog)",
+                "GET /reports (get_reports)",
+                "DELETE /reports/{report_id} (delete_report)"
+            ],
+            "auth.py": [
+                "POST /login (login)",
+                "POST /auth/2fa/verify (verify_2fa_login)",
+                "POST /users/2fa/setup/totp (setup_totp)",
+                "POST /users/2fa/verify/totp (verify_totp_setup)",
+                "POST /users/2fa/setup/email (setup_email_2fa)",
+                "POST /users/2fa/disable (disable_2fa)",
+                "DELETE /users/2fa/methods/{method} (remove_2fa_method)",
+                "POST /users/2fa/setup/webauthn/register/options (webauthn_register_options)",
+                "POST /users/2fa/setup/webauthn/register/verify (webauthn_register_verify)",
+                "POST /auth/2fa/webauthn/options (webauthn_auth_options)",
+                "POST /auth/2fa/webauthn/verify (webauthn_auth_verify)",
+                "POST /auth/2fa/send-email-code (send_email_2fa_code_endpoint)"
+            ],
+            "backup.py": [
+                "GET /settings/export (export_settings)",
+                "GET /database/export (export_database)"
+            ],
+            "chat.py": [
+                "GET /chat/history/{other_user_id} (get_chat_history)",
+                "GET /chat/conversations (get_conversations)"
+            ],
+            "notifications.py": [
+                "GET /notifications (get_notifications)",
+                "PUT /notifications/{notif_id}/read (mark_notification_read)",
+                "DELETE /notifications/clear (clear_all_notifications)",
+                "GET /notifications/vapid-public-key (get_vapid_public_key)",
+                "POST /notifications/subscribe (subscribe_push)"
+            ],
+            "oauth.py": [
+                "GET /connections (get_connections)",
+                "DELETE /connections/{provider} (delete_connection)"
+            ],
+            "system.py": [
+                "GET /public-config (get_public_config)",
+                "GET /public/legal (get_public_legal)",
+                "GET /.well-known/assetlinks.json (get_assetlinks)"
+            ],
+            "users.py": [
+                "POST /users/ (create_user)",
+                "POST /verify (verify_email)",
+                "GET /users/{user_id} (get_user_profile)",
+                "GET /matches/{user_id} (get_matches)",
+                "GET /users/{user_id}/public (get_user_public_profile)",
+                "POST /users/{user_id}/report (report_user)",
+                "GET /questions (get_questions)",
+                "GET /users/discover (discover_users)",
+                "PUT /users/{user_id}/profile (update_profile)",
+                "POST /users/{user_id}/image (upload_image)",
+                "PUT /users/{user_id}/account (update_account_settings)",
+                "PUT /users/{user_id}/preferences (update_user_preferences)",
+                "DELETE /users/{user_id} (delete_own_account)",
+                "POST /auth/password-reset/request (request_password_reset)",
+                "POST /auth/password-reset/confirm (confirm_password_reset)"
+            ]
+        },
+        "key_modules": {}
+    },
+    "structure": {
+        ".gitattributes": null,
+        ".gitignore": null,
+        "LICENSE.md": null,
+        "README.md": null,
+        "backend/": {
+            "Dockerfile": null,
+            "app/": {
+                "__init__.py": null,
+                "api/": {
+                    "__init__.py": null,
+                    "dependencies.py": null,
+                    "routers/": {}
+                },
+                "core/": {
+                    "__init__.py": null,
+                    "config.py": null,
+                    "database.py": null,
+                    "logging_config.py": null,
+                    "security.py": null
+                },
+                "db/": {
+                    "__init__.py": null,
+                    "models.py": null,
+                    "schemas.py": null
+                },
+                "main.py": null,
+                "middleware/": {
+                    "maintenance.py": null
+                },
+                "scripts/": {
+                    "__init__.py": null,
+                    "check_msgs.py": null,
+                    "debug_match.py": null,
+                    "init_data.py": null,
+                    "verify_guest_matches.py": null,
+                    "wait_for_db.py": null
+                },
+                "services/": {
+                    "__init__.py": null,
+                    "captcha.py": null,
+                    "export_service.py": null,
+                    "i18n/": {},
+                    "i18n.py": null,
+                    "password_validation.py": null,
+                    "questions_content.py": null,
+                    "rate_limiter.py": null,
+                    "scheduler.py": null,
+                    "tasks.py": null,
+                    "utils.py": null
+                }
+            },
+            "app.log": null,
+            "frontend_package.json": null,
+            "i18n/": {},
+            "manage.py": null,
+            "middleware/": {},
+            "requirements.txt": null,
+            "routers/": {},
+            "secret.key": null,
+            "static/": {
+                "images/": {}
+            },
+            "tests/": {
+                "check_i18n.py": null,
+                "conftest.py": null,
+                "test_auth_validation.py": null,
+                "test_chat_crypto.py": null,
+                "test_export.py": null,
+                "test_mail_chat.py": null,
+                "test_main.py": null,
+                "test_notifications.py": null,
+                "test_password_security.py": null,
+                "test_registration.py": null,
+                "test_roles.py": null
+            },
+            "verify_import.py": null
+        },
+        "cliff.toml": null,
+        "docker-compose.yml": null,
+        "docs/": {
+            "CAPTCHA_SETUP.md": null,
+            "FEATURES.md": null,
+            "OAUTH_SETUP.md": null
+        },
+        "frontend/": {
+            "Dockerfile": null,
+            "e2e/": {
+                "functional.spec.js": null
+            },
+            "eslint.config.js": null,
+            "index.html": null,
+            "package.json": null,
+            "playwright.config.js": null,
+            "postcss.config.js": null,
+            "public/": {
+                "logo/": {
+                    "Solumati.png": null,
+                    "android-chrome-192x192.png": null,
+                    "android-chrome-512x512.png": null,
+                    "apple-touch-icon.png": null,
+                    "favicon-16x16.png": null,
+                    "favicon-32x32.png": null,
+                    "favicon.ico": null,
+                    "ios/": {},
+                    "windows11/": {}
+                },
+                "manifest.json": null,
+                "sw.js": null
+            },
+            "src/": {
+                "App.jsx": null,
+                "App.test.jsx": null,
+                "components/": {
+                    "ThemeContext.jsx": null,
+                    "admin/": {},
+                    "auth/": {},
+                    "common/": {},
+                    "dashboard/": {},
+                    "layout/": {},
+                    "social/": {},
+                    "user/": {}
+                },
+                "config.js": null,
+                "context/": {
+                    "AuthContext.jsx": null,
+                    "ConfigContext.jsx": null,
+                    "I18nContext.jsx": null
+                },
+                "index.css": null,
+                "main.jsx": null,
+                "pages/": {
+                    "Landing.jsx": null,
+                    "Legal.jsx": null,
+                    "MaintenancePage.jsx": null,
+                    "MarketingPage.jsx": null,
+                    "Support.jsx": null
+                },
+                "router/": {
+                    "AppRouter.jsx": null
+                },
+                "tests/": {
+                    "AdminPanel.test.jsx": null,
+                    "AuthContextToken.test.jsx": null,
+                    "AuthenticationIntegration.test.jsx": null,
+                    "OfflineMode.test.jsx": null,
+                    "components.test.jsx": null,
+                    "config.test.js": null,
+                    "setup.js": null
+                }
+            },
+            "sw.js": null,
+            "tailwind.config.js": null,
+            "vite.config.js": null
+        },
+        "renovate.json": null,
+        "scripts/": {
+            "generate_version.py": null,
+            "update_repo_meta.py": null
+        },
+        "secret.key": null,
+        "test.db": null
+    },
+    "generated_at": "Dynamic (Run `scripts/update_repo_meta.py` to update)"
+}

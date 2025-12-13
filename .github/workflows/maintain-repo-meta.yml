@@ -1,0 +1,37 @@
+name: Maintain Repo Meta
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - 'repo_meta.json' # Prevent infinite loops
+  workflow_dispatch:
+
+jobs:
+  update-meta:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Generate Repository Metadata
+      run: |
+        python scripts/update_repo_meta.py
+
+    - name: Commit and Push changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "chore: update repository metadata [skip ci]"
+        file_pattern: "repo_meta.json"
