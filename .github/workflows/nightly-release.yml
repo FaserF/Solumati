@@ -75,7 +75,7 @@ jobs:
           # Update frontend/package.json
           # Using npm version to update file without creating a git tag yet
           cd frontend
-          npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+          npm version ${{ env.NEW_VERSION }} --no-git-tag-version --allow-same-version
           cd ..
 
           # Update backend/config.py

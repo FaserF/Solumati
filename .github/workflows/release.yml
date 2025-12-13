@@ -75,7 +75,7 @@ jobs:
         cd frontend
         # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
         NPM_VERSION=$(echo "${{ env.NEW_VERSION }}" | sed -E 's/([0-9])([ab])/\1-\2/' | sed 's/\.dev/-dev/')
-        npm version $NPM_VERSION --no-git-tag-version
+        npm version $NPM_VERSION --no-git-tag-version --allow-same-version
         cd ..
 
         # Update backend/app/core/config.py
@@ -189,7 +189,7 @@ jobs:
           cd frontend
           # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
           NPM_VERSION=$(echo "${{ env.NEW_VERSION }}" | sed -E 's/([0-9])([ab])/\1-\2/' | sed 's/\.dev/-dev/')
-          npm version $NPM_VERSION --no-git-tag-version
+          npm version $NPM_VERSION --no-git-tag-version --allow-same-version
           cd ..
 
           # Update backend/app/core/config.py
