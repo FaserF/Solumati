@@ -5,7 +5,7 @@
 ################################################################################
 
 # 1. VISIBILITY & FORMATTING
-format = "markdown"
+
 
 # 2. CHECK SCOPE
 # Check all markdown files, HTML, and source code
