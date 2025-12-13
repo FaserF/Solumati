@@ -349,6 +349,7 @@
             "tailwind.config.js": null,
             "vite.config.js": null
         },
+        "lychee.toml": null,
         "renovate.json": null,
         "scripts/": {
             "generate_version.py": null,
