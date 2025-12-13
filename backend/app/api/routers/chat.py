@@ -1,23 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
-from typing import List, Dict
-import json
-from datetime import datetime
-from cryptography.fernet import Fernet
 import base64
+import json
 import os
 import secrets
+from datetime import datetime
+from typing import Dict, List
 
+from app.api.dependencies import \
+    get_current_user_from_header  # We might need a query param version for WS
 from app.core.database import get_db
 from app.db import models, schemas
-from app.api.dependencies import get_current_user_from_header # We might need a query param version for WS
+from cryptography.fernet import Fernet
+from fastapi import (APIRouter, Depends, HTTPException, WebSocket,
+                     WebSocketDisconnect)
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 
 # --- ENCRYPTION SETUP ---
 # In a real app, this MUST be in environment variables.
 # We will generate/load a key. For MVP persistence, we will use a hardcoded fallback or load from file.
 # To keep it simple and consistent across restarts (unless file is deleted), we try to load/create a key file.
 KEY_FILE = "secret.key"
+
 
 def load_key():
     if os.path.exists(KEY_FILE):
@@ -29,14 +32,17 @@ def load_key():
             key_file.write(key)
         return key
 
+
 try:
     cipher_suite = Fernet(load_key())
 except:
     # Fallback if something fails (e.g. read permissions), though dangerous for data loss if it changes
     cipher_suite = Fernet(Fernet.generate_key())
 
+
 def encrypt_message(message: str) -> str:
     return cipher_suite.encrypt(message.encode()).decode()
+
 
 def decrypt_message(encrypted_message: str) -> str:
     try:
@@ -44,7 +50,9 @@ def decrypt_message(encrypted_message: str) -> str:
     except:
         return "[Decryption Error]"
 
+
 router = APIRouter()
+
 
 # --- WEBSOCKET MANAGER ---
 class ConnectionManager:
@@ -70,7 +78,9 @@ class ConnectionManager:
             for connection in self.active_connections[user_id]:
                 await connection.send_json(message)
 
+
 manager = ConnectionManager()
+
 
 # --- WS DEPENDENCY HELPER ---
 # WebSockets cannot send headers easily in browser JS API (standard WebSocket).
@@ -82,13 +92,17 @@ def get_current_user_ws(token: str, db: Session):
     try:
         user_id = int(token)
         user = db.query(models.User).filter(models.User.id == user_id).first()
-        if not user: return None
+        if not user:
+            return None
         return user
     except ValueError:
         return None
 
+
 @router.websocket("/ws/chat")
-async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Depends(get_db)):
+async def websocket_endpoint(
+    websocket: WebSocket, token: str, db: Session = Depends(get_db)
+):
     user = get_current_user_ws(token, db)
     if not user:
         await websocket.close(code=4003)
@@ -101,60 +115,80 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
             # Expecting JSON: { "receiver_id": 123, "content": "Hello" }
             try:
                 msg_data = json.loads(data)
-                receiver_id = int(msg_data['receiver_id'])
-                content = msg_data['content']
+                receiver_id = int(msg_data["receiver_id"])
+                content = msg_data["content"]
 
                 # --- PERMISSION CHECK ---
-                receiver = db.query(models.User).filter(models.User.id == receiver_id).first()
-                if not receiver: continue # Or send error
+                receiver = (
+                    db.query(models.User).filter(models.User.id == receiver_id).first()
+                )
+                if not receiver:
+                    continue  # Or send error
 
                 # 0. Support Chat Logic (ID 3)
                 if receiver_id == 3:
                     # Check Settings
                     from app.services.utils import get_setting
-                    support_conf = get_setting(db, "support_chat", {"enabled": False, "email_target": ""})
+
+                    support_conf = get_setting(
+                        db, "support_chat", {"enabled": False, "email_target": ""}
+                    )
                     support_enabled = support_conf.get("enabled", False)
-                    user_is_support = (user.id == 3) # Support replying to user
+                    user_is_support = user.id == 3  # Support replying to user
 
                     if not user_is_support:
-                         if not support_enabled and user.role != 'admin':
-                             err = {"error": "Support chat is currently read-only."}
-                             await manager.send_personal_message(err, user.id)
-                             continue
+                        if not support_enabled and user.role != "admin":
+                            err = {"error": "Support chat is currently read-only."}
+                            await manager.send_personal_message(err, user.id)
+                            continue
 
-                         # Email Forwarding - BLOCKED FOR GUESTS
-                         # Guests can chat (sandbox) but we do not forward to email to prevent spam.
-                         if not user.is_guest:
-                             support_email = support_conf.get("email_target", "")
-                             if support_email:
-                                 from app.services.utils import send_mail_sync, create_html_email
-                                 try:
-                                     subject = f"Support Request: {user.username}"
-                                     html_body = create_html_email(
-                                         title=f"New Message from {user.username}",
-                                         content=f"<p><b>User:</b> {user.username} (ID: {user.id})</p><p><b>Message:</b><br>{content}</p>"
-                                     )
-                                     # Send sync (might block slightly but acceptable for MVP support chat)
-                                     send_mail_sync(support_email, subject, html_body, db)
-                                 except Exception as exc:
-                                     print(f"Error forwarding support email: {exc}")
+                        # Email Forwarding - BLOCKED FOR GUESTS
+                        # Guests can chat (sandbox) but we do not forward to email to prevent spam.
+                        if not user.is_guest:
+                            support_email = support_conf.get("email_target", "")
+                            if support_email:
+                                from app.services.utils import (
+                                    create_html_email, send_mail_sync)
+
+                                try:
+                                    subject = f"Support Request: {user.username}"
+                                    html_body = create_html_email(
+                                        title=f"New Message from {user.username}",
+                                        content=f"<p><b>User:</b> {user.username} (ID: {user.id})</p><p><b>Message:</b><br>{content}</p>",
+                                    )
+                                    # Send sync (might block slightly but acceptable for MVP support chat)
+                                    send_mail_sync(
+                                        support_email, subject, html_body, db
+                                    )
+                                except Exception as exc:
+                                    print(f"Error forwarding support email: {exc}")
 
                 # 1. Guest Restriction (Guest -> Can only chat with 'test' users)
                 if user.is_guest:
                     # UPDATED: Allow Guest -> Support (3) as well
-                    if receiver.role != 'test' and receiver.role != 'admin' and receiver.id != 3:
+                    if (
+                        receiver.role != "test"
+                        and receiver.role != "admin"
+                        and receiver.id != 3
+                    ):
                         # Block
                         err = {"error": "Guests can only chat with Test users."}
                         await manager.send_personal_message(err, user.id)
                         continue
 
                 # 2. Test User Restriction (Test -> Test only)
-                if user.role == 'test':
-                     # UPDATED: Allow Test -> Support (3) as well
-                     if receiver.role != 'test' and receiver.role != 'admin' and receiver.id != 3:
-                          err = {"error": "Test users can only chat with other Test users."}
-                          await manager.send_personal_message(err, user.id)
-                          continue
+                if user.role == "test":
+                    # UPDATED: Allow Test -> Support (3) as well
+                    if (
+                        receiver.role != "test"
+                        and receiver.role != "admin"
+                        and receiver.id != 3
+                    ):
+                        err = {
+                            "error": "Test users can only chat with other Test users."
+                        }
+                        await manager.send_personal_message(err, user.id)
+                        continue
 
                 # 3. Encrypt
                 encrypted_content = encrypt_message(content)
@@ -184,7 +218,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                         receiver_id=receiver_id,
                         content=encrypted_content,
                         timestamp=timestamp,
-                        is_read=False
+                        is_read=False,
                     )
                     db.add(new_msg)
                     db.commit()
@@ -202,7 +236,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                     "receiver_id": receiver_id,
                     "content": content,
                     "timestamp": timestamp.isoformat(),
-                    "is_transient": is_transient
+                    "is_transient": is_transient,
                 }
 
                 # 6. Notify Receiver (Real-time)
@@ -218,18 +252,34 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
     except WebSocketDisconnect:
         manager.disconnect(websocket, user.id)
 
+
 @router.get("/chat/history/{other_user_id}", response_model=List[dict])
-def get_chat_history(other_user_id: int, current_user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+def get_chat_history(
+    other_user_id: int,
+    current_user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
     """Retrieve chat history with a specific user."""
 
     # Check permissions? Only if matches exist? For now, open if known ID.
 
-    messages = db.query(models.Message).filter(
-        or_(
-            and_(models.Message.sender_id == current_user.id, models.Message.receiver_id == other_user_id),
-            and_(models.Message.sender_id == other_user_id, models.Message.receiver_id == current_user.id)
+    messages = (
+        db.query(models.Message)
+        .filter(
+            or_(
+                and_(
+                    models.Message.sender_id == current_user.id,
+                    models.Message.receiver_id == other_user_id,
+                ),
+                and_(
+                    models.Message.sender_id == other_user_id,
+                    models.Message.receiver_id == current_user.id,
+                ),
+            )
         )
-    ).order_by(models.Message.timestamp.asc()).all()
+        .order_by(models.Message.timestamp.asc())
+        .all()
+    )
 
     # Decrypt
     results = []
@@ -239,36 +289,48 @@ def get_chat_history(other_user_id: int, current_user: models.User = Depends(get
         # Mark as read if I am the receiver and it's unread
         if m.receiver_id == current_user.id and not m.is_read:
             m.is_read = True
-            db.add(m) # Mark for update
+            db.add(m)  # Mark for update
 
-        results.append({
-            "id": m.id,
-            "sender_id": m.sender_id,
-            "receiver_id": m.receiver_id,
-            "content": decrypted,
-            "timestamp": m.timestamp,
-            "is_read": m.is_read
-        })
+        results.append(
+            {
+                "id": m.id,
+                "sender_id": m.sender_id,
+                "receiver_id": m.receiver_id,
+                "content": decrypted,
+                "timestamp": m.timestamp,
+                "is_read": m.is_read,
+            }
+        )
 
-    db.commit() # Commit read status changes
+    db.commit()  # Commit read status changes
     return results
 
+
 @router.get("/chat/conversations", response_model=List[dict])
-def get_conversations(current_user: models.User = Depends(get_current_user_from_header), db: Session = Depends(get_db)):
+def get_conversations(
+    current_user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
     """
     Returns a list of conversations for the current user.
     Each item includes the partner user details and the last message.
     """
     # 1. Fetch all messages involving the user, ordered by time DESC
     # We limit to e.g. 500 recent messages to find unique conversations
-    recent_msgs = db.query(models.Message).filter(
-        or_(
-            models.Message.sender_id == current_user.id,
-            models.Message.receiver_id == current_user.id
+    recent_msgs = (
+        db.query(models.Message)
+        .filter(
+            or_(
+                models.Message.sender_id == current_user.id,
+                models.Message.receiver_id == current_user.id,
+            )
         )
-    ).order_by(models.Message.timestamp.desc()).limit(1000).all()
+        .order_by(models.Message.timestamp.desc())
+        .limit(1000)
+        .all()
+    )
 
-    conversations = {} # partner_id -> { partner_user, last_msg }
+    conversations = {}  # partner_id -> { partner_user, last_msg }
 
     for m in recent_msgs:
         partner_id = m.receiver_id if m.sender_id == current_user.id else m.sender_id
@@ -277,10 +339,7 @@ def get_conversations(current_user: models.User = Depends(get_current_user_from_
             # Need to fetch partner details if not already known?
             # We can fetch them in bulk later or one by one.
             # For MVP, let's just store the msg and ID, then fetch Users.
-            conversations[partner_id] = {
-                "message": m,
-                "unread_count": 0
-            }
+            conversations[partner_id] = {"message": m, "unread_count": 0}
 
         # Count unread
         if m.receiver_id == current_user.id and not m.is_read:
@@ -301,8 +360,9 @@ def get_conversations(current_user: models.User = Depends(get_current_user_from_
     partners_map = {u.id: u for u in partners}
 
     result = []
-    for pid in partner_ids: # Keep order of recent_msgs (most recent first)
-        if pid not in partners_map: continue
+    for pid in partner_ids:  # Keep order of recent_msgs (most recent first)
+        if pid not in partners_map:
+            continue
 
         user = partners_map[pid]
         data = conversations[pid]
@@ -311,14 +371,16 @@ def get_conversations(current_user: models.User = Depends(get_current_user_from_
         # specific decryption
         decrypted_content = decrypt_message(msg.content)
 
-        result.append({
-            "partner_id": pid,
-            "partner_username": user.username,
-            "partner_real_name": user.real_name,
-            "partner_image_url": user.image_url,
-            "last_message": decrypted_content,
-            "timestamp": msg.timestamp,
-            "unread_count": data["unread_count"]
-        })
+        result.append(
+            {
+                "partner_id": pid,
+                "partner_username": user.username,
+                "partner_real_name": user.real_name,
+                "partner_image_url": user.image_url,
+                "last_message": decrypted_content,
+                "timestamp": msg.timestamp,
+                "unread_count": data["unread_count"],
+            }
+        )
 
     return result

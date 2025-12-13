@@ -4,9 +4,11 @@ CAPTCHA verification service supporting multiple providers:
 - Google reCAPTCHA (v2/v3)
 - hCaptcha
 """
-import httpx
+
 import logging
 from typing import Optional
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +16,12 @@ logger = logging.getLogger(__name__)
 VERIFY_URLS = {
     "cloudflare": "https://challenges.cloudflare.com/turnstile/v0/siteverify",
     "google": "https://www.google.com/recaptcha/api/siteverify",
-    "hcaptcha": "https://hcaptcha.com/siteverify"
+    "hcaptcha": "https://hcaptcha.com/siteverify",
 }
 
 
 async def verify_captcha_async(
-    token: str,
-    provider: str,
-    secret_key: str,
-    remote_ip: Optional[str] = None
+    token: str, provider: str, secret_key: str, remote_ip: Optional[str] = None
 ) -> bool:
     """
     Verify a CAPTCHA token with the specified provider (async version).
@@ -48,10 +47,7 @@ async def verify_captcha_async(
     url = VERIFY_URLS[provider]
 
     # Build request data based on provider
-    data = {
-        "secret": secret_key,
-        "response": token
-    }
+    data = {"secret": secret_key, "response": token}
 
     # Add remote IP if provided (optional for most providers)
     if remote_ip:
@@ -71,7 +67,9 @@ async def verify_captcha_async(
 
             if not success:
                 error_codes = result.get("error-codes", [])
-                logger.warning(f"CAPTCHA verification failed for {provider}: {error_codes}")
+                logger.warning(
+                    f"CAPTCHA verification failed for {provider}: {error_codes}"
+                )
             else:
                 logger.debug(f"CAPTCHA verification succeeded for {provider}")
 
@@ -86,10 +84,7 @@ async def verify_captcha_async(
 
 
 def verify_captcha_sync(
-    token: str,
-    provider: str,
-    secret_key: str,
-    remote_ip: Optional[str] = None
+    token: str, provider: str, secret_key: str, remote_ip: Optional[str] = None
 ) -> bool:
     """
     Verify a CAPTCHA token with the specified provider (sync version).
@@ -115,10 +110,7 @@ def verify_captcha_sync(
     url = VERIFY_URLS[provider]
 
     # Build request data based on provider
-    data = {
-        "secret": secret_key,
-        "response": token
-    }
+    data = {"secret": secret_key, "response": token}
 
     # Add remote IP if provided
     if remote_ip:
@@ -133,7 +125,9 @@ def verify_captcha_sync(
 
             if not success:
                 error_codes = result.get("error-codes", [])
-                logger.warning(f"CAPTCHA verification failed for {provider}: {error_codes}")
+                logger.warning(
+                    f"CAPTCHA verification failed for {provider}: {error_codes}"
+                )
             else:
                 logger.debug(f"CAPTCHA verification succeeded for {provider}")
 

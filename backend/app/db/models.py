@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, Boolean, ARRAY, DateTime, ForeignKey, Text, Enum
-from sqlalchemy.orm import relationship
-from app.core.database import Base
-from datetime import datetime
 import json
+from datetime import datetime
+
+from app.core.database import Base
+from sqlalchemy import (ARRAY, Boolean, Column, DateTime, Enum, ForeignKey,
+                        Integer, String, Text)
+from sqlalchemy.orm import relationship
+
 
 class Report(Base):
     __tablename__ = "reports"
@@ -17,6 +20,7 @@ class Report(Base):
     reporter = relationship("User", foreign_keys=[reporter_id])
     reported = relationship("User", foreign_keys=[reported_id])
 
+
 class LinkedAccount(Base):
     __tablename__ = "linked_accounts"
 
@@ -28,6 +32,7 @@ class LinkedAccount(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="linked_accounts")
+
 
 class User(Base):
     __tablename__ = "users"
@@ -73,7 +78,7 @@ class User(Base):
 
     # --- 2FA Extensions ---
     # Methods: 'none', 'totp', 'email', 'passkey'
-    two_factor_method = Column(String, default='none')
+    two_factor_method = Column(String, default="none")
 
     # TOTP Secret (Base32)
     totp_secret = Column(String, nullable=True)
@@ -89,16 +94,20 @@ class User(Base):
 
     # --- NEW: App Settings & Push ---
     # Stores generic app settings like theme, language pref, etc. as JSON string
-    app_settings = Column(Text, default='{"notifications_enabled": false, "theme": "system"}')
+    app_settings = Column(
+        Text, default='{"notifications_enabled": false, "theme": "system"}'
+    )
 
     # Stores the raw Web Push Subscription object (JSON)
     push_subscription = Column(Text, nullable=True)
 
-    linked_accounts = relationship("LinkedAccount", back_populates="user", cascade="all, delete-orphan")
+    linked_accounts = relationship(
+        "LinkedAccount", back_populates="user", cascade="all, delete-orphan"
+    )
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == "admin"
 
     def get_settings_dict(self):
         try:
@@ -117,6 +126,7 @@ class User(Base):
             return len(creds) > 0
         except:
             return False
+
 
 class Message(Base):
     __tablename__ = "messages"
@@ -137,8 +147,8 @@ class Notification(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     title = Column(String)
     message = Column(Text)
-    type = Column(String) # 'system', 'match', 'update', 'security'
-    link = Column(String, nullable=True) # Optional action link
+    type = Column(String)  # 'system', 'match', 'update', 'security'
+    link = Column(String, nullable=True)  # Optional action link
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

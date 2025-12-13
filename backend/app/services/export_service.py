@@ -1,15 +1,18 @@
+import io
 import json
 import zipfile
-import io
-from sqlalchemy.orm import Session
-from app.db import models, schemas
 from datetime import datetime
+
+from app.db import models, schemas
+from sqlalchemy.orm import Session
+
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
         return super().default(obj)
+
 
 def collect_user_data(db: Session, user_id: int):
     """
@@ -32,7 +35,7 @@ def collect_user_data(db: Session, user_id: int):
         "is_verified": user.is_verified,
         "intent": user.intent,
         "image_url": user.image_url,
-        "settings": {}
+        "settings": {},
     }
 
     # Parse JSON fields
@@ -42,81 +45,107 @@ def collect_user_data(db: Session, user_id: int):
         profile_data["answers"] = user.answers
 
     try:
-        profile_data["settings"] = json.loads(user.app_settings) if user.app_settings else {}
+        profile_data["settings"] = (
+            json.loads(user.app_settings) if user.app_settings else {}
+        )
     except:
         pass
 
     # 2. Linked Accounts
     linked_accounts = []
     for acc in user.linked_accounts:
-        linked_accounts.append({
-            "provider": acc.provider,
-            "provider_user_id": acc.provider_user_id,
-            "email": acc.email,
-            "connected_at": acc.created_at
-        })
+        linked_accounts.append(
+            {
+                "provider": acc.provider,
+                "provider_user_id": acc.provider_user_id,
+                "email": acc.email,
+                "connected_at": acc.created_at,
+            }
+        )
 
     # 3. Messages (Sent & Received)
     # GDPR: User has right to see copies of messages they sent.
     # Received messages are also part of their "inbox" data space.
-    messages_sent = db.query(models.Message).filter(models.Message.sender_id == user_id).all()
-    messages_received = db.query(models.Message).filter(models.Message.receiver_id == user_id).all()
+    messages_sent = (
+        db.query(models.Message).filter(models.Message.sender_id == user_id).all()
+    )
+    messages_received = (
+        db.query(models.Message).filter(models.Message.receiver_id == user_id).all()
+    )
 
     msgs_export = []
     for m in messages_sent:
-        msgs_export.append({
-            "direction": "sent",
-            "to_user_id": m.receiver_id,
-            "content": m.content, # In a real app this might be encrypted?
-            "timestamp": m.timestamp,
-            "is_read": m.is_read
-        })
+        msgs_export.append(
+            {
+                "direction": "sent",
+                "to_user_id": m.receiver_id,
+                "content": m.content,  # In a real app this might be encrypted?
+                "timestamp": m.timestamp,
+                "is_read": m.is_read,
+            }
+        )
     for m in messages_received:
-         msgs_export.append({
-            "direction": "received",
-            "from_user_id": m.sender_id,
-            "content": m.content,
-            "timestamp": m.timestamp,
-            "is_read": m.is_read
-        })
+        msgs_export.append(
+            {
+                "direction": "received",
+                "from_user_id": m.sender_id,
+                "content": m.content,
+                "timestamp": m.timestamp,
+                "is_read": m.is_read,
+            }
+        )
 
     # 4. Reports (Active transparency)
-    reports_filed = db.query(models.Report).filter(models.Report.reporter_id == user_id).all()
-    reports_received = db.query(models.Report).filter(models.Report.reported_id == user_id).all()
+    reports_filed = (
+        db.query(models.Report).filter(models.Report.reporter_id == user_id).all()
+    )
+    reports_received = (
+        db.query(models.Report).filter(models.Report.reported_id == user_id).all()
+    )
 
     reports_export = []
     for r in reports_filed:
-        reports_export.append({
-            "type": "filed_by_me",
-            "reported_user_id": r.reported_id,
-            "reason": r.reason,
-            "status": r.status,
-            "created_at": r.created_at
-        })
+        reports_export.append(
+            {
+                "type": "filed_by_me",
+                "reported_user_id": r.reported_id,
+                "reason": r.reason,
+                "status": r.status,
+                "created_at": r.created_at,
+            }
+        )
     # NOTE: GDPR allows withholding data if it adversely affects rights of others.
     # Exposing WHO reported you might be a safety risk.
     # Usually you only disclose that you WERE reported and for what reason, but maybe REDACT the reporter?
     # Solumati is a small project, but let's be safe: Redact reporter ID for reports received.
     for r in reports_received:
-        reports_export.append({
-            "type": "filed_against_me",
-            "reason": r.reason,
-            "status": r.status,
-            "created_at": r.created_at
-            # No reporter_id included
-        })
+        reports_export.append(
+            {
+                "type": "filed_against_me",
+                "reason": r.reason,
+                "status": r.status,
+                "created_at": r.created_at,
+                # No reporter_id included
+            }
+        )
 
     # 5. Notifications
-    notifications = db.query(models.Notification).filter(models.Notification.user_id == user_id).all()
+    notifications = (
+        db.query(models.Notification)
+        .filter(models.Notification.user_id == user_id)
+        .all()
+    )
     notifs_export = []
     for n in notifications:
-        notifs_export.append({
-            "title": n.title,
-            "message": n.message,
-            "type": n.type,
-            "created_at": n.created_at,
-            "is_read": n.is_read
-        })
+        notifs_export.append(
+            {
+                "title": n.title,
+                "message": n.message,
+                "type": n.type,
+                "created_at": n.created_at,
+                "is_read": n.is_read,
+            }
+        )
 
     return {
         "profile": profile_data,
@@ -126,9 +155,10 @@ def collect_user_data(db: Session, user_id: int):
         "notifications": notifs_export,
         "meta": {
             "export_date": datetime.utcnow(),
-            "description": "Personal data export generated by Solumati."
-        }
+            "description": "Personal data export generated by Solumati.",
+        },
     }
+
 
 def create_export_archive(user_data: dict) -> io.BytesIO:
     """

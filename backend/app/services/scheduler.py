@@ -1,14 +1,15 @@
+import json
+import logging
+from datetime import datetime, timedelta
+
+from app.core.config import PROJECT_NAME
+from app.core.database import SessionLocal
+from app.db import models
+from app.services.utils import (create_html_email, get_setting,
+                                get_user_email_preferences, send_mail_sync)
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
-import logging
-from datetime import datetime, timedelta
-import json
-
-from app.core.database import SessionLocal
-from app.db import models
-from app.services.utils import send_mail_sync, create_html_email, get_setting, get_user_email_preferences
-from app.core.config import PROJECT_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,12 @@ def start_scheduler():
 
     # Run every day at 08:00 AM
     trigger = CronTrigger(hour=8, minute=0)
-    scheduler.add_job(send_daily_message_summaries, trigger, id='daily_summary', replace_existing=True)
+    scheduler.add_job(
+        send_daily_message_summaries, trigger, id="daily_summary", replace_existing=True
+    )
     scheduler.start()
     logger.info("Scheduler started with daily summary job at 08:00.")
+
 
 def send_daily_message_summaries():
     """
@@ -39,7 +43,7 @@ def send_daily_message_summaries():
         for user in users:
             # Check Preferences (Default False for new messages, but user might have enabled it)
             prefs = get_user_email_preferences(user)
-            if not prefs.get('new_messages', False):
+            if not prefs.get("new_messages", False):
                 continue
 
             # 2. Check for unread messages
@@ -48,41 +52,62 @@ def send_daily_message_summaries():
             # If they didn't read it yesterday, they still need to know.
             # But maybe only recent ones? Let's show count of ALL unread.
 
-            unread_count = db.query(models.Message).filter(
-                models.Message.receiver_id == user.id,
-                models.Message.is_read == False
-            ).count()
+            unread_count = (
+                db.query(models.Message)
+                .filter(
+                    models.Message.receiver_id == user.id,
+                    models.Message.is_read == False,
+                )
+                .count()
+            )
 
             if unread_count == 0:
                 continue
 
             # Get distinct senders of unread messages
-            unread_senders = db.query(models.Message.sender_id).filter(
-                models.Message.receiver_id == user.id,
-                models.Message.is_read == False
-            ).distinct().count()
+            unread_senders = (
+                db.query(models.Message.sender_id)
+                .filter(
+                    models.Message.receiver_id == user.id,
+                    models.Message.is_read == False,
+                )
+                .distinct()
+                .count()
+            )
 
             # 3. Generate Email
             # Determine Language
-            lang = 'en'
+            lang = "en"
             if user.app_settings:
                 try:
-                    s = json.loads(user.app_settings) if isinstance(user.app_settings, str) else user.app_settings
-                    lang = s.get('language', 'en')
-                except: pass
+                    s = (
+                        json.loads(user.app_settings)
+                        if isinstance(user.app_settings, str)
+                        else user.app_settings
+                    )
+                    lang = s.get("language", "en")
+                except:
+                    pass
 
             from app.services.i18n import get_translations
+
             t = get_translations(lang)
 
             subject = f"[{PROJECT_NAME}] {t.get('email.summary.subject', 'Your Daily Summary')}"
-            title = t.get('email.summary.title', 'You have unread messages')
+            title = t.get("email.summary.title", "You have unread messages")
 
             if unread_senders == 1:
-                desc = t.get('email.summary.desc_single', 'You have {count} unread message from 1 chat partner.').format(count=unread_count)
+                desc = t.get(
+                    "email.summary.desc_single",
+                    "You have {count} unread message from 1 chat partner.",
+                ).format(count=unread_count)
             else:
-                desc = t.get('email.summary.desc_multi', 'You have {count} unread messages from {senders} chat partners.').format(count=unread_count, senders=unread_senders)
+                desc = t.get(
+                    "email.summary.desc_multi",
+                    "You have {count} unread messages from {senders} chat partners.",
+                ).format(count=unread_count, senders=unread_senders)
 
-            btn_text = t.get('email.summary.btn', 'Go to Chat')
+            btn_text = t.get("email.summary.btn", "Go to Chat")
 
             reg_config = get_setting(db, "registration", {})
             server_domain = reg_config.get("server_domain", "")
@@ -90,7 +115,9 @@ def send_daily_message_summaries():
 
             content = f"<p>{desc}</p>"
 
-            html = create_html_email(title, content, action_url, btn_text, server_domain, db)
+            html = create_html_email(
+                title, content, action_url, btn_text, server_domain, db
+            )
 
             # Send
             send_mail_sync(user.email, subject, html, db)
