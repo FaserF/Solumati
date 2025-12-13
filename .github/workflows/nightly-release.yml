@@ -99,61 +99,79 @@ jobs:
           # Get the new commit SHA
           echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
+      - name: Set up Python for Release Body
+        if: steps.check_changes.outputs.has_changes == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
       - name: Generate Initial Release Body
         if: steps.check_changes.outputs.has_changes == 'true'
         id: release_body
+        env:
+          NEW_VERSION: ${{ env.NEW_VERSION }}
         run: |
-          INITIAL_BODY="## Nightly Release v${{ env.NEW_VERSION }}
+          # Generate download buttons HTML using Python to avoid YAML parsing issues
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          from datetime import datetime
 
-This is an automated nightly build. Use with caution.
+          new_version = os.environ.get('NEW_VERSION', 'unknown')
 
-## 📥 Downloads
+          # Build HTML using string concatenation to avoid YAML parser seeing < characters
+          downloads_html = "## 📥 Downloads\n\n"
+          downloads_html += "<div style=\"background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;\">\n"
+          downloads_html += "  <div style=\"margin-bottom: 16px;\">\n"
+          downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
+          downloads_html += "      <div style=\"background: #2196f3; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9em;\">\n"
+          downloads_html += "        ⏳ Build Status: Building...\n"
+          downloads_html += "      </div>\n"
+          downloads_html += "    </div>\n"
+          downloads_html += "  </div>\n"
+          downloads_html += "  <div style=\"display: flex; flex-wrap: wrap; gap: 8px; align-items: center;\">\n"
+          downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
+          downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
+          downloads_html += "        <span style=\"font-size: 1.2em;\">🤖</span>\n"
+          downloads_html += "        <span>Android APK</span>\n"
+          downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
+          downloads_html += "      </div>\n"
+          downloads_html += "    </div>\n"
+          downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
+          downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
+          downloads_html += "        <span style=\"font-size: 1.2em;\">🪟</span>\n"
+          downloads_html += "        <span>Windows MSIX</span>\n"
+          downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
+          downloads_html += "      </div>\n"
+          downloads_html += "    </div>\n"
+          downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
+          downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
+          downloads_html += "        <span style=\"font-size: 1.2em;\">🍎</span>\n"
+          downloads_html += "        <span>iOS IPA</span>\n"
+          downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
+          downloads_html += "      </div>\n"
+          downloads_html += "    </div>\n"
+          downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
+          downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
+          downloads_html += "        <span style=\"font-size: 1.2em;\">🐳</span>\n"
+          downloads_html += "        <span>Docker Image</span>\n"
+          downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
+          downloads_html += "      </div>\n"
+          downloads_html += "    </div>\n"
+          downloads_html += "  </div>\n"
+          downloads_html += "  <div style=\"margin-top: 16px; font-size: 0.9em; color: #666;\">\n"
+          downloads_html += "    <p><strong>Last updated:</strong> " + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') + " UTC</p>\n"
+          downloads_html += "    <p><em>Build artifacts are automatically uploaded as they become available.</em></p>\n"
+          downloads_html += "  </div>\n"
+          downloads_html += "</div>"
 
-<div style=\"background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;\">
-  <div style=\"margin-bottom: 16px;\">
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #2196f3; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9em;\">
-        ⏳ Build Status: Building...
-      </div>
-    </div>
-  </div>
-  <div style=\"display: flex; flex-wrap: wrap; gap: 8px; align-items: center;\">
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🤖</span>
-        <span>Android APK</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
-      </div>
-    </div>
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🪟</span>
-        <span>Windows MSIX</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
-      </div>
-    </div>
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🍎</span>
-        <span>iOS IPA</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
-      </div>
-    </div>
-    <div style=\"display: inline-block; margin: 8px;\">
-      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">
-        <span style=\"font-size: 1.2em;\">🐳</span>
-        <span>Docker Image</span>
-        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>
-      </div>
-    </div>
-  </div>
-  <div style=\"margin-top: 16px; font-size: 0.9em; color: #666;\">
-    <p><strong>Last updated:</strong> $(date -u +'%Y-%m-%d %H:%M:%S') UTC</p>
-    <p><em>Build artifacts are automatically uploaded as they become available.</em></p>
-  </div>
-</div>
-"
-          echo "$INITIAL_BODY" > RELEASE_BODY.md
+          initial_body = f"## Nightly Release v{new_version}\n\n"
+          initial_body += "This is an automated nightly build. Use with caution.\n\n"
+          initial_body += downloads_html
+
+          with open('RELEASE_BODY.md', 'w', encoding='utf-8') as f:
+              f.write(initial_body)
+          PYTHON_SCRIPT
+
           echo "body_path=RELEASE_BODY.md" >> $GITHUB_OUTPUT
 
       - name: Create Nightly Release
