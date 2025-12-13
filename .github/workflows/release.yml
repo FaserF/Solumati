@@ -219,7 +219,8 @@ jobs:
           # Update frontend/src/config.js
           sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "dev";/' frontend/src/config.js
 
-          # Commit and Push
+          # Commit and Push (with rebase to handle concurrent changes from release job)
           git add frontend/package.json backend/app/core/config.py frontend/src/config.js
           git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
+          git pull --rebase origin main
           git push origin main
