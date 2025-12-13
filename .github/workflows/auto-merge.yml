@@ -1,0 +1,30 @@
+name: Auto Merge Trusted PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-latest
+    # Check if the PR author is a Bot OR has high privileges (Owner, Admin, Maintainer)
+    if: |
+      github.event.pull_request.user.type == 'Bot' ||
+      contains(fromJSON('["OWNER", "ADMIN", "MAINTAINER", "COLLABORATOR"]'), github.event.pull_request.author_association)
+    steps:
+      - name: Enable Auto-Merge for PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        # Logic:
+        # --auto: Queues the merge to happen only after requirements (tests/checks) are met.
+        # --squash: Squashes commits into one (cleaner history). Change to --merge or --rebase if preferred.
+        run: |
+          echo "Processing PR: $PR_URL"
+          echo "Author Association: ${{ github.event.pull_request.author_association }}"
+
+          gh pr merge "$PR_URL" --auto --squash
