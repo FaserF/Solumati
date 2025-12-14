@@ -53,7 +53,7 @@ jobs:
 
       # 4. COMMIT & PUSH
       - name: Commit Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "style: auto-fix linting and i18n issues"
           file_pattern: "."
