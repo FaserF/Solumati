@@ -27,21 +27,44 @@ jobs:
           echo "Processing PR: $PR_URL"
           echo "Author Association: ${{ github.event.pull_request.author_association }}"
 
-          # Try to enable auto-merge, but handle cases where it's not available
           set +e
-          ERROR_OUTPUT=$(gh pr merge "$PR_URL" --auto --squash 2>&1)
-          EXIT_CODE=$?
-          set -e
+          # Retry loop parameters
+          MAX_RETRIES=5
+          RETRY_DELAY=10
+          COUNT=0
+          SUCCESS=0
 
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "✅ Auto-merge enabled successfully"
-          else
-            if echo "$ERROR_OUTPUT" | grep -q "Protected branch rules not configured"; then
-              echo "⚠️  Auto-merge is not available: Protected branch rules not configured for this branch"
-              echo "This is expected if branch protection doesn't allow auto-merge. The PR will need manual merge."
-              exit 0
+          while [ $COUNT -lt $MAX_RETRIES ]; do
+            OUTPUT=$(gh pr merge "$PR_URL" --auto --squash 2>&1)
+            EXIT_CODE=$?
+
+            if [ $EXIT_CODE -eq 0 ]; then
+              echo "✅ Auto-merge enabled successfully"
+              SUCCESS=1
+              break
+            fi
+
+            # Check if it's the specific "unstable status" error which is worth retrying
+            if echo "$OUTPUT" | grep -q "Pull request is in unstable status"; then
+              echo "⚠️  Attempt $(($COUNT + 1))/$MAX_RETRIES failed: PR is in unstable status. Retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+              COUNT=$(($COUNT + 1))
             else
-              echo "❌ Failed to enable auto-merge: $ERROR_OUTPUT"
+              # For other errors, we might want to fail immediately or check for protected branch rules
+              if echo "$OUTPUT" | grep -q "Protected branch rules not configured"; then
+                 echo "⚠️  Auto-merge is not available: Protected branch rules not configured for this branch"
+                 echo "This is expected if branch protection doesn't allow auto-merge. The PR will need manual merge."
+                 exit 0
+              fi
+
+              # If it's another error, stop retrying
+              echo "❌ Failed to enable auto-merge with non-retriable error: $OUTPUT"
               exit $EXIT_CODE
             fi
+          done
+
+          if [ $SUCCESS -eq 0 ]; then
+            echo "❌ Failed to enable auto-merge after $MAX_RETRIES attempts."
+            echo "Last error: $OUTPUT"
+            exit 1
           fi
