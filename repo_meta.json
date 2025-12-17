@@ -16,7 +16,7 @@
             "pydantic==2.12.5",
             "pydantic-settings==2.12.0",
             "pytest==9.0.2",
-            "fastapi-sso==0.18.0"
+            "fastapi-sso==0.19.0"
         ],
         "dev_ops": [
             "Docker Compose",
