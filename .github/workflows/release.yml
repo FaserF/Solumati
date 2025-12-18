@@ -304,7 +304,6 @@ jobs:
       tag_name: v${{ needs.release.outputs.new_version }}
       ref: ${{ needs.release.outputs.commit_sha }}
     secrets: inherit
-    continue-on-error: true
 
   # Monitor and update release buttons
   update-release-buttons:
