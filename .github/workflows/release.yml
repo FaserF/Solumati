@@ -198,10 +198,8 @@ jobs:
             f.write(downloads_html)
         PYTHON_SCRIPT
 
-        INITIAL_BODY="$CHANGELOG
-
-$(cat /tmp/release_body.txt)"
-        echo "$INITIAL_BODY" > RELEASE_BODY.md
+        RELEASE_CONTENT=$(cat /tmp/release_body.txt)
+        printf "%s\n\n%s" "$CHANGELOG" "$RELEASE_CONTENT" > RELEASE_BODY.md
         echo "body_path=RELEASE_BODY.md" >> $GITHUB_OUTPUT
 
     - name: Create Release
