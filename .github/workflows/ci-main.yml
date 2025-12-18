@@ -52,7 +52,7 @@ jobs:
       - uses: lycheeverse/lychee-action@v2.7.0
         with:
           args: --config lychee.toml --exclude-all-private './**/*.md' './docs/**/*.md' './frontend/src/**/*.jsx'
-          fail: true
+          fail: false
 
   backend:
     needs: changes

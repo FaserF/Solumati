@@ -64,7 +64,8 @@ jobs:
           done
 
           if [ $SUCCESS -eq 0 ]; then
-            echo "❌ Failed to enable auto-merge after $MAX_RETRIES attempts."
+            echo "⚠️ Could not enable auto-merge after $MAX_RETRIES attempts."
             echo "Last error: $OUTPUT"
-            exit 1
+            echo "This is not critical - the PR can still be merged manually."
+            exit 0
           fi
