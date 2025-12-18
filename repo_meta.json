@@ -5,13 +5,13 @@
     },
     "technology_stack": {
         "frontend": [
-            "lucide-react (^0.561.0)",
+            "lucide-react (^0.562.0)",
             "react (^19.0.0)",
             "react-router-dom (^7.0.0)",
             "vite (^7.0.0)"
         ],
         "backend": [
-            "fastapi==0.124.4",
+            "fastapi==0.125.0",
             "sqlalchemy==2.0.45",
             "pydantic==2.12.5",
             "pydantic-settings==2.12.0",
