@@ -428,11 +428,11 @@ $(cat /tmp/release_body.txt)"
             git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
 
             # Double-check: stage and commit any remaining changes that might have been missed
-          git add -A
-          if ! git diff --staged --quiet || ! git diff --quiet; then
-            echo "Found additional changes after commit, committing them..."
-            git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} (additional changes) [skip ci]" || echo "No additional changes to commit"
-          fi
+            git add -A
+            if ! git diff --staged --quiet || ! git diff --quiet; then
+              echo "Found additional changes after commit, committing them..."
+              git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} (additional changes) [skip ci]" || echo "No additional changes to commit"
+            fi
 
             # Verify working directory is clean before pull
             if ! git diff --quiet || ! git diff --cached --quiet; then

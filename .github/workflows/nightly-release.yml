@@ -204,7 +204,6 @@ jobs:
       tag_name: v${{ needs.nightly-release.outputs.version }}
       ref: ${{ needs.nightly-release.outputs.commit_sha }}
     secrets: inherit
-    continue-on-error: true
 
   build-ios:
     needs: nightly-release
@@ -214,7 +213,6 @@ jobs:
       tag_name: v${{ needs.nightly-release.outputs.version }}
       ref: ${{ needs.nightly-release.outputs.commit_sha }}
     secrets: inherit
-    continue-on-error: true
 
   build-windows:
     needs: nightly-release
@@ -224,7 +222,6 @@ jobs:
       tag_name: v${{ needs.nightly-release.outputs.version }}
       ref: ${{ needs.nightly-release.outputs.commit_sha }}
     secrets: inherit
-    continue-on-error: true
 
   # Monitor and update release buttons
   update-release-buttons:
