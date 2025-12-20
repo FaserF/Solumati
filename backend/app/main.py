@@ -3,7 +3,7 @@ import logging
 import os
 
 # Routers
-from app.api.routers import (admin, auth, backup, chat, notifications, oauth,
+from app.api.routers import (admin, auth, backup, chat, demo, notifications, oauth,
                              system, users)
 from app.core.config import CURRENT_VERSION, PROJECT_NAME, TEST_MODE
 # Local modules
@@ -100,3 +100,4 @@ app.include_router(chat.router, tags=["chat"])
 app.include_router(notifications.router, tags=["notifications"])
 
 app.include_router(backup.router, tags=["backup"])
+app.include_router(demo.router)

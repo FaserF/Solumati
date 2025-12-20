@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Activity, Shield, EyeOff, LifeBuoy } from 'lucide-react';
+import { AlertTriangle, Activity, Shield, EyeOff, LifeBuoy, Zap, Inbox, MessageCircle } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PublicProfile from '../user/PublicProfile';
 import DashboardNavbar from './DashboardNavbar';
@@ -9,6 +9,10 @@ import { APP_VERSION, API_URL } from '../../config';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Container } from '../ui/Container';
+import { cn } from '../../lib/utils';
 
 const Dashboard = () => {
     const { user, isGuest, logout } = useAuth();
@@ -21,11 +25,12 @@ const Dashboard = () => {
 
     // Matches State
     const [matches, setMatches] = useState([]);
-
-    // State for viewing public profiles
     const [selectedUser, setSelectedUser] = useState(null);
-    // State for active chat
     const [activeChatUser, setActiveChatUser] = useState(null);
+    const [show2FAPrompt, setShow2FAPrompt] = useState(false);
+
+    // Check match visibility
+    const isVisible = user?.is_visible_in_matches !== false;
 
     // Fetch Matches
     useEffect(() => {
@@ -43,19 +48,12 @@ const Dashboard = () => {
     // Check if questionnaire is filled
     const showQuestionnairePrompt = user && (!user.answers || (typeof user.answers === 'object' && Object.keys(user.answers).length < 5) || (typeof user.answers === 'string' && user.answers.length < 5));
 
-    // Check match visibility
-    const isVisible = user?.is_visible_in_matches !== false;
-
-    // 2FA Onboarding Prompt
-    const [show2FAPrompt, setShow2FAPrompt] = useState(false);
-
+    // 2FA Prompt Logic
     useEffect(() => {
         if (user && user.two_factor_method === 'none') {
             const hasDismissed = localStorage.getItem('dismissed_2fa_prompt');
-            // Check if not dismissed and not already shown
             if (!hasDismissed) {
-                // Use setTimeout to avoid synchronous setState warning
-                const tId = setTimeout(() => setShow2FAPrompt(true), 0);
+                const tId = setTimeout(() => setShow2FAPrompt(true), 1000);
                 return () => clearTimeout(tId);
             }
         }
@@ -72,7 +70,7 @@ const Dashboard = () => {
     };
 
     const handleOpenChat = (targetUser) => {
-        setSelectedUser(null); // Close profile if open
+        setSelectedUser(null);
         setActiveChatUser(targetUser);
     };
 
@@ -81,8 +79,6 @@ const Dashboard = () => {
     const activeTab = searchParams.get('tab') || 'matches';
     const setActiveTab = (tab) => setSearchParams({ tab });
     const [inboxConversations, setInboxConversations] = useState([]);
-
-    // APK Update Check State
     const [updateAvailable, setUpdateAvailable] = useState(null);
 
     const fetchInbox = async () => {
@@ -102,38 +98,27 @@ const Dashboard = () => {
 
     useEffect(() => {
         if (activeTab === 'inbox') {
-            const t = setTimeout(() => fetchInbox(), 0);
-            return () => clearTimeout(t);
+            fetchInbox();
         }
     }, [activeTab]);
 
     useEffect(() => {
-        // APK Update Check
         const checkUpdate = async () => {
             try {
                 const res = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
-                if (res.status === 404) return; // No releases yet
+                if (res.status === 404) return;
                 if (res.ok) {
                     const data = await res.json();
                     const latest = data.tag_name.replace('v', '');
                     const current = APP_VERSION.replace('v', '');
                     if (latest !== current) {
                         setUpdateAvailable(data);
-                        // Local Notification
-                        if (window.Notification && Notification.permission === 'granted') {
-                            new Notification(t('update.available_title', "Update Available"), {
-                                body: t('update.available_msg', `New version ${data.tag_name} is available!`),
-                                icon: '/pwa-192x192.png'
-                            });
-                        }
                     }
                 }
-            } catch {
-                // Check failed silently
-            }
+            } catch { }
         };
         checkUpdate();
-    }, [t]);
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -141,60 +126,31 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 flex flex-col items-center p-4 md:p-6 pb-24">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-500 pb-24">
 
-            {/* Sticky Warnings Container */}
-            <div className="fixed top-0 z-50 w-full flex flex-col items-center pointer-events-none">
+            {/* Alerts Bar */}
+            <div className="sticky top-0 z-50 w-full flex flex-col items-center pointer-events-none p-2 gap-1">
                 {isGuest && (
-                    <div className="bg-yellow-400 text-yellow-900 px-4 py-2 mt-2 rounded-full font-bold flex items-center gap-2 shadow-lg pointer-events-auto">
-                        <AlertTriangle size={18} />
-                        <span className="text-sm">{t('dashboard.guest_warning')}</span>
-                        <button onClick={() => navigate('/register')} className="ml-4 bg-black text-white text-xs px-3 py-1 rounded-lg hover:bg-gray-800 transition">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm pointer-events-auto backdrop-blur-md border border-amber-200 dark:border-amber-800">
+                        <AlertTriangle size={16} />
+                        <span>{t('dashboard.guest_warning')}</span>
+                        <Button size="sm" variant="primary" className="h-6 px-2 text-xs ml-2 bg-amber-600 hover:bg-amber-700 text-white border-none" onClick={() => navigate('/register')}>
                             {t('landing.btn_register')}
-                        </button>
+                        </Button>
                     </div>
                 )}
                 {maintenanceMode && (
-                    <div className="bg-red-600 text-white px-4 py-1 mt-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto animate-pulse">
+                    <div className="bg-red-500 text-white px-4 py-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto animate-pulse">
                         <AlertTriangle size={14} />
                         {t('alert.maintenance_mode_active', 'Maintenance Mode Active')}
                     </div>
                 )}
-                {testMode && (
-                    <div className="bg-orange-500 text-white px-4 py-1 mt-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto">
-                        <Activity size={14} />
-                        {t('alert.test_mode_active', 'Test Mode Active')}
-                    </div>
-                )}
                 {updateAvailable && (
-                    <a href={updateAvailable.html_url} target="_blank" rel="noopener noreferrer" className="bg-blue-600 text-white px-4 py-1 mt-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto hover:bg-blue-700 transition">
-                        🚀 {t('update.banner', 'New Update Available!')}
+                    <a href={updateAvailable.html_url} target="_blank" rel="noopener noreferrer" className="bg-indigo-600 text-white px-4 py-1 rounded-full font-bold text-xs flex items-center gap-2 shadow-lg pointer-events-auto hover:bg-indigo-700 transition">
+                        {t('update.banner', 'New Update Available!')}
                     </a>
                 )}
             </div>
-
-            {/* 2FA Onboarding Modal */}
-            {show2FAPrompt && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center">
-                        <div className="mx-auto w-16 h-16 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center text-pink-600 mb-6">
-                            <Shield size={32} />
-                        </div>
-                        <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{t('dashboard.2fa_promo_title', 'Protect your Account')}</h2>
-                        <p className="text-gray-500 dark:text-gray-400 mb-8">
-                            {t('dashboard.2fa_promo_text', "We strongly recommend enabling Two-Factor Authentication (2FA) to secure your data.")}
-                        </p>
-                        <div className="flex flex-col gap-3">
-                            <button onClick={setup2FA} className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl font-bold hover:scale-[1.02] transition">
-                                {t('dashboard.2fa_btn_setup', 'Setup 2FA Now')}
-                            </button>
-                            <button onClick={dismiss2FAPrompt} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-medium py-2">
-                                {t('dashboard.2fa_btn_later', "I'll do it later")}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <DashboardNavbar
                 user={user}
@@ -206,135 +162,187 @@ const Dashboard = () => {
                 t={t}
             />
 
-            {/* Questionnaire Prompt */}
-            {showQuestionnairePrompt && (
-                <div className="w-full max-w-5xl mb-6 p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl border border-pink-200 dark:border-pink-900/30 shadow-lg flex items-center justify-between">
-                    <div>
-                        <h3 className="font-bold text-gray-900 dark:text-white">{t('dashboard.complete_profile', 'Complete your Profile')}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.better_matches', 'Answer questions to get better matches!')}</p>
+            <Container className="mt-8 space-y-8">
+
+                {/* 2FA Promo (Inline if appropriate, but keeping as modal logic for now) */}
+                {show2FAPrompt && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                        <Card className="max-w-sm w-full p-8 text-center bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                            <div className="mx-auto w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-indigo-600 mb-6">
+                                <Shield size={32} />
+                            </div>
+                            <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">{t('dashboard.2fa_promo_title', 'Protect your Account')}</h2>
+                            <p className="text-zinc-500 dark:text-zinc-400 mb-8">
+                                {t('dashboard.2fa_promo_text', "We strongly recommend enabling 2FA.")}
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <Button onClick={setup2FA} variant="primary" className="w-full">
+                                    {t('dashboard.2fa_btn_setup', 'Setup 2FA Now')}
+                                </Button>
+                                <Button onClick={dismiss2FAPrompt} variant="ghost" className="w-full">
+                                    {t('dashboard.2fa_btn_later', "Maybe later")}
+                                </Button>
+                            </div>
+                        </Card>
                     </div>
-                    <button onClick={() => navigate('/questionnaire')} className="px-4 py-2 bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition">
-                        {t('btn.start')}
+                )}
+
+                {/* Questionnaire Banner */}
+                {showQuestionnairePrompt && (
+                    <Card variant="glass" className="flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-200/50 dark:border-indigo-800/50">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600">
+                                <Zap size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-zinc-900 dark:text-white text-lg">{t('dashboard.complete_profile', 'Complete your Profile')}</h3>
+                                <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('dashboard.better_matches', 'Answer questions to get better matches!')}</p>
+                            </div>
+                        </div>
+                        <Button onClick={() => navigate('/questionnaire')} variant="primary">
+                            {t('btn.start', "Start Now")}
+                        </Button>
+                    </Card>
+                )}
+
+                {/* Tabs */}
+                <div className="flex justify-center">
+                    <div className="bg-zinc-100 dark:bg-zinc-800/50 p-1.5 rounded-2xl inline-flex shadow-inner">
+                        <button
+                            onClick={() => setActiveTab('matches')}
+                            className={cn(
+                                "px-6 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2",
+                                activeTab === 'matches'
+                                    ? 'bg-white dark:bg-zinc-700 shadow-sm text-indigo-600 dark:text-indigo-400'
+                                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                            )}
+                        >
+                            <Zap size={16} />
+                            {t('dashboard.tab_matches', 'Matches')}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('inbox')}
+                            className={cn(
+                                "px-6 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2",
+                                activeTab === 'inbox'
+                                    ? 'bg-white dark:bg-zinc-700 shadow-sm text-indigo-600 dark:text-indigo-400'
+                                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                            )}
+                        >
+                            <Inbox size={16} />
+                            {t('dashboard.tab_inbox', 'Inbox')}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {activeTab === 'matches' && (
+                        <div className="space-y-6">
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <h2 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">{t('dashboard.title', 'Your Matches')}</h2>
+                                    <p className="text-zinc-500 dark:text-zinc-400">{t('dashboard.subtitle', "People who vibe with you")}</p>
+                                </div>
+                                <Button onClick={() => navigate('/discover')} variant="shadow" className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900">
+                                    {t('dashboard.discover', "Discover")} 🚀
+                                </Button>
+                            </div>
+
+                            {!isVisible ? (
+                                <div className="text-center py-16 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-3xl border border-dashed border-zinc-300 dark:border-zinc-700">
+                                    <EyeOff size={48} className="mx-auto text-zinc-400 mb-4" />
+                                    <h3 className="text-xl font-bold text-zinc-700 dark:text-zinc-300 mb-2">{t('dashboard.hidden_title', 'You are hidden')}</h3>
+                                    <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto mb-6">
+                                        {t('dashboard.hidden_desc', "Enable visibility to see matches.")}
+                                    </p>
+                                    <Button variant="outline" onClick={() => navigate('/profile')}>
+                                        {t('dashboard.change_settings', 'Change Settings')}
+                                    </Button>
+                                </div>
+                            ) : matches.length === 0 ? (
+                                <div className="text-center py-20">
+                                    <div className="text-6xl mb-4 grayscale opacity-50">😴</div>
+                                    <h3 className="text-xl font-bold text-zinc-400 dark:text-zinc-500">{t('dashboard.no_matches', 'No matches yet')}</h3>
+                                    <Button variant="ghost" onClick={() => navigate('/discover')} className="mt-4">
+                                        {t('dashboard.try_discover', "Try Discover Mode")}
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {matches.map((m, i) => (
+                                        <MatchCard
+                                            key={i}
+                                            match={m}
+                                            isGuest={isGuest}
+                                            onClick={() => setSelectedUser(m)}
+                                            t={t}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'inbox' && (
+                        <Card className="min-h-[400px] overflow-hidden p-0">
+                            {inboxConversations.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
+                                    <MessageCircle size={48} className="mb-4 opacity-20" />
+                                    <p>{t('dashboard.no_convos', 'No conversations yet.')}</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                    {inboxConversations.map((c) => (
+                                        <button
+                                            key={c.partner_id}
+                                            onClick={() => handleOpenChat({ user_id: c.partner_id, username: c.partner_username, image_url: c.partner_image_url })}
+                                            className="w-full flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition text-left group"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden shrink-0 ring-2 ring-transparent group-hover:ring-indigo-500/20 transition-all">
+                                                {c.partner_image_url ?
+                                                    <img src={c.partner_image_url} className="w-full h-full object-cover" /> :
+                                                    <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-600 font-bold text-lg dark:bg-indigo-900/30">
+                                                        {c.partner_username[0]}
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                    <h4 className="font-bold text-zinc-900 dark:text-white truncate">{c.partner_real_name || c.partner_username}</h4>
+                                                    <span className="text-xs text-zinc-500 whitespace-nowrap ml-2">
+                                                        {new Date(c.timestamp).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-zinc-500 dark:text-zinc-400 truncate group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">
+                                                    {c.last_message}
+                                                </p>
+                                            </div>
+                                            {c.unread_count > 0 && (
+                                                <div className="w-5 h-5 bg-indigo-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0">
+                                                    {c.unread_count}
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </Card>
+                    )}
+                </div>
+
+                {/* Footer Links */}
+                <div className="flex justify-center gap-6 text-sm text-zinc-400 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                    <button onClick={() => navigate('/imprint')} className="hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+                        {t('footer.imprint', 'Impressum')}
+                    </button>
+                    <button onClick={() => navigate('/privacy')} className="hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+                        {t('footer.privacy', 'Datenschutz')}
                     </button>
                 </div>
-            )}
+            </Container>
 
-            {/* Tab Switcher */}
-            <div className="w-full max-w-md flex bg-white/50 dark:bg-black/30 p-1 rounded-xl mb-6 backdrop-blur self-center">
-                <button
-                    onClick={() => setActiveTab('matches')}
-                    className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'matches' ? 'bg-white dark:bg-gray-700 shadow-sm text-pink-600' : 'text-gray-500 hover:bg-white/50'}`}
-                >
-                    {t('dashboard.tab_matches', 'Matches')}
-                </button>
-                <button
-                    onClick={() => setActiveTab('inbox')}
-                    className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'inbox' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500 hover:bg-white/50'}`}
-                >
-                    {t('dashboard.tab_inbox', 'Inbox')}
-                </button>
-            </div>
-
-            <div className="w-full max-w-5xl grid gap-6 transition-all">
-
-                {activeTab === 'matches' && (
-                    <>
-                        <div className="flex justify-between items-end">
-                            <div>
-                                <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-1">{t('dashboard.title', 'Your Matches')}</h2>
-                                <p className="text-gray-500 dark:text-gray-400">{t('dashboard.subtitle', "People who vibe with you")}</p>
-                            </div>
-                            <button
-                                onClick={() => navigate('/discover')}
-                                className="bg-black text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-black/20 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-2 group"
-                            >
-                                <span>{t('dashboard.discover', "Discover")}</span>
-                                <span className="group-hover:translate-x-1 transition-transform">🚀</span>
-                            </button>
-                        </div>
-
-                        {!isVisible ? (
-                            <div className="bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur p-12 rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-center">
-                                <EyeOff size={48} className="mx-auto text-gray-400 mb-4" />
-                                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">{t('dashboard.hidden_title', 'You are hidden')}</h3>
-                                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-                                    {t('dashboard.hidden_desc', "Your profile is not visible to others, so you won't receive new matches. Enable visibility in settings to get back in the game.")}
-                                </p>
-                                <button onClick={() => navigate('/profile')} className="text-pink-600 font-bold hover:text-pink-700 hover:underline">
-                                    {t('dashboard.change_settings', 'Change Settings')}
-                                </button>
-                            </div>
-                        ) : matches.length === 0 ? (
-                            <div className="text-center py-20 bg-white/40 dark:bg-black/20 rounded-3xl border border-white/50 backdrop-blur-sm">
-                                <div className="text-6xl mb-4">😴</div>
-                                <h3 className="text-xl font-bold text-gray-400 dark:text-gray-500">{t('dashboard.no_matches', 'No matches yet')}</h3>
-                                <p className="text-gray-400 mt-2">{t('dashboard.try_discover', "Try the Discover mode to find people!")}</p>
-                            </div>
-                        ) : (
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-                                {matches.map((m, i) => (
-                                    <MatchCard
-                                        key={i}
-                                        match={m}
-                                        isGuest={isGuest}
-                                        onClick={() => setSelectedUser(m)}
-                                        t={t}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {activeTab === 'inbox' && (
-                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-3xl shadow-sm border border-white/50 dark:border-white/10 overflow-hidden min-h-[400px]">
-                        {inboxConversations.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400">
-                                <div className="text-4xl mb-4">📭</div>
-                                <p>{t('dashboard.no_convos', 'No conversations yet.')}</p>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                                {inboxConversations.map((c) => (
-                                    <button
-                                        key={c.partner_id}
-                                        onClick={() => handleOpenChat({ user_id: c.partner_id, username: c.partner_username, image_url: c.partner_image_url })}
-                                        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left"
-                                    >
-                                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                                            {c.partner_image_url ?
-                                                <img src={c.partner_image_url} className="w-full h-full object-cover" /> :
-                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-lg">
-                                                    {c.partner_username[0]}
-                                                </div>
-                                            }
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <h4 className="font-bold text-gray-900 dark:text-white truncate">{c.partner_real_name || c.partner_username}</h4>
-                                                <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                                                    {new Date(c.timestamp).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                                {c.last_message}
-                                            </p>
-                                        </div>
-                                        {c.unread_count > 0 && (
-                                            <div className="w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0">
-                                                {c.unread_count}
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-            </div>
-
-            {/* Public Profile Modal */}
+            {/* Modals & Floating Elements */}
             {selectedUser && (
                 <PublicProfile
                     userId={selectedUser.user_id}
@@ -344,9 +352,8 @@ const Dashboard = () => {
                 />
             )}
 
-            {/* Chat Window */}
             {activeChatUser && (
-                <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm">
+                <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm shadow-2xl rounded-t-2xl overflow-hidden animate-slide-up">
                     <ChatWindow
                         currentUser={user}
                         chatPartner={{
@@ -362,24 +369,14 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* Support Chat FAB */}
+            {/* Support FAB */}
             <button
                 onClick={() => handleOpenChat({ user_id: 3, username: "Support", role: 'moderator' })}
-                className="fixed bottom-6 left-6 z-40 bg-white text-blue-600 p-4 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all border border-blue-100 group"
+                className="fixed bottom-6 left-6 z-40 bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all border border-zinc-100 dark:border-zinc-700"
                 title="Contact Support"
             >
-                <LifeBuoy size={28} className="group-hover:rotate-12 transition-transform" />
+                <LifeBuoy size={24} />
             </button>
-
-            {/* Footer */}
-            <div className="w-full max-w-5xl mt-12 mb-6 flex justify-center gap-6 text-sm text-gray-400">
-                <button onClick={() => navigate('/imprint')} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-                    {t('footer.imprint', 'Impressum')}
-                </button>
-                <button onClick={() => navigate('/privacy')} className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-                    {t('footer.privacy', 'Datenschutz')}
-                </button>
-            </div>
         </div>
     );
 };
