@@ -19,6 +19,10 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       docker: ${{ steps.filter.outputs.docker }}
       e2e: ${{ steps.filter.outputs.e2e }}
+      docs: ${{ steps.filter.outputs.docs }}
+      ci: ${{ steps.filter.outputs.ci }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+      any_code: ${{ steps.filter.outputs.any_code }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
@@ -41,6 +45,19 @@ jobs:
               - 'frontend/**'
               - 'backend/**'
               - '.github/workflows/e2e-tests.yml'
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+              - '!CHANGELOG.md'
+            ci:
+              - '.github/**'
+            dependencies:
+              - '**/requirements.txt'
+              - '**/package.json'
+              - '**/package-lock.json'
+            any_code:
+              - 'backend/**'
+              - 'frontend/**'
 
   # 2. SUB-WORKFLOWS (Conditional)
 
@@ -74,3 +91,40 @@ jobs:
     # Run E2E if backend OR frontend changed
     if: ${{ needs.changes.outputs.e2e == 'true' }}
     uses: ./.github/workflows/e2e-tests.yml
+
+  # 3. CI SUMMARY
+  ci-summary:
+    name: CI Summary
+    needs: [changes, link-check, backend, frontend, docker, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## 📊 CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Detected Changes" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.changes.outputs.backend == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.changes.outputs.frontend == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker | ${{ needs.changes.outputs.docker == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E | ${{ needs.changes.outputs.e2e == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docs | ${{ needs.changes.outputs.docs == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Config | ${{ needs.changes.outputs.ci == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependencies | ${{ needs.changes.outputs.dependencies == 'true' && '✅ Yes' || '⏭️ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏃 Workflow Execution" >> $GITHUB_STEP_SUMMARY
+          echo "| Workflow | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Link Check | ${{ needs.link-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend CI | ${{ needs.backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend CI | ${{ needs.frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker CI | ${{ needs.docker.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for Failures
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "❌ One or more checks failed!"
+          exit 1
