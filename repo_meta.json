@@ -124,6 +124,18 @@
                     "key = Column(String, primary_key=True, index=True)",
                     "value = Column(Text)"
                 ]
+            },
+            "EmailLog": {
+                "description": null,
+                "fields": [
+                    "__tablename__ = 'email_logs'",
+                    "id = Column(Integer, primary_key=True, index=True)",
+                    "recipient = Column(String, index=True)",
+                    "subject = Column(String)",
+                    "status = Column(String)",
+                    "error_message = Column(Text, nullable=True)",
+                    "timestamp = Column(DateTime, default=datetime.utcnow)"
+                ]
             }
         },
         "api_routes": {
@@ -180,7 +192,8 @@
                 "POST /update/trigger (trigger_update)",
                 "GET /changelog (get_changelog)",
                 "GET /reports (get_reports)",
-                "DELETE /reports/{report_id} (delete_report)"
+                "GET /logs/email (get_email_logs)",
+                "GET /logs/server (get_server_logs)"
             ],
             "notifications.py": [
                 "GET /notifications (get_notifications)",
