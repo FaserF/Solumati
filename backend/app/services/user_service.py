@@ -8,6 +8,7 @@ from app.services.utils import generate_unique_username
 from datetime import datetime
 import json
 import secrets
+from app.core.config import TEST_MODE
 
 class UserService(BaseService[models.User]):
     def get_by_email(self, db: Session, email: str) -> Optional[models.User]:
@@ -60,7 +61,8 @@ class UserService(BaseService[models.User]):
             self.model.id != 0
         )
 
-        if is_privileged:
+        # Allow test users if Privileged OR TEST_MODE is active
+        if is_privileged or TEST_MODE:
              query = query.filter(
                 or_(self.model.is_visible_in_matches == True, self.model.role == "test")
             )
@@ -81,7 +83,7 @@ class UserService(BaseService[models.User]):
             self.model.id != 0
         )
 
-        if is_privileged:
+        if is_privileged or TEST_MODE:
             query = query.filter(
                 or_(self.model.is_visible_in_matches == True, self.model.role == "test")
             )

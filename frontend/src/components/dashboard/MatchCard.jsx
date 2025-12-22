@@ -6,7 +6,7 @@ const MatchCard = ({ match, isGuest, onClick, t }) => {
     return (
         <Card
             onClick={onClick}
-            variant="glass-card"
+            variant="glass"
             className="group flex items-center justify-between p-5 hover:scale-[1.02] cursor-pointer transition-all duration-300 border-zinc-200 dark:border-zinc-800"
         >
             <div className="flex items-center gap-5 relative z-10">
