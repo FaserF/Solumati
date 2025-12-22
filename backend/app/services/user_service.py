@@ -93,4 +93,27 @@ class UserService(BaseService[models.User]):
 
         return query.limit(limit).all()
 
+    def delete_user(self, db: Session, user: models.User):
+        """
+        Delete a user and all their associated data (Messages, Notifications, Reports).
+        We do this manually because we don't have database-level ON DELETE CASCADE for everything
+        and we want to ensure complete cleanup.
+        """
+        # 1. Delete Messages (Sent & Received)
+        db.query(models.Message).filter(
+            or_(models.Message.sender_id == user.id, models.Message.receiver_id == user.id)
+        ).delete(synchronize_session=False)
+
+        # 2. Delete Notifications
+        db.query(models.Notification).filter(models.Notification.user_id == user.id).delete(synchronize_session=False)
+
+        # 3. Delete Reports (Reporter & Reported)
+        db.query(models.Report).filter(
+            or_(models.Report.reporter_id == user.id, models.Report.reported_id == user.id)
+        ).delete(synchronize_session=False)
+
+        # 4. Delete User (LinkedAccounts handled by SQLAlchemy cascade)
+        db.delete(user)
+        db.commit()
+
 user_service = UserService(models.User)

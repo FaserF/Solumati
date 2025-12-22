@@ -24,10 +24,12 @@ async def cleanup_unverified_users():
         count = 0
         for user in users_to_delete:
             logger.info(f"Deleting expired unverified user: {user.email}")
-            db.delete(user)
+            # Use Service method to handle cascading deletes (Messages, etc.)
+            from app.services.user_service import user_service
+            user_service.delete_user(db, user)
             count += 1
         if count > 0:
-            db.commit()
+            # db.commit() # delete_user already commits
             logger.info(f"Cleanup complete. Deleted {count} expired users.")
         else:
             logger.info("Cleanup complete. No expired users found.")

@@ -15,7 +15,17 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request)
             .catch(() => {
-                return caches.match(event.request);
+                return caches.match(event.request).then((response) => {
+                    if (response) {
+                        return response;
+                    }
+                    // Return a fallback response so we don't return undefined (which causes TypeError)
+                    // We can return a 503 or a generic JSON error
+                    return new Response(JSON.stringify({ error: "Network unavailable" }), {
+                        status: 503,
+                        headers: { "Content-Type": "application/json" }
+                    });
+                });
             })
     );
 });
