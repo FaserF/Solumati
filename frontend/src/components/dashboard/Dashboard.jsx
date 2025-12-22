@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Activity, Shield, EyeOff, LifeBuoy, Zap, Inbox, MessageCircle } from 'lucide-react';
+import { AlertTriangle, Shield, EyeOff, LifeBuoy, Zap, Inbox, MessageCircle } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PublicProfile from '../user/PublicProfile';
 import DashboardNavbar from './DashboardNavbar';
@@ -20,7 +20,6 @@ const Dashboard = () => {
     const { t } = useI18n();
     const navigate = useNavigate();
 
-    const testMode = globalConfig?.test_mode;
     const supportChatEnabled = globalConfig?.support_chat_enabled;
 
     // Matches State
@@ -96,8 +95,10 @@ const Dashboard = () => {
         }
     };
 
+    // Fetch inbox when tab is active - legitimate data fetching pattern
     useEffect(() => {
         if (activeTab === 'inbox') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchInbox();
         }
     }, [activeTab]);
@@ -115,7 +116,9 @@ const Dashboard = () => {
                         setUpdateAvailable(data);
                     }
                 }
-            } catch { }
+            } catch {
+                // Silently ignore network errors for update check
+            }
         };
         checkUpdate();
     }, []);

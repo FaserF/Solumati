@@ -1,6 +1,7 @@
 import { Settings, User, LogOut } from 'lucide-react';
 import { APP_NAME } from '../../config';
 import { Button } from '../ui/Button';
+import NotificationBell from './NotificationBell';
 
 const DashboardNavbar = ({
     user,
@@ -27,6 +28,8 @@ const DashboardNavbar = ({
 
             {/* Right Side: Actions */}
             <div className="flex items-center gap-2">
+                <NotificationBell user={user} />
+
                 {isAdminOrMod && (
                     <Button variant="ghost" size="icon" onClick={onAdminClick} title={t('dashboard.admin_panel')}>
                         <Settings size={20} />

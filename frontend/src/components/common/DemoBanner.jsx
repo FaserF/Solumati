@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Wifi, Activity, Users } from 'lucide-react';
+import { Activity, Users } from 'lucide-react';
 import { API_URL } from '../../config';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,7 +27,9 @@ const DemoBanner = () => {
                         setLastEvent(null);
                     }
                 }
-            } catch { }
+            } catch {
+                // Silently ignore network errors
+            }
         };
 
         checkStatus();
@@ -79,7 +81,9 @@ const DemoBanner = () => {
                             time: new Date()
                         });
                     }
-                } catch { }
+                } catch {
+                    // Silently ignore malformed JSON
+                }
             };
         };
 

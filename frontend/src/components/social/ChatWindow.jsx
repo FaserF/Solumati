@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, WifiOff, Wifi } from 'lucide-react';
+import { Send, X, WifiOff } from 'lucide-react';
 import { API_URL } from '../../config';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -9,6 +9,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [status, setStatus] = useState("disconnected");
+    const [errorMessage, setErrorMessage] = useState(null);
     const ws = useRef(null);
     const messagesEndRef = useRef(null);
     const reconnectTimeout = useRef(null);
@@ -32,7 +33,9 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                 setMessages(data);
                 scrollToBottom();
             }
-        } catch { }
+        } catch {
+            // Silently handle network errors
+        }
     }, [chatPartner.id, token]);
 
     useEffect(() => {
@@ -50,6 +53,13 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
             socket.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
+
+                    if (msg.error) {
+                        setErrorMessage(msg.error);
+                        setStatus("error");
+                        return;
+                    }
+
                     if (msg.sender_id === chatPartner.id || msg.receiver_id === chatPartner.id) {
                         setMessages(prev => {
                             if (prev.some(m => m.id === msg.id)) return prev;
@@ -57,7 +67,9 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                         });
                         scrollToBottom();
                     }
-                } catch { }
+                } catch {
+                    // Silently handle malformed messages
+                }
             };
 
             socket.onclose = () => {
@@ -168,8 +180,8 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                         <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                             <div
                                 className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm relative group ${isMe
-                                        ? 'bg-indigo-600 text-white rounded-br-none'
-                                        : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-none border border-zinc-100 dark:border-zinc-700'
+                                    ? 'bg-indigo-600 text-white rounded-br-none'
+                                    : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-none border border-zinc-100 dark:border-zinc-700'
                                     }`}
                             >
                                 {msg.content}
@@ -185,7 +197,12 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
 
             {/* Input */}
             <div className="p-3 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800">
-                {canWrite ? (
+                {status === 'error' ? (
+                    <div className="w-full text-center text-xs text-red-500 font-medium py-3 bg-red-50 dark:bg-red-900/10 rounded-xl flex items-center justify-center gap-2">
+                        <WifiOff size={14} />
+                        {errorMessage || "Connection Error"}
+                    </div>
+                ) : canWrite ? (
                     <div className="flex gap-2">
                         <Input
                             value={input}

@@ -193,7 +193,9 @@ const AdminPanel = () => {
         try {
             await fetch(`${API_URL}/demo/errors`, { method: 'DELETE', headers: authHeaders });
             await fetchDemoStatus();
-        } catch { }
+        } catch {
+            // Silently handle errors
+        }
     };
 
     // Backup & Migration Handlers
@@ -302,12 +304,12 @@ const AdminPanel = () => {
         } catch { alert("Network Error"); }
     };
 
-    const handleAction = async (id, action) => {
+    const handleAction = async (id, action, data = {}) => {
         try {
             const res = await fetch(`${API_URL}/admin/users/${id}/punish`, {
                 method: 'PUT',
                 headers: authHeaders,
-                body: JSON.stringify({ action: action })
+                body: JSON.stringify({ action: action, ...data })
             });
 
             if (res.ok) {
@@ -1777,7 +1779,11 @@ const AdminPanel = () => {
                                 <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
                                 <button
                                     onClick={() => {
-                                        handleAction(punishModal.userId, 'deactivate');
+                                        // Execute punishment action
+                                        handleAction(punishModal.userId, punishReason === 'AdminDeactivation' ? 'deactivate' : 'suspend', {
+                                            reason: customReason,
+                                            duration_hours: parseInt(banHours) || 0
+                                        });
                                         setPunishModal({ show: false, userId: null });
                                     }}
                                     className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700"

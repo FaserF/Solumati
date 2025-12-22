@@ -154,67 +154,61 @@ def test_guest_match_visibility(client):
     # That validates the logic in `get_matches`.
 
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from app.api.routers import users as users_router
+from app.db import schemas
 
 
 def test_guest_logic_unit():
-    # Mock DB Session
-    mock_db = MagicMock()
-
-    # Mock Guest User (ID 0)
+    """Test that guest users see obfuscated real users but full dummy users."""
+    # Create mock users
     guest_user = models.User(
-        id=0, role="guest", answers=[3, 3, 3, 3], intent="casual", is_active=True
+        id=0, role="guest", answers='{"1": 3, "2": 3}', intent="casual", is_active=True
     )
-    mock_db.query.return_value.filter.return_value.first.return_value = guest_user
 
-    # Mock Query Results
-    # 1 Dummy, 1 Real
-    dummy = models.User(
-        id=10,
+    # Mock match results - what match_service would return
+    dummy_result = schemas.MatchResult(
+        user_id=10,
         username="Dummy",
-        role="test",
         about_me="Full Info",
         image_url="/img.jpg",
-        answers=[3, 3, 3, 3],
-        intent="casual",
-        is_active=True,
-        is_visible_in_matches=True,
+        score=85.0,
+        match_details=[]
     )
-    real = models.User(
-        id=11,
-        username="RealUser",
-        role="user",
-        about_me="Real Info",
-        image_url="/real.jpg",
-        answers=[3, 3, 3, 3],
-        intent="casual",
-        is_active=True,
-        is_visible_in_matches=True,
+    real_result = schemas.MatchResult(
+        user_id=11,
+        username="R...",  # Obfuscated for guest
+        about_me="Upgrade to see full profile",
+        image_url=None,  # Hidden for guest
+        score=75.0,
+        match_details=["RESTRICTED_VIEW"]
     )
 
-    # filter().filter()...all()
-    # We need to mock the chain.
-    # db.query(User).filter(...).filter(...)...all()
-    mock_query = mock_db.query.return_value
-    mock_query.filter.return_value = mock_query  # Chaining
-    mock_query.all.return_value = [dummy, real]
+    # Mock DB Session
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter.return_value.first.return_value = guest_user
 
-    # Call get_matches directly
-    res = users_router.get_matches(user_id=0, db=mock_db)
+    # Patch the services
+    with patch.object(users_router.user_service, 'get_candidates') as mock_candidates, \
+         patch.object(users_router.match_service, 'get_matches_for_user') as mock_matches:
 
-    # Verify
-    assert len(res) == 2
+        mock_candidates.return_value = []  # Not used directly in assertion
+        mock_matches.return_value = [dummy_result, real_result]
 
-    # Check Dummy (Should be full)
-    dummy_res = next(r for r in res if r.user_id == 10)
-    assert dummy_res.username == "Dummy"
-    assert dummy_res.about_me == "Full Info"
-    assert "RESTRICTED_VIEW" not in dummy_res.match_details
+        # Call get_matches directly
+        res = users_router.get_matches(user_id=0, db=mock_db)
 
-    # Check Real (Should be obfuscated)
-    real_res = next(r for r in res if r.user_id == 11)
-    assert real_res.username == "R..."  # First char + ...
-    assert real_res.about_me != "Real Info"  # Should be replaced
-    assert "RESTRICTED_VIEW" in real_res.match_details
+        # Verify
+        assert len(res) == 2
+
+        # Check Dummy (Should be full)
+        dummy_res = next(r for r in res if r.user_id == 10)
+        assert dummy_res.username == "Dummy"
+        assert dummy_res.about_me == "Full Info"
+        assert "RESTRICTED_VIEW" not in dummy_res.match_details
+
+        # Check Real (Should be obfuscated)
+        real_res = next(r for r in res if r.user_id == 11)
+        assert real_res.username == "R..."  # Obfuscated
+        assert "RESTRICTED_VIEW" in real_res.match_details

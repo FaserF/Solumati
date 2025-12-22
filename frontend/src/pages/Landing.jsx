@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useLayoutEffect } from 'react';
 import { Github, Scale, AlertTriangle, Info, Smartphone, Monitor, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -30,7 +30,9 @@ const Landing = () => {
     const navigate = useNavigate();
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
+    // Use layoutEffect to set mounted state synchronously before paint
+    useLayoutEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
@@ -65,7 +67,7 @@ const Landing = () => {
     const showWindowsCta = isWindows && !isApp;
 
     const handleDownload = async (platform) => {
-        // ... (Keep existing logic)
+        // Fetch latest release from GitHub and download appropriate asset
         try {
             const response = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
             if (response.ok) {

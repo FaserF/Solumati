@@ -1,27 +1,22 @@
+"""
+Email Service
+Handles all email-related operations with proper typing and error handling.
+"""
 import logging
 import smtplib
-from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
+from typing import Optional
+
 from sqlalchemy.orm import Session
-from app.db import models, schemas
+
 from app.core.config import PROJECT_NAME
-import json
+from app.db import schemas
+from app.services.settings_service import SettingsService
 
 logger = logging.getLogger(__name__)
 
-# Temporary duplicate from utils until utils is refactored
-def get_setting_local(db: Session, key: str, default):
-    try:
-        setting = db.query(models.SystemSetting).filter(models.SystemSetting.key == key).first()
-        if setting:
-            return json.loads(setting.value)
-        if hasattr(default, "dict"):
-            return default.dict()
-        return default
-    except:
-        return default
 
 class EmailService:
     @staticmethod
@@ -43,12 +38,12 @@ class EmailService:
         if db:
             try:
                 # Fetch settings for footer
-                reg_config = get_setting_local(db, "registration", {})
+                reg_config = SettingsService.get(db, "registration", {})
                 if not server_domain:
                      host_url = reg_config.get("server_domain", host_url)
 
-                support_conf = get_setting_local(db, "support_page", {})
-                legal_conf = get_setting_local(db, "legal", {})
+                support_conf = SettingsService.get(db, "support_page", {})
+                legal_conf = SettingsService.get(db, "legal", {})
 
                 if isinstance(support_conf, dict) and support_conf.get("enabled", True):
                     support_url = f"{host_url}/support"
@@ -108,14 +103,25 @@ class EmailService:
         """
 
     @staticmethod
-    def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
+    def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session) -> bool:
+        """
+        Send an email synchronously.
+
+        Args:
+            to_email: Recipient email address
+            subject: Email subject
+            html_body: HTML content
+            db: Database session for config lookup
+
+        Returns:
+            True if sent successfully, False otherwise
+        """
         try:
-            config_dict = get_setting_local(db, "mail", schemas.MailConfig())
-            config = schemas.MailConfig(**config_dict)
+            config = SettingsService.get_mail_config(db)
 
             if not config.enabled:
                 logger.debug(f"Mail disabled. Skipping email to {to_email}")
-                return
+                return False
 
             if to_email.endswith("@solumati.local"):
                 return
