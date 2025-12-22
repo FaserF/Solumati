@@ -11,7 +11,7 @@
             "vite (^7.0.0)"
         ],
         "backend": [
-            "fastapi==0.125.0",
+            "fastapi==0.127.0",
             "sqlalchemy==2.0.45",
             "pydantic==2.12.5",
             "pydantic-settings==2.12.0",
@@ -209,6 +209,7 @@
         "README.md": null,
         "backend/": {
             "Dockerfile": null,
+            "active_test.py": null,
             "app/": {
                 "__init__.py": null,
                 "api/": {
@@ -220,7 +221,9 @@
                     "__init__.py": null,
                     "config.py": null,
                     "database.py": null,
+                    "exceptions.py": null,
                     "logging_config.py": null,
+                    "responses.py": null,
                     "security.py": null
                 },
                 "db/": {
@@ -242,16 +245,23 @@
                 },
                 "services/": {
                     "__init__.py": null,
+                    "base.py": null,
                     "captcha.py": null,
+                    "demo_service.py": null,
+                    "email_service.py": null,
                     "export_service.py": null,
                     "i18n/": {},
                     "i18n.py": null,
+                    "match_service.py": null,
                     "password_validation.py": null,
                     "questions_content.py": null,
                     "rate_limiter.py": null,
                     "scheduler.py": null,
+                    "settings_service.py": null,
                     "tasks.py": null,
-                    "utils.py": null
+                    "user_service.py": null,
+                    "utils.py": null,
+                    "websocket_manager.py": null
                 }
             },
             "frontend_package.json": null,
@@ -316,6 +326,7 @@
                     "dashboard/": {},
                     "layout/": {},
                     "social/": {},
+                    "ui/": {},
                     "user/": {}
                 },
                 "config.js": null,
@@ -325,6 +336,9 @@
                     "I18nContext.jsx": null
                 },
                 "index.css": null,
+                "lib/": {
+                    "utils.js": null
+                },
                 "main.jsx": null,
                 "pages/": {
                     "Landing.jsx": null,
