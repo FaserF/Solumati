@@ -1,0 +1,17 @@
+name: "💬 General Feedback / Question"
+description: "General questions, feedback, or praise."
+title: "[FEEDBACK]: "
+labels: ["discussion", "question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feel free to share your thoughts, ask questions, or just say hello!
+  - type: textarea
+    id: content
+    attributes:
+      label: "Your Feedback / Question"
+      description: "What's on your mind?"
+      placeholder: "I really like how..."
+    validations:
+      required: true
