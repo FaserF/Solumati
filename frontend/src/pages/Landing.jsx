@@ -1,33 +1,43 @@
-import { Github, Scale, AlertTriangle, Info, Smartphone, Monitor } from 'lucide-react';
+import { useState, useLayoutEffect } from 'react';
+import { Github, Scale, AlertTriangle, Info, Smartphone, Monitor, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
 import { APP_VERSION, APP_RELEASE_TYPE } from '../config';
 import { useConfig } from '../context/ConfigContext';
+import { Button } from '../components/ui/Button';
 
-// Render Banner Helper
-const AppBanner = ({ icon: Icon, title, sub, onClick, color }) => (
-    <a
-        href="#"
+// Render Banner Helper with Premium UI
+const AppBanner = ({ icon: Icon, title, sub, onClick, className }) => (
+    <button
         onClick={(e) => { e.preventDefault(); onClick(); }}
-        className={`mb-8 flex items-center gap-2 ${color} text-white px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg animate-bounce`}
+        className={`w-full group relative mb-6 flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 ${className}`}
     >
-        <Icon size={24} />
-        <div className="text-left">
-            <div className="font-bold text-sm">{title}</div>
-            <div className="text-xs opacity-90">{sub}</div>
+        <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform">
+            <Icon size={24} className="text-white bg-transparent" />
         </div>
-    </a>
+        <div className="flex-grow text-left">
+            <div className="font-bold text-base text-white">{title}</div>
+            <div className="text-sm text-white/70">{sub}</div>
+        </div>
+        <ChevronRight className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" size={20} />
+    </button>
 );
 
 const Landing = () => {
     const { t } = useI18n();
     const { guestLogin } = useAuth();
     const navigate = useNavigate();
+    const [mounted, setMounted] = useState(false);
+
+    // Use layoutEffect to set mounted state synchronously before paint
+    useLayoutEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     const onLogin = () => navigate('/login');
     const onRegister = () => navigate('/register');
-    // const onAdmin = () => navigate('/login');  // Unused
     const onLegal = () => navigate('/imprint');
 
     const onGuest = async () => {
@@ -39,6 +49,7 @@ const Landing = () => {
             alert("Guest login failed");
         }
     };
+
     // Platform Detection
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isAndroid = /android/i.test(userAgent);
@@ -56,6 +67,7 @@ const Landing = () => {
     const showWindowsCta = isWindows && !isApp;
 
     const handleDownload = async (platform) => {
+        // Fetch latest release from GitHub and download appropriate asset
         try {
             const response = await fetch('https://api.github.com/repos/FaserF/Solumati/releases/latest');
             if (response.ok) {
@@ -80,123 +92,148 @@ const Landing = () => {
     const { globalConfig } = useConfig();
 
     return (
-        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-gray-900 to-black opacity-90"></div>
+        <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden selection:bg-indigo-500/30">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-zinc-950 to-zinc-950 opacity-80 z-0"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none z-0"></div>
 
-            <div className="z-10 text-center max-w-3xl flex flex-col items-center flex-grow justify-center">
-                <div className="mb-6 w-32 h-32 md:w-48 md:h-48 relative animate-pulse">
-                    <img src="/logo/Solumati.png" alt="Solumati Logo" className="w-full h-full object-contain drop-shadow-2xl" />
+            {/* Content Container */}
+            <div className={`z-10 text-center max-w-4xl flex flex-col items-center flex-grow justify-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+
+                {/* Logo */}
+                <div className="mb-8 relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <img src="/logo/Solumati.png" alt="Solumati Logo" className="relative w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" />
                 </div>
 
-                <h1 className="text-6xl md:text-8xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-pulse">
-                    {t('app.title')}
+                {/* Hero Text */}
+                <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white tracking-tight">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-indigo-200">
+                        {t('app.title')}
+                    </span>
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-300 mb-12 font-light">
+                <p className="text-xl md:text-2xl text-zinc-400 mb-12 font-light max-w-2xl leading-relaxed">
                     {t('landing.tagline')}
                 </p>
 
-                {showAndroidCta && (
-                    <AppBanner
-                        platform="android"
-                        icon={Smartphone}
-                        title={t('landing.get_android', "Get the Android App")}
-                        sub={t('landing.download_apk', "Download APK")}
-                        onClick={() => handleDownload('android')}
-                        color="bg-gradient-to-r from-green-500 to-emerald-600"
-                    />
-                )}
-                {showIOSCta && (
-                    <AppBanner
-                        platform="ios"
-                        icon={Smartphone}
-                        title={t('landing.get_ios', "Get the iOS App")}
-                        sub={t('landing.download_ipa', "Download IPA (AltStore)")}
-                        onClick={() => handleDownload('ios')}
-                        color="bg-gradient-to-r from-blue-500 to-blue-600"
-                    />
-                )}
-                {showWindowsCta && (
-                    <AppBanner
-                        platform="windows"
-                        icon={Monitor}
-                        title={t('landing.get_windows', "Get the Windows App")}
-                        sub={t('landing.download_msix', "Download App")}
-                        onClick={() => handleDownload('windows')}
-                        color="bg-gradient-to-r from-blue-600 to-indigo-600"
-                    />
-                )}
+                {/* Mobile CTAs */}
+                <div className="w-full max-w-md">
+                    {showAndroidCta && (
+                        <AppBanner
+                            platform="android"
+                            icon={Smartphone}
+                            title={t('landing.get_android', "Get App for Android")}
+                            sub={t('landing.download_apk', "Download APK")}
+                            onClick={() => handleDownload('android')}
+                            className="bg-zinc-900/50 hover:bg-zinc-800/80 border-zinc-700 hover:border-emerald-500/50"
+                        />
+                    )}
+                    {showIOSCta && (
+                        <AppBanner
+                            platform="ios"
+                            icon={Smartphone}
+                            title={t('landing.get_ios', "Get App for iOS")}
+                            sub={t('landing.download_ipa', "Download for AltStore")}
+                            onClick={() => handleDownload('ios')}
+                            className="bg-zinc-900/50 hover:bg-zinc-800/80 border-zinc-700 hover:border-blue-500/50"
+                        />
+                    )}
+                    {showWindowsCta && (
+                        <AppBanner
+                            platform="windows"
+                            icon={Monitor}
+                            title={t('landing.get_windows', "Get App for Windows")}
+                            sub={t('landing.download_msix', "Download Installer")}
+                            onClick={() => handleDownload('windows')}
+                            className="bg-zinc-900/50 hover:bg-zinc-800/80 border-zinc-700 hover:border-indigo-500/50"
+                        />
+                    )}
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mx-auto mb-8">
-                    <button onClick={onLogin} className="bg-white text-gray-900 font-bold py-3 px-6 rounded-full hover:scale-105 transition transform shadow-lg">
+                {/* Main Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mb-16">
+                    <Button
+                        onClick={onLogin}
+                        size="lg"
+                        variant="primary"
+                        className="rounded-full px-8 text-lg hover:shadow-indigo-500/25 ring-offset-2 ring-offset-zinc-950"
+                    >
                         {t('landing.btn_login')}
-                    </button>
-                    <button onClick={onRegister} className="bg-transparent border-2 border-pink-500 text-pink-500 font-bold py-3 px-6 rounded-full hover:bg-pink-500 hover:text-white transition transform shadow-lg">
+                    </Button>
+                    <Button
+                        onClick={onRegister}
+                        size="lg"
+                        variant="ghost"
+                        className="rounded-full px-8 text-lg border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                    >
                         {t('landing.btn_register')}
-                    </button>
-                    <button onClick={onGuest} className="bg-gray-800 text-gray-400 font-medium py-3 px-6 rounded-full hover:bg-gray-700 hover:text-white transition transform border border-gray-700">
+                    </Button>
+                    <Button
+                        onClick={onGuest}
+                        size="lg"
+                        variant="ghost"
+                        className="rounded-full px-8 text-lg text-zinc-500 hover:text-zinc-300"
+                    >
                         {t('landing.btn_guest')}
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Marketing Link */}
                 {globalConfig.marketing_enabled && (
                     <button
                         onClick={() => navigate('/about')}
-                        className="text-gray-400 hover:text-pink-400 underline underline-offset-4 transition-colors font-medium text-sm flex items-center gap-1"
+                        className="text-zinc-500 hover:text-indigo-400 transition-colors font-medium text-sm flex items-center gap-2 group"
                     >
-                        <Info size={14} />
-                        {t('landing.more_info', 'More Information')}
+                        <Info size={16} />
+                        <span className="underline underline-offset-4">{t('landing.more_info', 'Learn more about Solumati')}</span>
+                        <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </button>
                 )}
             </div>
 
-            <div className="z-10 w-full p-6 flex justify-between items-end text-gray-500 text-xs md:text-sm">
-                <div className="flex gap-4">
-                    {/* GitHub Link - Always Visible or move to Support Page? Leaving for now as it's separate requirement */}
+            {/* Footer */}
+            <div className="z-10 w-full p-6 flex justify-between items-end border-t border-zinc-800/50 backdrop-blur-sm">
+                <div className="flex gap-6 text-zinc-400 text-sm">
                     <a
                         href="https://github.com/FaserF/Solumati"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 hover:text-white transition group"
                     >
-                        <Github size={20} className="group-hover:text-white" />
+                        <Github size={18} className="group-hover:text-white" />
                         <span className="hidden md:inline">{t('landing.opensource')}</span>
                     </a>
 
-                    {/* Support Link */}
                     {globalConfig?.support_page?.enabled !== false && (
-                        <button onClick={() => navigate('/support')} className="hover:text-white transition flex items-center gap-1">
-                            <Monitor size={16} /> {t('landing.support', 'Support')}
+                        <button onClick={() => navigate('/support')} className="hover:text-white transition flex items-center gap-2">
+                            <Monitor size={18} /> {t('landing.support', 'Support')}
                         </button>
                     )}
 
-                    {/* Legal Link */}
                     {(globalConfig?.legal?.enabled_imprint !== false || globalConfig?.legal?.enabled_privacy !== false) && (
-                        <button onClick={onLegal} className="hover:text-white transition flex items-center gap-1">
-                            <Scale size={16} /> {t('landing.legal')}
+                        <button onClick={onLegal} className="hover:text-white transition flex items-center gap-2">
+                            <Scale size={18} /> {t('landing.legal')}
                         </button>
                     )}
                 </div>
 
-                {/* Release Status Badge (Beta / Nightly) */}
+                {/* Release Status Badge */}
                 {APP_RELEASE_TYPE && APP_RELEASE_TYPE !== 'stable' && (
-                    <div className="flex flex-col items-end animate-fade-in-up">
-                        <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md border shadow-lg ${APP_RELEASE_TYPE === 'beta'
-                            ? 'bg-blue-500/10 border-blue-500/30 text-blue-200'
-                            : 'bg-orange-500/10 border-orange-500/30 text-orange-200'
+                    <div className="flex flex-col items-end">
+                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${APP_RELEASE_TYPE === 'beta'
+                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-200'
+                            : 'bg-orange-500/10 border-orange-500/20 text-orange-200'
                             }`}>
-                            {APP_RELEASE_TYPE === 'beta' ? <Info size={14} /> : <AlertTriangle size={14} />}
-                            <span className="text-xs font-bold uppercase tracking-wider">
-                                {APP_RELEASE_TYPE === 'beta' ? t('landing.beta_access', 'Beta Access') : 'Nightly Build'}
-                            </span>
+                            {APP_RELEASE_TYPE === 'beta' ? <Info size={12} /> : <AlertTriangle size={12} />}
+                            {APP_RELEASE_TYPE === 'beta' ? t('landing.beta_access', 'Beta') : 'Nightly'}
                         </div>
-                        <div className="text-[10px] font-mono text-gray-600 mt-1 mr-2 opacity-60">
+                        <div className="text-[10px] font-mono text-zinc-600 mt-1">
                             v{APP_VERSION}
                         </div>
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 };
 

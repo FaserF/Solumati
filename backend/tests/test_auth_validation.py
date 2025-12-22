@@ -58,7 +58,10 @@ def test_registration_duplicate_email(client, test_password):
     # 2. Try Duplicate
     r2 = client.post("/users/", json=payload)
     assert r2.status_code == 400
-    assert "Email already registered" in r2.json()["detail"]
+    data = r2.json()
+    # Support both old 'detail' format and new 'error.message' format
+    error_msg = data.get("detail") or (data.get("error", {}).get("message", ""))
+    assert "Email already registered" in error_msg
 
 
 def test_registration_duplicate_username():

@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import './ChatWindow.css';
-
+import { Send, X, WifiOff } from 'lucide-react';
 import { API_URL } from '../../config';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Card } from '../ui/Card';
 
 const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabled = false, t }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [status, setStatus] = useState("disconnected"); // connected, disconnected
+    const [status, setStatus] = useState("disconnected");
+    const [errorMessage, setErrorMessage] = useState(null);
     const ws = useRef(null);
     const messagesEndRef = useRef(null);
     const reconnectTimeout = useRef(null);
@@ -31,7 +34,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                 scrollToBottom();
             }
         } catch {
-            // console.error("Failed to load history");
+            // Silently handle network errors
         }
     }, [chatPartner.id, token]);
 
@@ -41,17 +44,22 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
         const connectWebSocket = () => {
             if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
 
-            // Pass token in query param
             const socket = new WebSocket(`${WS_URL}/ws/chat?token=${token}`);
 
             socket.onopen = () => {
-                console.log("WS Connected");
                 setStatus("connected");
             };
 
             socket.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
+
+                    if (msg.error) {
+                        setErrorMessage(msg.error);
+                        setStatus("error");
+                        return;
+                    }
+
                     if (msg.sender_id === chatPartner.id || msg.receiver_id === chatPartner.id) {
                         setMessages(prev => {
                             if (prev.some(m => m.id === msg.id)) return prev;
@@ -59,15 +67,15 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                         });
                         scrollToBottom();
                     }
-                } catch { /* ignore */ }
+                } catch {
+                    // Silently handle malformed messages
+                }
             };
 
             socket.onclose = () => {
-                console.log("WS Disconnected");
                 setStatus("disconnected");
                 if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
                 reconnectTimeout.current = setTimeout(() => {
-                    console.log("Attempting Reconnect...");
                     connectWebSocket();
                 }, 3000);
             };
@@ -95,8 +103,6 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
         };
 
         ws.current.send(JSON.stringify(payload));
-        // We will receive echo from server to update UI, or optimistically update.
-        // Server echo is safer for ID sync.
         if (!msgContent) setInput("");
     };
 
@@ -124,26 +130,43 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
     const ICEBREAKERS = isSupportChat ? ICEBREAKERS_SUPPORT : ICEBREAKERS_USER;
 
     return (
-        <div className="chat-window">
-            <div className="chat-header">
-                <div className="chat-partner-info">
-                    {chatPartner.image_url && <img src={`${API_URL}${chatPartner.image_url}`} alt={chatPartner.username} />}
-                    <span>{chatPartner.username}</span>
-                    <span className={`status-dot ${status}`}></span>
+        <Card variant="solid" className="flex flex-col h-[500px] w-full max-w-md shadow-2xl border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900">
+            {/* Header */}
+            <div className="bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                            {chatPartner.image_url ?
+                                <img src={`${API_URL}${chatPartner.image_url}`} alt={chatPartner.username} className="w-full h-full object-cover" /> :
+                                <div className="w-full h-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 font-bold">{chatPartner.username[0]}</div>
+                            }
+                        </div>
+                        <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-900 ${status === 'connected' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-zinc-900 dark:text-white leading-none">{chatPartner.username}</h4>
+                        <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wide flex items-center gap-1">
+                            {status === 'connected' ? 'Online' : 'Offline'}
+                            {status !== 'connected' && <WifiOff size={10} />}
+                        </span>
+                    </div>
                 </div>
-                <button onClick={onClose} className="close-btn">×</button>
+                <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-full">
+                    <X size={18} />
+                </Button>
             </div>
 
-            <div className="chat-messages">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50/50 dark:bg-black/20">
                 {messages.length === 0 && canWrite && (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-2 p-4">
-                        <p className="text-sm italic mb-2">{t ? t('chat.start_convo', 'Start the conversation!') : 'Start the conversation!'}</p>
-                        <div className="flex flex-wrap justify-center gap-2">
+                    <div className="flex flex-col items-center justify-center h-full text-zinc-400 space-y-4">
+                        <p className="text-sm italic">{t ? t('chat.start_convo', 'Start the conversation!') : 'Start the conversation!'}</p>
+                        <div className="flex flex-wrap justify-center gap-2 max-w-[250px]">
                             {ICEBREAKERS.map((cur, i) => (
                                 <button
                                     key={i}
                                     onClick={() => sendMessage(cur)}
-                                    className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs hover:bg-blue-100 transition border border-blue-200"
+                                    className="px-3 py-1.5 bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 rounded-full text-xs hover:scale-105 transition shadow-sm border border-indigo-100 dark:border-indigo-900/30"
                                 >
                                     {cur}
                                 </button>
@@ -152,37 +175,60 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                     </div>
                 )}
                 {messages.map((msg, idx) => {
-                    const isMe = msg.sender_id === currentUser.id;
+                    const isMe = msg.sender_id === currentUser.id; // Warning: Checking ID types (int vs str) might be needed
                     return (
-                        <div key={idx} className={`message-bubble ${isMe ? 'mine' : 'theirs'}`}>
-                            {msg.content}
-                            <div className="msg-time">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            <div
+                                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm relative group ${isMe
+                                    ? 'bg-indigo-600 text-white rounded-br-none'
+                                    : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-none border border-zinc-100 dark:border-zinc-700'
+                                    }`}
+                            >
+                                {msg.content}
+                                <div className={`text-[9px] opacity-70 mt-1 flex justify-end gap-1 ${isMe ? 'text-indigo-100' : 'text-zinc-400'}`}>
+                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            </div>
                         </div>
                     );
                 })}
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="chat-input p-2">
-                {canWrite ? (
-                    <>
-                        <input
-                            type="text"
+            {/* Input */}
+            <div className="p-3 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800">
+                {status === 'error' ? (
+                    <div className="w-full text-center text-xs text-red-500 font-medium py-3 bg-red-50 dark:bg-red-900/10 rounded-xl flex items-center justify-center gap-2">
+                        <WifiOff size={14} />
+                        {errorMessage || "Connection Error"}
+                    </div>
+                ) : canWrite ? (
+                    <div className="flex gap-2">
+                        <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyPress={handleKeyPress}
                             placeholder={status === 'connected' ? (t ? t('chat.placeholder', "Type a message...") : "Type a message...") : "Connecting..."}
                             disabled={status !== "connected"}
+                            className="flex-1 rounded-full border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950"
                         />
-                        <button onClick={() => sendMessage()} disabled={status !== "connected"}>{t ? t('btn.send', 'Send') : 'Send'}</button>
-                    </>
+                        <Button
+                            onClick={() => sendMessage()}
+                            disabled={status !== "connected" || !input.trim()}
+                            size="icon"
+                            variant="primary"
+                            className="rounded-full w-11 h-11 shrink-0 bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            <Send size={18} className="translate-x-0.5 translate-y-0.5" />
+                        </Button>
+                    </div>
                 ) : (
-                    <div className="w-full text-center text-xs text-gray-400 italic py-2 bg-gray-50 rounded">
+                    <div className="w-full text-center text-xs text-zinc-400 italic py-3 bg-zinc-50 dark:bg-zinc-950/50 rounded-xl">
                         {t ? t('chat.readonly', 'This is a read-only support channel.') : 'This is a read-only support channel.'}
                     </div>
                 )}
             </div>
-        </div>
+        </Card>
     );
 };
 

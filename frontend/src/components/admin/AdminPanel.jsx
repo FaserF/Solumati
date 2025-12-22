@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useI18n } from '../../context/I18nContext';
 import ChatWindow from '../social/ChatWindow';
-import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone, Upload, Download, HardDrive, Scale, Phone } from 'lucide-react';
+import { Shield, Settings, Users, Save, RefreshCw, AlertTriangle, Check, UserX, XCircle, ArrowLeft, UserMinus, UserPlus, Edit2, Activity, Eye, EyeOff, Server, Globe, Database, FileText, Ban, Github, Info, Beaker, Zap, Mail, Unlock, MessageSquare, LifeBuoy, CheckCircle, Smartphone, Upload, Download, HardDrive, Scale, Phone, Wifi } from 'lucide-react';
 import { API_URL, APP_VERSION, APP_RELEASE_TYPE } from '../../config';
 
 const AdminPanel = () => {
@@ -101,6 +101,7 @@ const AdminPanel = () => {
         if (activeTab === 'settings' && canManageSettings) fetchSettings();
         if (activeTab === 'diagnostics' && canViewDiagnostics) fetchDiagnostics();
         if (activeTab === 'inbox') fetchConversations();
+        if (activeTab === 'demo' && isAdmin) fetchDemoStatus();
         setLoading(false);
     };
 
@@ -152,6 +153,49 @@ const AdminPanel = () => {
             if (changeRes.ok) setChangelog(await changeRes.json());
         } catch { setError("Diagnostics failed."); }
         setLoading(false);
+    };
+
+    // Demo Mode Handlers
+    const fetchDemoStatus = async () => {
+        try {
+            const statusRes = await fetch(`${API_URL}/demo/status`);
+            const errorsRes = await fetch(`${API_URL}/demo/errors`, { headers: authHeaders });
+
+            if (statusRes.ok && errorsRes.ok) {
+                const status = await statusRes.json();
+                const errors = await errorsRes.json();
+                setSettings(prev => ({ ...prev, demo_status: status, demo_errors: errors }));
+            }
+        } catch { setError("Could not load demo status."); }
+    };
+
+    const handleDemoAction = async (action) => {
+        setLoading(true);
+        try {
+            let url = `${API_URL}/demo/`;
+            if (action === 'stop') {
+                url += 'stop';
+            } else {
+                url += `start?mode=${action}`;
+            }
+            const res = await fetch(url, { method: 'POST', headers: authHeaders });
+            if (res.ok) {
+                await fetchDemoStatus();
+            } else {
+                const err = await res.json();
+                alert("Error: " + (err.detail || "Unknown"));
+            }
+        } catch { alert("Network Error"); }
+        setLoading(false);
+    };
+
+    const clearDemoErrors = async () => {
+        try {
+            await fetch(`${API_URL}/demo/errors`, { method: 'DELETE', headers: authHeaders });
+            await fetchDemoStatus();
+        } catch {
+            // Silently handle errors
+        }
     };
 
     // Backup & Migration Handlers
@@ -260,12 +304,12 @@ const AdminPanel = () => {
         } catch { alert("Network Error"); }
     };
 
-    const handleAction = async (id, action) => {
+    const handleAction = async (id, action, data = {}) => {
         try {
             const res = await fetch(`${API_URL}/admin/users/${id}/punish`, {
                 method: 'PUT',
                 headers: authHeaders,
-                body: JSON.stringify({ action: action })
+                body: JSON.stringify({ action: action, ...data })
             });
 
             if (res.ok) {
@@ -566,6 +610,11 @@ const AdminPanel = () => {
                         <HardDrive size={18} /> Backup & Migration
                     </button>
                 )}
+                {isAdmin && (
+                    <button onClick={() => setActiveTab('demo')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'demo' ? 'bg-yellow-500 text-white' : 'bg-white dark:bg-gray-800 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700'}`}>
+                        <Zap size={18} /> Demo Mode
+                    </button>
+                )}
             </div>
 
             {/* Content Area */}
@@ -778,6 +827,113 @@ const AdminPanel = () => {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                )
+            }
+
+            {/* 4. DEMO MODE TAB */}
+            {
+                activeTab === 'demo' && isAdmin && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 animate-in fade-in duration-300">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-4">
+                            <Zap className="text-yellow-500" /> Demo & Simulation Mode
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            {/* Mode 1: Local */}
+                            <div className={`p-6 rounded-xl border-2 transition-all ${settings?.demo_status?.active_mode === 'local' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                    <Wifi size={20} className="text-indigo-500" /> Mode 1: Local Simulation
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 h-12">
+                                    Simulates high activity (10k users) with fake WebSocket events. Nothing is saved to the database. Safe for visualization testing.
+                                </p>
+                                <button
+                                    onClick={() => handleDemoAction('local')}
+                                    disabled={loading || settings?.demo_status?.active_mode}
+                                    className={`w-full py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${settings?.demo_status?.active_mode === 'local' ? 'bg-indigo-600 text-white cursor-default' : 'bg-gray-100 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'}`}
+                                >
+                                    {settings?.demo_status?.active_mode === 'local' ? 'Active' : 'Start Local Demo'}
+                                </button>
+                            </div>
+
+                            {/* Mode 2: Persistent */}
+                            <div className={`p-6 rounded-xl border-2 transition-all ${settings?.demo_status?.active_mode === 'persistent' ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                    <Database size={20} className="text-red-500" /> Mode 2: Real-time Persistence
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 h-12">
+                                    Simulates real user actions (Creating Users, Sending Messages) and saves them to the DB. Also captures system errors.
+                                </p>
+                                <button
+                                    onClick={() => handleDemoAction('persistent')}
+                                    disabled={loading || settings?.demo_status?.active_mode}
+                                    className={`w-full py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${settings?.demo_status?.active_mode === 'persistent' ? 'bg-red-600 text-white cursor-default' : 'bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400'}`}
+                                >
+                                    {settings?.demo_status?.active_mode === 'persistent' ? 'Active' : 'Start Real-time Demo'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Stop Button */}
+                        {settings?.demo_status?.active_mode && (
+                            <div className="mb-8 flex justify-center">
+                                <button
+                                    onClick={() => handleDemoAction('stop')}
+                                    className="bg-red-600 text-white hover:bg-red-700 px-8 py-3 rounded-full font-bold shadow-lg shadow-red-500/30 flex items-center gap-2"
+                                >
+                                    <Ban size={18} /> STOP SIMULATION
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Error Log (Mode 2) */}
+                        {settings?.demo_errors?.length > 0 && (
+                            <div className="mt-8 border-t dark:border-gray-700 pt-8">
+                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-red-600">
+                                    <AlertTriangle /> Live Error Log
+                                </h3>
+                                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-red-100/50 dark:bg-red-900/20 text-red-800 dark:text-red-200">
+                                            <tr>
+                                                <th className="p-3 text-xs font-bold uppercase">Time</th>
+                                                <th className="p-3 text-xs font-bold uppercase">Error</th>
+                                                <th className="p-3 text-xs font-bold uppercase">Details</th>
+                                                <th className="p-3 text-xs font-bold uppercase text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-red-200 dark:divide-red-900/30">
+                                            {settings.demo_errors.map(err => (
+                                                <tr key={err.id}>
+                                                    <td className="p-3 text-xs opacity-70 whitespace-nowrap">{formatDate(err.timestamp)}</td>
+                                                    <td className="p-3 text-sm font-bold text-red-700 dark:text-red-400">{err.title}</td>
+                                                    <td className="p-3 text-sm opacity-80 max-w-md truncate" title={err.details}>{err.details}</td>
+                                                    <td className="p-3 text-right">
+                                                        <a
+                                                            href={err.github_issue_link}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 bg-black text-white px-3 py-1 rounded text-xs font-bold hover:bg-gray-800"
+                                                        >
+                                                            <Github size={12} /> Create Issue
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="mt-2 text-right">
+                                    <button
+                                        onClick={clearDemoErrors}
+                                        className="text-xs text-red-600 hover:underline"
+                                    >
+                                        Clear Log
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )
             }
@@ -1623,7 +1779,11 @@ const AdminPanel = () => {
                                 <button onClick={() => setPunishModal({ show: false, userId: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
                                 <button
                                     onClick={() => {
-                                        handleAction(punishModal.userId, 'deactivate');
+                                        // Execute punishment action
+                                        handleAction(punishModal.userId, punishReason === 'AdminDeactivation' ? 'deactivate' : 'suspend', {
+                                            reason: customReason,
+                                            duration_hours: parseInt(banHours) || 0
+                                        });
                                         setPunishModal({ show: false, userId: null });
                                     }}
                                     className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700"

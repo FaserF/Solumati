@@ -1,0 +1,56 @@
+name: "🐛 Bug Report"
+description: "Found something wrong? Report it here."
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Your feedback helps us improve Solumati.
+  - type: input
+    id: version
+    attributes:
+      label: "Solumati Version"
+      description: "What version of Solumati are you using? (e.g. v2025.12.3)"
+      placeholder: "v..."
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "I encountered a problem when..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Tell us how to reproduce the issue."
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen?"
+      placeholder: "The application should show..."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevant Logs / Console Output"
+      description: "Please share any logs or console errors if available."
+      render: shell
+  - type: textarea
+    id: additional
+    attributes:
+      label: "Additional Context"
+      description: "Add any other context about the problem here (e.g., screenshots, OS, Browser)."

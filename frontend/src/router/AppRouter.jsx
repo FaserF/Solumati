@@ -28,6 +28,7 @@ import VerificationBanner from '../components/common/VerificationBanner';
 import ConsentBanner from '../components/common/ConsentBanner';
 import NotificationPermission from '../components/common/NotificationPermission';
 import AuthLayout from '../components/layout/AuthLayout';
+import DemoBanner from '../components/common/DemoBanner';
 
 
 // Wrapper to handle URL params like ?reset_token=... and redirect
@@ -124,6 +125,7 @@ const MainLayout = () => {
     return (
         <div className="w-full h-full min-h-screen">
             {/* Global Banners */}
+            <DemoBanner />
             <VerificationBanner onClose={() => { }} />
             <ConsentBanner t={t} onNavigate={(path) => navigate(path === 'legal' ? '/imprint' : '/' + path)} />
             <NotificationPermission t={t} />
