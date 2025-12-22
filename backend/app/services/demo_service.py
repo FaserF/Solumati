@@ -4,7 +4,11 @@ import random
 from datetime import datetime
 from typing import List, Optional
 
-from faker import Faker
+try:
+    from faker import Faker
+except ImportError:
+    Faker = None
+
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
@@ -17,7 +21,11 @@ class DemoService:
     def __init__(self):
         self.active_mode: Optional[str] = None  # 'local' or 'persistent'
         self.task: Optional[asyncio.Task] = None
-        self.faker = Faker()
+        if Faker:
+            self.faker = Faker()
+        else:
+            self.faker = None
+            logger.warning("Faker library not installed. Demo features will generate errors or use fallbacks.")
         self.errors: List[dict] = []
         self._stop_event = asyncio.Event()
 
@@ -63,6 +71,10 @@ class DemoService:
 
     async def _run_local_simulation(self):
         """Mode 1: Broadcast fake data without saving."""
+        if not self.faker:
+            logger.warning("Faker not active, skipping local simulation step.")
+            return
+
         # 1. Simulate Chat Message (Group simulating behavior)
         # We send a "demo_message" event that the frontend can display in a special banner/feed
         msg = self.faker.sentence()
@@ -107,6 +119,9 @@ class DemoService:
     async def _create_dummy_user(self, db: Session):
         # Create a user in DB
         try:
+            if not self.faker:
+                return
+
             profile = self.faker.profile()
             username = profile['username']
             email = profile['mail']
@@ -145,7 +160,9 @@ class DemoService:
                 return
 
             sender, receiver = random.sample(users, 2)
-            content = self.faker.sentence()
+            content = "This is a demo message."
+            if self.faker:
+                content = self.faker.sentence()
 
             # Logic similar to chat.py router
             # Reuse logic? For now, simple insert
