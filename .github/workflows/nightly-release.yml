@@ -193,7 +193,7 @@ jobs:
     with:
       version: ${{ needs.nightly-release.outputs.version }}
     permissions:
-      contents: read
+      contents: write
       packages: write
 
   build-android:
