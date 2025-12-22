@@ -2,15 +2,15 @@
 Settings Service
 Centralized, typed access to system settings with caching.
 """
+
 import json
 import logging
 from functools import lru_cache
 from typing import Any, Dict, Optional, Type, TypeVar
 
+from app.db import models, schemas
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
-from app.db import models, schemas
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,17 @@ class SettingsService:
             return _settings_cache[key]
 
         try:
-            record = db.query(models.SystemSetting).filter(models.SystemSetting.key == key).first()
+            record = (
+                db.query(models.SystemSetting)
+                .filter(models.SystemSetting.key == key)
+                .first()
+            )
             if record:
-                value = json.loads(record.value) if isinstance(record.value, str) else record.value
+                value = (
+                    json.loads(record.value)
+                    if isinstance(record.value, str)
+                    else record.value
+                )
                 _settings_cache[key] = value
                 return value
         except Exception as e:
@@ -91,7 +99,11 @@ class SettingsService:
             True if successful
         """
         try:
-            record = db.query(models.SystemSetting).filter(models.SystemSetting.key == key).first()
+            record = (
+                db.query(models.SystemSetting)
+                .filter(models.SystemSetting.key == key)
+                .first()
+            )
             value_json = json.dumps(value)
 
             if record:

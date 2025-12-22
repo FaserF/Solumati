@@ -174,7 +174,7 @@ def test_guest_logic_unit():
         about_me="Full Info",
         image_url="/img.jpg",
         score=85.0,
-        match_details=[]
+        match_details=[],
     )
     real_result = schemas.MatchResult(
         user_id=11,
@@ -182,7 +182,7 @@ def test_guest_logic_unit():
         about_me="Upgrade to see full profile",
         image_url=None,  # Hidden for guest
         score=75.0,
-        match_details=["RESTRICTED_VIEW"]
+        match_details=["RESTRICTED_VIEW"],
     )
 
     # Mock DB Session
@@ -190,8 +190,11 @@ def test_guest_logic_unit():
     mock_db.query.return_value.filter.return_value.first.return_value = guest_user
 
     # Patch the services
-    with patch.object(users_router.user_service, 'get_candidates') as mock_candidates, \
-         patch.object(users_router.match_service, 'get_matches_for_user') as mock_matches:
+    with patch.object(
+        users_router.user_service, "get_candidates"
+    ) as mock_candidates, patch.object(
+        users_router.match_service, "get_matches_for_user"
+    ) as mock_matches:
 
         mock_candidates.return_value = []  # Not used directly in assertion
         mock_matches.return_value = [dummy_result, real_result]

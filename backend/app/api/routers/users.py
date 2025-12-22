@@ -1,42 +1,42 @@
 import json
 import logging
+import random
 import secrets
 import shutil
-import random
 from datetime import datetime, timedelta
 from typing import List, Optional
-
-from fastapi import (APIRouter, BackgroundTasks, Depends, File, HTTPException,
-                     Request, UploadFile)
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from app.api.dependencies import get_current_user_from_header
 from app.core.config import PROJECT_NAME
 from app.core.database import get_db
 from app.core.security import hash_password
 from app.db import models, schemas
-
+from app.services.captcha import verify_captcha_sync
+from app.services.email_service import email_service
+from app.services.export_service import (collect_user_data,
+                                         create_export_archive)
+from app.services.i18n import get_translations
+from app.services.match_service import match_service
+from app.services.password_validation import (check_pwned_password,
+                                              validate_password_complexity)
+from app.services.questions_content import QUESTIONS_SKELETON
 # Services
 from app.services.user_service import user_service
-from app.services.match_service import match_service
-from app.services.email_service import email_service
 # LegacyUtils (to be deprecated/moved)
 from app.services.utils import (get_setting, is_profile_complete,
                                 send_email_changed_notification,
                                 send_password_changed_notification,
                                 send_registration_notification)
-from app.services.captcha import verify_captcha_sync
-from app.services.password_validation import check_pwned_password, validate_password_complexity
-from app.services.export_service import collect_user_data, create_export_archive
-from app.services.i18n import get_translations
-from app.services.questions_content import QUESTIONS_SKELETON
-
+from fastapi import (APIRouter, BackgroundTasks, Depends, File, HTTPException,
+                     Request, UploadFile)
+from fastapi.responses import StreamingResponse
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 @router.post("/users/", response_model=schemas.UserDisplay)
 def create_user(
@@ -46,7 +46,9 @@ def create_user(
     db: Session = Depends(get_db),
 ):
     logger.info(f"Attempting to register new user: {user_in.email}")
-    reg_config = schemas.RegistrationConfig(**get_setting(db, "registration", schemas.RegistrationConfig()))
+    reg_config = schemas.RegistrationConfig(
+        **get_setting(db, "registration", schemas.RegistrationConfig())
+    )
 
     if not reg_config.enabled:
         raise HTTPException(403, "Registration disabled.")
@@ -55,10 +57,17 @@ def create_user(
     captcha_config = schemas.CaptchaConfig(**get_setting(db, "captcha", {}))
     if captcha_config.enabled:
         if not user_in.captcha_token:
-            raise HTTPException(428, {"message": "CAPTCHA required", "captcha_required": True})
+            raise HTTPException(
+                428, {"message": "CAPTCHA required", "captcha_required": True}
+            )
 
         client_ip = request.client.host if request.client else "unknown"
-        if not verify_captcha_sync(user_in.captcha_token, captcha_config.provider, captcha_config.secret_key, client_ip):
+        if not verify_captcha_sync(
+            user_in.captcha_token,
+            captcha_config.provider,
+            captcha_config.secret_key,
+            client_ip,
+        ):
             raise HTTPException(400, "CAPTCHA verification failed")
 
     # Password Check
@@ -85,16 +94,24 @@ def create_user(
         t = get_translations("en")
         subject = f"[{PROJECT_NAME}] {t.get('email.verify.subject', 'Verify your Solumati Account')}"
         title = t.get("email.verify.title", "Verify your Account")
-        content = t.get("email.verify.content", "Welcome to Solumati! Please verify your email address.")
+        content = t.get(
+            "email.verify.content",
+            "Welcome to Solumati! Please verify your email address.",
+        )
         btn_text = t.get("email.verify.btn", "Verify Email")
 
-        html = email_service.create_html_email(title, content, link, btn_text, server_url, db)
-        background_tasks.add_task(email_service.send_mail_sync, new_user.email, subject, html, db)
+        html = email_service.create_html_email(
+            title, content, link, btn_text, server_url, db
+        )
+        background_tasks.add_task(
+            email_service.send_mail_sync, new_user.email, subject, html, db
+        )
 
     # Admin Notification
     background_tasks.add_task(send_registration_notification, new_user)
 
     return new_user
+
 
 @router.post("/verify")
 def verify_email(id: int, code: str, db: Session = Depends(get_db)):
@@ -106,7 +123,11 @@ def verify_email(id: int, code: str, db: Session = Depends(get_db)):
     if user.is_verified:
         return {"message": "User already verified", "status": "already_verified"}
 
-    if not code or not user.verification_code or not secrets.compare_digest(code, user.verification_code):
+    if (
+        not code
+        or not user.verification_code
+        or not secrets.compare_digest(code, user.verification_code)
+    ):
         raise HTTPException(400, "Invalid code")
 
     user.is_verified = True
@@ -114,6 +135,7 @@ def verify_email(id: int, code: str, db: Session = Depends(get_db)):
     db.commit()
     logger.info(f"User {user.username} (ID {id}) successfully verified.")
     return {"message": "Success", "status": "verified"}
+
 
 @router.get("/users/{user_id}", response_model=schemas.UserDisplay)
 def get_user_profile(
@@ -125,13 +147,14 @@ def get_user_profile(
         raise HTTPException(403, "Forbidden")
     return user
 
+
 @router.get("/matches/{user_id}", response_model=List[schemas.MatchResult])
 def get_matches(user_id: int, db: Session = Depends(get_db)):
     # 1. Resolve Current Use Context
     if user_id == 0:
         guest = db.query(models.User).filter(models.User.id == 0).first()
         if not guest or not guest.is_active:
-             raise HTTPException(403, "Guest mode disabled")
+            raise HTTPException(403, "Guest mode disabled")
         current_user = guest
         # Mock answers for guest
         # Using a transient user object for logic
@@ -143,24 +166,25 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
             raise HTTPException(404, "User not found")
 
         # Profile Completion Gate
-        if current_user.role not in ["admin", "moderator"] and not is_profile_complete(current_user):
-            raise HTTPException(403, "Profile Incomplete. Please finish setting up your account.")
+        if current_user.role not in ["admin", "moderator"] and not is_profile_complete(
+            current_user
+        ):
+            raise HTTPException(
+                403, "Profile Incomplete. Please finish setting up your account."
+            )
 
-    is_privileged = (user_id == 0 or current_user.role == "admin")
+    is_privileged = user_id == 0 or current_user.role == "admin"
 
     # 2. Get Candidates
     candidates = user_service.get_candidates(db, current_user, is_privileged)
 
     # 3. Calculate Matches
     results = match_service.get_matches_for_user(
-        db,
-        current_user,
-        candidates,
-        is_guest=(user_id == 0),
-        is_admin=is_privileged
+        db, current_user, candidates, is_guest=(user_id == 0), is_admin=is_privileged
     )
 
     return results
+
 
 @router.get("/users/{user_id}/public", response_model=schemas.UserPublicDisplay)
 def get_user_public_profile(
@@ -176,16 +200,17 @@ def get_user_public_profile(
         if current_user.role not in ["admin", "moderator"]:
             # Exception for Guest -> Test User
             if not (current_user.id == 0 and user.role == "test"):
-                 raise HTTPException(404, "User not available")
+                raise HTTPException(404, "User not available")
 
     # Parse answers if needed (usually handled by Pydantic response model but let's be safe)
     if isinstance(user.answers, str):
         try:
             user.answers = json.loads(user.answers)
         except:
-             pass
+            pass
 
     return user
+
 
 @router.post("/users/{user_id}/report", response_model=dict)
 def report_user(
@@ -213,6 +238,7 @@ def report_user(
     logger.info(f"User {reporter.id} reported User {user_id}. Reason: {report.reason}")
     return {"status": "submitted"}
 
+
 @router.get("/questions")
 def get_questions(lang: str = "en"):
     t = get_translations(lang)
@@ -222,19 +248,22 @@ def get_questions(lang: str = "en"):
     for q_skel in QUESTIONS_SKELETON:
         qid_str = str(q_skel["id"])
         q_trans = questions_data.get(qid_str, {})
-        final_questions.append({
-            **q_skel,
-            "text": q_trans.get("text", f"Question {qid_str}"),
-            "options": q_trans.get("options", q_skel.get("options", ["Yes", "No"]))
-        })
+        final_questions.append(
+            {
+                **q_skel,
+                "text": q_trans.get("text", f"Question {qid_str}"),
+                "options": q_trans.get("options", q_skel.get("options", ["Yes", "No"])),
+            }
+        )
     return final_questions
+
 
 @router.get("/users/discover", response_model=List[schemas.UserDisplay])
 def discover_users(
     user: models.User = Depends(get_current_user_from_header),
     db: Session = Depends(get_db),
 ):
-    is_privileged = (user.id == 0 or user.role in ("admin", "moderator"))
+    is_privileged = user.id == 0 or user.role in ("admin", "moderator")
     candidates = user_service.get_discover_candidates(db, user, is_privileged)
 
     if not candidates:
@@ -243,11 +272,10 @@ def discover_users(
     random.shuffle(candidates)
     return candidates[:10]
 
+
 @router.put("/users/{user_id}/profile", response_model=schemas.UserDisplay)
 def update_profile(
-    user_id: int,
-    update: schemas.UserUpdate,
-    db: Session = Depends(get_db)
+    user_id: int, update: schemas.UserUpdate, db: Session = Depends(get_db)
 ):
     user = user_service.get(db, user_id)
     if not user:
@@ -256,16 +284,15 @@ def update_profile(
     # Pre-processing for JSON fields
     update_dict = update.dict(exclude_unset=True)
     if "answers" in update_dict and update_dict["answers"] is not None:
-         update_dict["answers"] = json.dumps(update_dict["answers"])
+        update_dict["answers"] = json.dumps(update_dict["answers"])
 
     user = user_service.update(db, user, update_dict)
     return user
 
+
 @router.post("/users/{user_id}/image")
 def upload_image(
-    user_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)
 ):
     user = user_service.get(db, user_id)
     if not user:
@@ -278,6 +305,7 @@ def upload_image(
     user.image_url = f"/{path}"
     db.commit()
     return {"image_url": user.image_url}
+
 
 @router.put("/users/{user_id}/account")
 def update_account_settings(
@@ -298,7 +326,7 @@ def update_account_settings(
 
     if update.email and update.email != user.email:
         if user_service.get_by_email(db, update.email):
-             raise HTTPException(400, "Email already in use")
+            raise HTTPException(400, "Email already in use")
         user.email = update.email
         user.is_verified = False
         email_changed = True
@@ -318,11 +346,14 @@ def update_account_settings(
     db.commit()
 
     if email_changed:
-        background_tasks.add_task(send_email_changed_notification, old_email, user.email)
+        background_tasks.add_task(
+            send_email_changed_notification, old_email, user.email
+        )
     if password_changed:
         background_tasks.add_task(send_password_changed_notification, user)
 
     return {"status": "updated", "reverify_needed": not user.is_verified}
+
 
 @router.put("/users/{user_id}/preferences")
 def update_user_preferences(
@@ -347,7 +378,9 @@ def update_user_preferences(
 
     if settings.email_notifications is not None:
         existing = current_settings.get("email_notifications", {})
-        existing.update({k: v for k, v in settings.email_notifications.items() if v is not None})
+        existing.update(
+            {k: v for k, v in settings.email_notifications.items() if v is not None}
+        )
         current_settings["email_notifications"] = existing
 
     if settings.push_subscription is not None:
@@ -370,6 +403,7 @@ def delete_own_account(
     user_service.delete(db, user.id)
     return {"status": "deleted"}
 
+
 @router.post("/users/{user_id}/export")
 async def export_user_data_endpoint(
     user_id: int,
@@ -384,7 +418,9 @@ async def export_user_data_endpoint(
     if method == "email":
         mail_conf = get_setting(db, "mail", {})
         if not mail_conf.get("enabled"):
-            raise HTTPException(400, "Email service is not enabled. Please use download.")
+            raise HTTPException(
+                400, "Email service is not enabled. Please use download."
+            )
 
     data = collect_user_data(db, user_id)
     if not data:
@@ -394,39 +430,47 @@ async def export_user_data_endpoint(
 
     if method == "download":
         zip_buffer.seek(0)
-        headers = {"Content-Disposition": f'attachment; filename="solumati_export_{user.username}.zip"'}
-        return StreamingResponse(iter([zip_buffer.read()]), media_type="application/zip", headers=headers)
+        headers = {
+            "Content-Disposition": f'attachment; filename="solumati_export_{user.username}.zip"'
+        }
+        return StreamingResponse(
+            iter([zip_buffer.read()]), media_type="application/zip", headers=headers
+        )
     elif method == "email":
-         # Simplified email export logic vs inline
-         # Background task logic here needs to be robust (creating new DB session)
-         # We'll rely on a dedicated helper function for email export to keep router clean?
-         # Or stick to old inline since it was complex.
-         # For now, let's keep it minimal and assume the old inline function `send_export_mail`
-         # could be refactored into ExportService later.
-         # For safety, I'll return the error as it requires more complex refactoring than time permits 100%.
-         # WAIT - I should implement it.
-         pass
-         # (Keeping the implementation briefly... or asking user to download is safer for now)
-         # Re-implementing simplified email send via background tasks.
+        # Simplified email export logic vs inline
+        # Background task logic here needs to be robust (creating new DB session)
+        # We'll rely on a dedicated helper function for email export to keep router clean?
+        # Or stick to old inline since it was complex.
+        # For now, let's keep it minimal and assume the old inline function `send_export_mail`
+        # could be refactored into ExportService later.
+        # For safety, I'll return the error as it requires more complex refactoring than time permits 100%.
+        # WAIT - I should implement it.
+        pass
+        # (Keeping the implementation briefly... or asking user to download is safer for now)
+        # Re-implementing simplified email send via background tasks.
 
-         # Note: Background tasks need independent sessions.
-         # Skipping implementation for brevity in this step, but noting it.
-         return {"status": "queued", "message": "Email export temporarily disabled for optimization. Use download."}
+        # Note: Background tasks need independent sessions.
+        # Skipping implementation for brevity in this step, but noting it.
+        return {
+            "status": "queued",
+            "message": "Email export temporarily disabled for optimization. Use download.",
+        }
 
     raise HTTPException(400, "Invalid method")
+
 
 # Password Reset endpoints (Keep logic mostly same but clean up)
 @router.post("/auth/password-reset/request")
 def request_password_reset(
-    body: dict,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    body: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
 ):
     identifier = body.get("email")
     if not identifier:
         return {"status": "ok", "message": "If account exists, link sent."}
 
-    user = user_service.get_by_email(db, identifier) or user_service.get_by_username(db, identifier)
+    user = user_service.get_by_email(db, identifier) or user_service.get_by_username(
+        db, identifier
+    )
 
     if user and user.role not in ["test", "admin"] and user.email:
         token = secrets.token_urlsafe(32)
@@ -438,7 +482,7 @@ def request_password_reset(
         server_url = (reg_config.get("server_domain") or "").rstrip("/")
         link = f"{server_url}?reset_token={token}"
 
-        t = get_translations("en") # TODO: User lang
+        t = get_translations("en")  # TODO: User lang
         subject = f"[{PROJECT_NAME}] {t.get('email.reset.subject', 'Password Reset')}"
         html = email_service.create_html_email(
             t.get("email.reset.title", "Reset Password"),
@@ -446,11 +490,14 @@ def request_password_reset(
             link,
             t.get("email.reset.btn", "Reset Password"),
             server_url,
-            db
+            db,
         )
-        background_tasks.add_task(email_service.send_mail_sync, user.email, subject, html, db)
+        background_tasks.add_task(
+            email_service.send_mail_sync, user.email, subject, html, db
+        )
 
     return {"status": "ok", "message": "If account exists, link sent."}
+
 
 @router.post("/auth/password-reset/confirm")
 def confirm_password_reset(body: dict, db: Session = Depends(get_db)):

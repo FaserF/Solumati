@@ -1,6 +1,8 @@
-from typing import Dict, List
 import json
+from typing import Dict, List
+
 from fastapi import WebSocket
+
 
 class ConnectionManager:
     def __init__(self):
@@ -40,6 +42,7 @@ class ConnectionManager:
                     await connection.send_json(message)
                 except Exception:
                     pass
+
 
 # Global instance
 manager = ConnectionManager()

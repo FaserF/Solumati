@@ -1,9 +1,10 @@
 import json
 import random
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Optional
+
 from app.db import models, schemas
 from app.services.questions_content import QUESTIONS_SKELETON
+from sqlalchemy.orm import Session
 
 # O(1) Lookup for question metadata
 QUESTION_METADATA = {
@@ -11,8 +12,15 @@ QUESTION_METADATA = {
     for q in QUESTIONS_SKELETON
 }
 
+
 class MatchService:
-    def calculate_compatibility(self, answers_a_raw: str | dict | list, answers_b_raw: str | dict | list, intent_a: str, intent_b: str) -> dict:
+    def calculate_compatibility(
+        self,
+        answers_a_raw: str | dict | list,
+        answers_b_raw: str | dict | list,
+        intent_a: str,
+        intent_b: str,
+    ) -> dict:
         """
         Calculates detailed compatibility score.
         Optimized to use cached metadata and avoid re-parsing overhead where possible.
@@ -27,7 +35,11 @@ class MatchService:
         ans_b = self._parse_answers(answers_b_raw)
 
         if not ans_a or not ans_b:
-             return {"score": intent_score if intent_score < 100 else 50, "details": [], "common": []}
+            return {
+                "score": intent_score if intent_score < 100 else 50,
+                "details": [],
+                "common": [],
+            }
 
         total_weight = 0
         earned_weight = 0
@@ -35,10 +47,12 @@ class MatchService:
 
         # Intersection of answered questions
         # Using string keys because JSON keys are always strings
-        common_keys = set(str(k) for k in ans_a.keys()) & set(str(k) for k in ans_b.keys())
+        common_keys = set(str(k) for k in ans_a.keys()) & set(
+            str(k) for k in ans_b.keys()
+        )
 
         for qid_str in common_keys:
-            qid = int(qid_str) # Conversion overhead but acceptable
+            qid = int(qid_str)  # Conversion overhead but acceptable
             meta = QUESTION_METADATA.get(qid)
 
             if not meta:
@@ -82,7 +96,14 @@ class MatchService:
                 return {}
         return {}
 
-    def get_matches_for_user(self, db: Session, user: models.User, candidates: List[models.User], is_guest: bool, is_admin: bool) -> List[schemas.MatchResult]:
+    def get_matches_for_user(
+        self,
+        db: Session,
+        user: models.User,
+        candidates: List[models.User],
+        is_guest: bool,
+        is_admin: bool,
+    ) -> List[schemas.MatchResult]:
         """
         Process candidates and return sorted results.
         """
@@ -109,7 +130,8 @@ class MatchService:
 
             # Escape Hatch
             if (is_guest or is_admin) and other.role == "test":
-                if score <= 0: score = 95
+                if score <= 0:
+                    score = 95
                 compatibility["details"].append("Debug Mode: Dummy Match")
 
             # Obfuscation
@@ -119,7 +141,9 @@ class MatchService:
             match_details = compatibility["details"]
 
             if is_guest and other.role != "test":
-                final_username = f"{other.username[0]}..." if other.username else "User..."
+                final_username = (
+                    f"{other.username[0]}..." if other.username else "User..."
+                )
                 final_about = random.choice(ADS)
                 match_details = ["RESTRICTED_VIEW"]
                 if score <= 0:
@@ -139,5 +163,6 @@ class MatchService:
 
         results.sort(key=lambda x: x.score, reverse=True)
         return results
+
 
 match_service = MatchService()

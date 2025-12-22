@@ -2,6 +2,7 @@
 Centralized Exception Handling
 Provides structured error responses and request ID tracing.
 """
+
 import logging
 import uuid
 from typing import Callable
@@ -16,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 class AppException(Exception):
     """Base application exception with structured error info."""
+
     def __init__(
         self,
         message: str,
         code: str = "INTERNAL_ERROR",
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        field: str = None
+        field: str = None,
     ):
         self.message = message
         self.code = code
@@ -32,50 +34,49 @@ class AppException(Exception):
 
 class NotFoundError(AppException):
     """Resource not found."""
+
     def __init__(self, message: str = "Resource not found", field: str = None):
         super().__init__(message, "NOT_FOUND", status.HTTP_404_NOT_FOUND, field)
 
 
 class ValidationError(AppException):
     """Validation failed."""
+
     def __init__(self, message: str, field: str = None):
-        super().__init__(message, "VALIDATION_ERROR", status.HTTP_422_UNPROCESSABLE_ENTITY, field)
+        super().__init__(
+            message, "VALIDATION_ERROR", status.HTTP_422_UNPROCESSABLE_ENTITY, field
+        )
 
 
 class AuthenticationError(AppException):
     """Authentication failed."""
+
     def __init__(self, message: str = "Authentication required"):
         super().__init__(message, "AUTH_REQUIRED", status.HTTP_401_UNAUTHORIZED)
 
 
 class AuthorizationError(AppException):
     """Authorization failed."""
+
     def __init__(self, message: str = "Permission denied"):
         super().__init__(message, "FORBIDDEN", status.HTTP_403_FORBIDDEN)
 
 
 class RateLimitError(AppException):
     """Rate limit exceeded."""
+
     def __init__(self, message: str = "Too many requests"):
         super().__init__(message, "RATE_LIMITED", status.HTTP_429_TOO_MANY_REQUESTS)
 
 
 def _build_error_response(
-    request_id: str,
-    code: str,
-    message: str,
-    status_code: int,
-    field: str = None
+    request_id: str, code: str, message: str, status_code: int, field: str = None
 ) -> dict:
     """Build standardized error response."""
     return {
         "success": False,
-        "error": {
-            "code": code,
-            "message": message,
-            "field": field
-        },
-        "request_id": request_id
+        "error": {"code": code, "message": message, "field": field},
+        "request_id": request_id,
     }
 
 
@@ -99,7 +100,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             content=_build_error_response(
                 request_id, exc.code, exc.message, exc.status_code, exc.field
-            )
+            ),
         )
 
     @app.exception_handler(StarletteHTTPException)
@@ -109,15 +110,14 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content=_build_error_response(
-                request_id,
-                f"HTTP_{exc.status_code}",
-                str(exc.detail),
-                exc.status_code
-            )
+                request_id, f"HTTP_{exc.status_code}", str(exc.detail), exc.status_code
+            ),
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ):
         request_id = getattr(request.state, "request_id", "unknown")
         errors = []
         for error in exc.errors():
@@ -131,12 +131,9 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content={
                 "success": False,
-                "error": {
-                    "code": "VALIDATION_ERROR",
-                    "message": message
-                },
-                "request_id": request_id
-            }
+                "error": {"code": "VALIDATION_ERROR", "message": message},
+                "request_id": request_id,
+            },
         )
 
     @app.exception_handler(Exception)
@@ -149,6 +146,6 @@ def register_exception_handlers(app: FastAPI) -> None:
                 request_id,
                 "INTERNAL_ERROR",
                 "An unexpected error occurred",
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            ),
         )

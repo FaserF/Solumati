@@ -72,4 +72,7 @@ def test_export_email(client, test_db):
 
         assert response.status_code == 200
         # Email export is temporarily disabled per backend implementation
-        assert response.json()["message"] == "Email export temporarily disabled for optimization. Use download."
+        assert (
+            response.json()["message"]
+            == "Email export temporarily disabled for optimization. Use download."
+        )

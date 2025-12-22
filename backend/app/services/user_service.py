@@ -1,13 +1,15 @@
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from app.db import models, schemas
-from app.services.base import BaseService
-from app.core.security import hash_password
-from app.services.utils import generate_unique_username
-from datetime import datetime
 import json
 import secrets
+from datetime import datetime
+from typing import List, Optional
+
+from app.core.security import hash_password
+from app.db import models, schemas
+from app.services.base import BaseService
+from app.services.utils import generate_unique_username
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 
 class UserService(BaseService[models.User]):
     def get_by_email(self, db: Session, email: str) -> Optional[models.User]:
@@ -16,7 +18,9 @@ class UserService(BaseService[models.User]):
     def get_by_username(self, db: Session, username: str) -> Optional[models.User]:
         return db.query(self.model).filter(self.model.username == username).first()
 
-    def create_user(self, db: Session, user_in: schemas.UserCreate, is_verified: bool = False) -> models.User:
+    def create_user(
+        self, db: Session, user_in: schemas.UserCreate, is_verified: bool = False
+    ) -> models.User:
         hashed_pw = hash_password(user_in.password)
         secure_code = secrets.token_urlsafe(32)
         verification_code = secure_code if not is_verified else None
@@ -25,10 +29,10 @@ class UserService(BaseService[models.User]):
         answers_json = "{}"
         if user_in.answers:
             if isinstance(user_in.answers, dict):
-                 answers_json = json.dumps(user_in.answers)
+                answers_json = json.dumps(user_in.answers)
             else:
-                 # Fallback if list or other type passed (though schema says dict usually)
-                 pass
+                # Fallback if list or other type passed (though schema says dict usually)
+                pass
 
         db_obj = models.User(
             email=user_in.email,
@@ -48,7 +52,9 @@ class UserService(BaseService[models.User]):
         db.refresh(db_obj)
         return db_obj
 
-    def get_candidates(self, db: Session, user: models.User, is_privileged: bool) -> List[models.User]:
+    def get_candidates(
+        self, db: Session, user: models.User, is_privileged: bool
+    ) -> List[models.User]:
         """
         Efficiently fetch candidates for matching.
         """
@@ -57,28 +63,29 @@ class UserService(BaseService[models.User]):
             self.model.id != user.id,
             self.model.is_active == True,
             self.model.role != "admin",
-            self.model.id != 0
+            self.model.id != 0,
         )
 
         if is_privileged:
-             query = query.filter(
+            query = query.filter(
                 or_(self.model.is_visible_in_matches == True, self.model.role == "test")
             )
         else:
-             query = query.filter(
-                self.model.is_visible_in_matches == True,
-                self.model.role != "test"
+            query = query.filter(
+                self.model.is_visible_in_matches == True, self.model.role != "test"
             )
 
         # Optimization: Limit candidate pool to 100 before processing python side
         return query.limit(100).all()
 
-    def get_discover_candidates(self, db: Session, user: models.User, is_privileged: bool, limit: int = 50) -> List[models.User]:
+    def get_discover_candidates(
+        self, db: Session, user: models.User, is_privileged: bool, limit: int = 50
+    ) -> List[models.User]:
         query = db.query(self.model).filter(
             self.model.id != user.id,
             self.model.is_active == True,
             self.model.role != "admin",
-            self.model.id != 0
+            self.model.id != 0,
         )
 
         if is_privileged:
@@ -87,10 +94,10 @@ class UserService(BaseService[models.User]):
             )
         else:
             query = query.filter(
-                self.model.is_visible_in_matches == True,
-                self.model.role != "test"
+                self.model.is_visible_in_matches == True, self.model.role != "test"
             )
 
         return query.limit(limit).all()
+
 
 user_service = UserService(models.User)

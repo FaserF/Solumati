@@ -4,14 +4,14 @@ import random
 from datetime import datetime
 from typing import List, Optional
 
-from faker import Faker
-from sqlalchemy.orm import Session
-
 from app.core.database import SessionLocal
 from app.db import models
 from app.services.websocket_manager import manager
+from faker import Faker
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
 
 class DemoService:
     def __init__(self):
@@ -48,9 +48,9 @@ class DemoService:
         """Main loop for generating events."""
         try:
             while not self._stop_event.is_set():
-                if self.active_mode == 'local':
+                if self.active_mode == "local":
                     await self._run_local_simulation()
-                elif self.active_mode == 'persistent':
+                elif self.active_mode == "persistent":
                     await self._run_persistent_simulation()
 
                 # Random delay between 0.5s and 3s to simulate activity
@@ -73,7 +73,7 @@ class DemoService:
             "username": user_name,
             "content": msg,
             "timestamp": datetime.utcnow().isoformat(),
-            "fake_member_count": random.randint(9900, 10100) # Simulating ~10k users
+            "fake_member_count": random.randint(9900, 10100),  # Simulating ~10k users
         }
         await manager.broadcast(payload)
 
@@ -82,22 +82,21 @@ class DemoService:
             notif = {
                 "type": "demo_notification",
                 "title": f"New User: {self.faker.first_name()}",
-                "message": "just joined the group."
+                "message": "just joined the group.",
             }
             await manager.broadcast(notif)
-
 
     async def _run_persistent_simulation(self):
         """Mode 2: Save data to DB and replicate real behavior."""
         try:
             with SessionLocal() as db:
-                action = random.choice(['create_user', 'send_message', 'system_error'])
+                action = random.choice(["create_user", "send_message", "system_error"])
 
-                if action == 'create_user':
+                if action == "create_user":
                     await self._create_dummy_user(db)
-                elif action == 'send_message':
+                elif action == "send_message":
                     await self._send_real_message(db)
-                elif action == 'system_error':
+                elif action == "system_error":
                     # Intentionally cause/simulate an error
                     await self._simulate_error()
 
@@ -108,8 +107,8 @@ class DemoService:
         # Create a user in DB
         try:
             profile = self.faker.profile()
-            username = profile['username']
-            email = profile['mail']
+            username = profile["username"]
+            email = profile["mail"]
 
             # Check exist
             if db.query(models.User).filter(models.User.email == email).first():
@@ -118,20 +117,22 @@ class DemoService:
             new_user = models.User(
                 username=username,
                 email=email,
-                role="guest", # Safe default
+                role="guest",  # Safe default
                 hashed_password="dummy_password_hash",
-                is_active=True
+                is_active=True,
             )
             db.add(new_user)
             db.commit()
 
             # Broadcast "Real" notification if implemented in app, but here we manually broadcast
             # to verify "Live" updates in Admin Console
-            await manager.broadcast({
-                "type": "system_event",
-                "event": "user_created",
-                "data": {"username": username, "id": new_user.id}
-            })
+            await manager.broadcast(
+                {
+                    "type": "system_event",
+                    "event": "user_created",
+                    "data": {"username": username, "id": new_user.id},
+                }
+            )
 
         except Exception as e:
             db.rollback()
@@ -152,15 +153,16 @@ class DemoService:
             new_msg = models.Message(
                 sender_id=sender.id,
                 receiver_id=receiver.id,
-                content=content, # Should be encrypted technically, but for demo plain or simple
+                content=content,  # Should be encrypted technically, but for demo plain or simple
                 timestamp=datetime.utcnow(),
-                is_read=False
+                is_read=False,
             )
             # If we want to test encryption we'd import it. Let's send plain for now or mimic
             # Actually chat.py expects decrypted for history?
             # If I insert plain and chat.py tries to decrypt, it might fail or show garbage.
             # Safe bet: Import encrypt
             from app.api.routers import chat
+
             encrypted = chat.encrypt_message(content)
             new_msg.content = encrypted
 
@@ -174,17 +176,19 @@ class DemoService:
                 "receiver_id": receiver.id,
                 "content": content,
                 "timestamp": new_msg.timestamp.isoformat(),
-                "is_transient": False
+                "is_transient": False,
             }
             await manager.send_personal_message(payload, receiver.id)
             await manager.send_personal_message(payload, sender.id)
 
             # Also Broadcast "Activity" to admins?
-            await manager.broadcast({
-                "type": "admin_spy",
-                "event": "message_sent",
-                "info": f"Message from {sender.username} to {receiver.username}"
-            })
+            await manager.broadcast(
+                {
+                    "type": "admin_spy",
+                    "event": "message_sent",
+                    "info": f"Message from {sender.username} to {receiver.username}",
+                }
+            )
 
         except Exception as e:
             self._record_error("Send Message Failed", str(e))
@@ -208,23 +212,26 @@ class DemoService:
             "details": details,
             "timestamp": datetime.utcnow().isoformat(),
             "fatal": fatal,
-            "github_issue_link": self._generate_github_link(title, details)
+            "github_issue_link": self._generate_github_link(title, details),
         }
         self.errors.append(error_entry)
         # Broadcast error to "Live Error Log"
-        asyncio.create_task(manager.broadcast({
-            "type": "system_error",
-            "error": error_entry
-        }))
+        asyncio.create_task(
+            manager.broadcast({"type": "system_error", "error": error_entry})
+        )
 
     def _generate_github_link(self, title, body) -> str:
         # Pre-fill GitHub Issue URL
         base = "https://github.com/FaserF/Solumati/issues/new"
         import urllib.parse
-        q = urllib.parse.urlencode({
-            "title": f"[Demo Error] {title}",
-            "body": f"### Error Detection\n\n**Error:** {title}\n**Details:**\n{body}\n\n*Reported via Demo Mode*"
-        })
+
+        q = urllib.parse.urlencode(
+            {
+                "title": f"[Demo Error] {title}",
+                "body": f"### Error Detection\n\n**Error:** {title}\n**Details:**\n{body}\n\n*Reported via Demo Mode*",
+            }
+        )
         return f"{base}?{q}"
+
 
 demo_service = DemoService()

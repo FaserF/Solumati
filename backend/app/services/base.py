@@ -1,9 +1,11 @@
-from typing import Generic, Type, TypeVar, Optional, List, Any
-from sqlalchemy.orm import Session
+from typing import Any, Generic, List, Optional, Type, TypeVar
+
 from app.core.database import Base
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
 
 ModelType = TypeVar("ModelType", bound=Base)
+
 
 class BaseService(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):

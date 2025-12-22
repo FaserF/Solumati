@@ -2,6 +2,7 @@
 Email Service
 Handles all email-related operations with proper typing and error handling.
 """
+
 import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -9,11 +10,10 @@ from email.mime.text import MIMEText
 from email.utils import formataddr
 from typing import Optional
 
-from sqlalchemy.orm import Session
-
 from app.core.config import PROJECT_NAME
 from app.db import schemas
 from app.services.settings_service import SettingsService
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class EmailService:
                 # Fetch settings for footer
                 reg_config = SettingsService.get(db, "registration", {})
                 if not server_domain:
-                     host_url = reg_config.get("server_domain", host_url)
+                    host_url = reg_config.get("server_domain", host_url)
 
                 support_conf = SettingsService.get(db, "support_page", {})
                 legal_conf = SettingsService.get(db, "legal", {})
@@ -48,7 +48,11 @@ class EmailService:
                 if isinstance(support_conf, dict) and support_conf.get("enabled", True):
                     support_url = f"{host_url}/support"
 
-                contact_email = legal_conf.get("contact_email") if isinstance(legal_conf, dict) else None
+                contact_email = (
+                    legal_conf.get("contact_email")
+                    if isinstance(legal_conf, dict)
+                    else None
+                )
 
             except Exception as e:
                 logger.warn(f"Failed to fetch settings for email build: {e}")
@@ -60,7 +64,8 @@ class EmailService:
             footer_links.append(f'<a href="mailto:{contact_email}">Support</a>')
 
         footer_html = " • ".join(footer_links)
-        if footer_html: footer_html = " • " + footer_html
+        if footer_html:
+            footer_html = " • " + footer_html
 
         # Template
         return f"""
@@ -103,7 +108,9 @@ class EmailService:
         """
 
     @staticmethod
-    def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session) -> bool:
+    def send_mail_sync(
+        to_email: str, subject: str, html_body: str, db: Session
+    ) -> bool:
         """
         Send an email synchronously.
 
@@ -147,5 +154,6 @@ class EmailService:
             logger.info(f"Email sent to {to_email}")
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {e}")
+
 
 email_service = EmailService()

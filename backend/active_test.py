@@ -1,13 +1,15 @@
-import pytest
 import asyncio
-from httpx import AsyncClient, ASGITransport
-from fastapi.testclient import TestClient
-from app.main import app
+
+import pytest
 from app.core.database import SessionLocal
 from app.db import models
+from app.main import app
+from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 # Use TestClient for synchronous endpoints if needed, but here we need Async for WS
 # We'll use a mix or just AsyncClient
+
 
 @pytest.mark.asyncio
 async def test_demo_mode_local():
@@ -18,7 +20,10 @@ async def test_demo_mode_local():
         # Let's assume user_id=1 (Admin)
 
         # 2. Start Demo Mode Local
-        headers = {"X-User-Id": "1", "X-User-Role": "admin"} # Mock header for dependencies
+        headers = {
+            "X-User-Id": "1",
+            "X-User-Role": "admin",
+        }  # Mock header for dependencies
         # Wait, get_current_user_from_header checks DB?
         # Yes. We need to ensure Admin exists.
         # It should exist from startup event or we force it.
@@ -32,6 +37,7 @@ async def test_demo_mode_local():
 
         # Mock dependency for user
         from app.api.dependencies import get_current_user_from_header
+
         def mock_get_user():
             return models.User(id=1, username="admin", role="admin", is_superuser=True)
 
@@ -61,12 +67,15 @@ async def test_demo_mode_local():
         resp = await ac.post("/demo/stop")
         assert resp.status_code == 200
 
+
 @pytest.mark.asyncio
 async def test_demo_mode_persistent():
     # Setup Override
     from app.api.dependencies import get_current_user_from_header
+
     def mock_get_user():
         return models.User(id=1, username="admin", role="admin", is_superuser=True)
+
     app.dependency_overrides[get_current_user_from_header] = mock_get_user
 
     transport = ASGITransport(app=app)

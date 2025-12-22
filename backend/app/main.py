@@ -3,12 +3,12 @@ import logging
 import os
 
 # Routers
-from app.api.routers import (admin, auth, backup, chat, demo, notifications, oauth,
-                             system, users)
+from app.api.routers import (admin, auth, backup, chat, demo, notifications,
+                             oauth, system, users)
 from app.core.config import CURRENT_VERSION, PROJECT_NAME, TEST_MODE
-from app.core.exceptions import register_exception_handlers
 # Local modules
 from app.core.database import Base, SessionLocal, engine, get_db
+from app.core.exceptions import register_exception_handlers
 from app.core.logging_config import logger
 from app.db import models, schemas
 from app.scripts.init_data import (check_emergency_reset, check_schema,
