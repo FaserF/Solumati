@@ -54,7 +54,7 @@ jobs:
 
       - name: Add labels to PR
         if: steps.labels.outputs.labels != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const labels = '${{ steps.labels.outputs.labels }}'.split(',').filter(l => l.trim() !== '');
@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Handle CI Result
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const run = context.payload.workflow_run;
@@ -132,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Say Thanks
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const ADMINS = ['FaserF', 'SolumatiBot'];
