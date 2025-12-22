@@ -16,19 +16,16 @@ export const ThemeProvider = ({ children }) => {
 
         const applyTheme = (t) => {
             removeOldTheme();
-            if (t === 'dark') {
+            const isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+            if (isDark) {
                 root.classList.add('dark');
-            } else if (t === 'light') {
-                root.classList.remove('dark');
-                // Ensure local storage is updated correctly if other scripts read it
-                localStorage.setItem('theme', 'light');
+                root.style.colorScheme = 'dark';
             } else {
-                // System
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    root.classList.add('dark');
-                } else {
-                    root.classList.remove('dark');
-                }
+                root.classList.remove('dark');
+                root.style.colorScheme = 'light';
+                // Ensure local storage is updated correctly if other scripts read it
+                if (t === 'light') localStorage.setItem('theme', 'light');
             }
         };
 

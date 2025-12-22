@@ -108,7 +108,7 @@ const UserProfile = ({ initialMode = 'view' }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] transition-colors pb-12">
+        <div className="min-h-screen bg-transparent transition-colors pb-12">
             <div className="max-w-2xl mx-auto p-4">
                 <button onClick={onBack} className="flex items-center text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-6">
                     <ChevronLeft size={20} /> {t('btn.back')}

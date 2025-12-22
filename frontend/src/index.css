@@ -2,6 +2,9 @@
 
 @plugin "tailwindcss-animate";
 
+/* FORCE DARK MODE CLASS STRATEGY */
+@variant dark (&:where(.dark, .dark *));
+
 /* ============================================
    SOLUMATI PREMIUM DESIGN SYSTEM
    Modern • Simple • Beautiful • Unified
@@ -49,11 +52,14 @@
 
   /* Surfaces */
   --color-surface: #ffffff;
-  --color-surface-dark: #09090b;
+  --color-surface-dark: #18181b;
+  /* Zinc 900 */
   --color-surface-panel: #ffffff;
-  --color-surface-panel-dark: #18181b;
+  --color-surface-panel-dark: #27272a;
+  /* Zinc 800 */
   --color-surface-elevated: #fafafa;
-  --color-surface-elevated-dark: #27272a;
+  --color-surface-elevated-dark: #3f3f46;
+  /* Zinc 700 */
 
   /* === SPACING SCALE === */
   --space-px: 1px;
@@ -121,7 +127,8 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 4%;
+    /* Slightly lighter than pure black */
     --foreground: 0 0% 98%;
   }
 
@@ -130,12 +137,22 @@
   }
 
   body {
-    @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased;
+    @apply bg-zinc-50 text-zinc-900 antialiased transition-colors duration-500;
     @apply selection:bg-indigo-500/30 selection:text-indigo-700 dark:selection:text-indigo-300;
+
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* PREMIUM DARK MODE BACKGROUND */
+  .dark body {
+    /* Rich Indigo-to-Slate Gradient */
+    background: radial-gradient(circle at 50% 0%, #172554 0%, #020617 60%);
+    background-attachment: fixed;
+    color: #f4f4f5;
+    /* zinc-100 */
   }
 
   /* Typography Scale */

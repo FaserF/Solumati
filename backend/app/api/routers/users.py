@@ -22,6 +22,7 @@ from app.db import models, schemas
 from app.services.user_service import user_service
 from app.services.match_service import match_service
 from app.services.email_service import email_service
+from app.services.demo_service import demo_service
 # LegacyUtils (to be deprecated/moved)
 from app.services.utils import (get_setting, is_profile_complete,
                                 send_email_changed_notification,
@@ -150,6 +151,33 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
 
     # 2. Get Candidates
     candidates = user_service.get_candidates(db, current_user, is_privileged)
+
+    # --- DEMO MODE: Inject Dummy Users for Guest OR Admin ---
+    # Only if Demo Mode is NOT active (Live Mode) - ensuring we don't duplicate logic if DB is full of fake users.
+    if (user_id == 0 or (current_user and current_user.role == "admin")) and not demo_service.active_mode:
+        # If we don't have enough real candidates (or any), inject dummies so the guest/admin sees something.
+        if len(candidates) < 5:
+            # Create transient dummy users (not saved to DB)
+            # using randomuser.me/pravatar.cc for stable demo images
+            dummy_data = [
+                {"id": -1, "username": "Alice (Demo)", "image_url": "https://i.pravatar.cc/300?img=1", "intent": "friendship", "answers": json.dumps({"1": 4, "2": 2})},
+                {"id": -2, "username": "Bob (Demo)", "image_url": "https://i.pravatar.cc/300?img=11", "intent": "dating", "answers": json.dumps({"1": 2, "2": 5})},
+                {"id": -3, "username": "Charlie (Demo)", "image_url": "https://i.pravatar.cc/300?img=3", "intent": "chat", "answers": json.dumps({"1": 5, "2": 1})},
+                {"id": -4, "username": "Diana (Demo)", "image_url": "https://i.pravatar.cc/300?img=5", "intent": "networking", "answers": json.dumps({"1": 3, "2": 3})},
+            ]
+            for d in dummy_data:
+                dummy_user = models.User(
+                    id=d["id"],
+                    username=d["username"],
+                    real_name=d["username"],
+                    image_url=d["image_url"],
+                    intent=d["intent"],
+                    answers=d["answers"],
+                    role="test",
+                    is_active=True,
+                    is_visible_in_matches=True
+                )
+                candidates.append(dummy_user)
 
     # 3. Calculate Matches
     results = match_service.get_matches_for_user(

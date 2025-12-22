@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { API_URL } from '../config';
 import { useI18n } from './I18nContext';
+import { useTheme } from '../components/ThemeContext';
 
 const AuthContext = createContext();
 
@@ -8,6 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const { changeLanguage } = useI18n();
+    const { setTheme } = useTheme();
 
     // Initialize user from LocalStorage (Cache)
     const [user, setUser] = useState(() => {
@@ -18,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     const [isGuest, setIsGuest] = useState(false);
-    const [theme, setThemeState] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'system');
+    // Theme state is now managed by ThemeContext
 
     // Server Status State
     const [serverStatus, setServerStatus] = useState('online'); // online, offline, maintenance
@@ -26,16 +28,10 @@ export const AuthProvider = ({ children }) => {
     // 2FA Intermediate State
     const [tempAuth, setTempAuth] = useState(null);
 
-    // Apply Theme Helper
+    // Apply Theme Helper - DEPRECATED (Kept for compatibility if needed, but redirects to ThemeContext)
     const applyTheme = useCallback((themeName) => {
-        setThemeState(themeName);
-        const root = window.document.documentElement;
-        if (themeName === 'dark' || (themeName === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            root.classList.add('dark');
-        } else {
-            root.classList.remove('dark');
-        }
-    }, []);
+        setTheme(themeName);
+    }, [setTheme]);
 
     const finalizeLogin = useCallback((data) => {
         // Normalize: backend returns 'id', frontend uses 'user_id'
@@ -195,7 +191,7 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{
             user,
             isGuest,
-            theme,
+            // theme, // Removed to avoid confusion, access via useTheme() specific context
             tempAuth,
             login,
             logout,
