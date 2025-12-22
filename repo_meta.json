@@ -362,7 +362,7 @@
             },
             "sw.js": null,
             "tailwind.config.js": null,
-            "vite.config.js": null
+            "vite.config.ts": null
         },
         "lychee.toml": null,
         "renovate.json": null,
