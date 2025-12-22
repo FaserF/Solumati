@@ -29,7 +29,7 @@ const Dashboard = () => {
     const [show2FAPrompt, setShow2FAPrompt] = useState(false);
 
     // Check match visibility
-    const isVisible = user?.is_visible_in_matches !== false;
+    const isVisible = user?.is_visible_in_matches !== false || isGuest || user?.role === 'admin';
 
     // Fetch Matches
     useEffect(() => {

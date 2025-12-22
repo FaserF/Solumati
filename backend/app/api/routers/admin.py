@@ -145,6 +145,10 @@ def admin_punish_user(
             user.banned_until = datetime.utcnow() + timedelta(
                 hours=action.duration_hours or 24
             )
+    elif action.action == "silent_deactivate":
+        user.is_active = False
+        user.deactivation_reason = "silent_admin"
+        # No email sent for silent deactivation
     elif action.action == "promote_moderator":
         user.role = "moderator"
         logger.info(f"User {user.username} promoted to moderator.")
@@ -515,15 +519,74 @@ def get_reports(
     return res
 
 
-@router.delete("/reports/{report_id}")
-def delete_report(
-    report_id: int,
-    db: Session = Depends(get_db),
-    current_mod: models.User = Depends(require_moderator_or_admin),
-):
-    r = db.query(models.Report).filter(models.Report.id == report_id).first()
-    if not r:
-        raise HTTPException(404, "Report not found")
     db.delete(r)
     db.commit()
     return {"status": "deleted"}
+
+
+@router.get("/logs/email")
+def get_email_logs(
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(require_admin),
+):
+    try:
+        logs = (
+            db.query(models.EmailLog)
+            .order_by(models.EmailLog.timestamp.desc())
+            .limit(limit)
+            .all()
+        )
+        return logs
+    except Exception as e:
+        logger.error(f"Failed to fetch email logs: {e}")
+        return []
+
+
+@router.get("/logs/server")
+def get_server_logs(
+    lines: int = 200,
+    level: str = "INFO",
+    current_admin: models.User = Depends(require_admin),
+):
+    """
+    Reads the last N lines from the server log file (if configured).
+    Filters are done in-memory for simplicity.
+    """
+    log_file = "app.log"  # Assumption: Log file is named app.log in root
+    try:
+        import os
+        if not os.path.exists(log_file):
+            return {"lines": ["Log file not found."]}
+
+        with open(log_file, "r", encoding="utf-8") as f:
+            # Read all line by line efficiently for large files?
+            # For 200 lines, reading all then slicing is okay for moderate size.
+            # If huge, use seek.
+            file_lines = f.readlines()
+
+            # Filter by level? Simple string check
+            # Levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+            levels_priority = {
+                 "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50
+            }
+            target_level = levels_priority.get(level.upper(), 0)
+
+            filtered = []
+            for line in file_lines:
+                # Try explicit level check
+                line_level = 0
+                if "DEBUG" in line: line_level = 10
+                elif "INFO" in line: line_level = 20
+                elif "WARNING" in line: line_level = 30
+                elif "ERROR" in line: line_level = 40
+                elif "CRITICAL" in line: line_level = 50
+
+                # If cannot detect, assume generic/same as prev? or just INFO
+                if line_level >= target_level:
+                    filtered.append(line)
+
+            return {"lines": filtered[-lines:]}
+
+    except Exception as e:
+        return {"lines": [f"Error reading logs: {str(e)}"]}

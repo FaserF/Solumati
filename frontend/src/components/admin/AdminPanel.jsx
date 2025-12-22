@@ -24,6 +24,7 @@ const AdminPanel = () => {
     const canViewReports = isModerator; // Admins + Mods
     const canManageSettings = isAdmin; // Only Admins
     const canViewDiagnostics = isAdmin; // Only Admins
+    const canViewLogs = isAdmin; // Only Admins
 
     const activeTab = searchParams.get('tab') || (isModerator ? 'reports' : 'users');
     const setActiveTab = (tab) => setSearchParams({ tab });
@@ -32,6 +33,13 @@ const AdminPanel = () => {
     const [settings, setSettings] = useState(null);
     const [diagnostics, setDiagnostics] = useState(null);
     const [changelog, setChangelog] = useState([]);
+
+    // Logs State
+    const [logType, setLogType] = useState('email'); // 'email' or 'server'
+    const [emailLogs, setEmailLogs] = useState([]);
+    const [serverLogs, setServerLogs] = useState([]);
+    const [serverLogConfig, setServerLogConfig] = useState({ lines: 200, level: 'INFO' });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -100,6 +108,7 @@ const AdminPanel = () => {
         if (activeTab === 'reports' && canViewReports) fetchReports();
         if (activeTab === 'settings' && canManageSettings) fetchSettings();
         if (activeTab === 'diagnostics' && canViewDiagnostics) fetchDiagnostics();
+        if (activeTab === 'logs' && canViewLogs) fetchLogs();
         if (activeTab === 'inbox') fetchConversations();
         if (activeTab === 'demo' && isAdmin) fetchDemoStatus();
         setLoading(false);
@@ -154,6 +163,29 @@ const AdminPanel = () => {
         } catch { setError("Diagnostics failed."); }
         setLoading(false);
     };
+
+    const fetchLogs = async () => {
+        setLoading(true);
+        try {
+            if (logType === 'email') {
+                const res = await fetch(`${API_URL}/admin/logs/email?limit=100`, { headers: authHeaders });
+                if (res.ok) setEmailLogs(await res.json());
+            } else {
+                const res = await fetch(`${API_URL}/admin/logs/server?lines=${serverLogConfig.lines}&level=${serverLogConfig.level}`, { headers: authHeaders });
+                if (res.ok) {
+                    const data = await res.json();
+                    setServerLogs(data.lines || []);
+                }
+            }
+        } catch { setError("Could not load logs."); }
+        setLoading(false);
+    };
+
+    // Trigger log fetch when sub-tab or config changes
+    useEffect(() => {
+        if (activeTab === 'logs') fetchLogs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [logType, serverLogConfig]);
 
     // Demo Mode Handlers
     const fetchDemoStatus = async () => {
@@ -600,9 +632,13 @@ const AdminPanel = () => {
                         <Settings size={18} /> {t('admin.tab.settings')}
                     </button>
                 )}
-                {canViewDiagnostics && (
-                    <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
-                        <Activity size={18} /> {t('admin.tab.diagnostics')}
+                <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+                    <Activity size={18} /> {t('admin.tab.diagnostics')}
+                </button>
+                )}
+                {canViewLogs && (
+                    <button onClick={() => setActiveTab('logs')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'logs' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+                        <FileText size={18} /> Logs
                     </button>
                 )}
                 {isAdmin && (
@@ -932,6 +968,92 @@ const AdminPanel = () => {
                                         Clear Log
                                     </button>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+
+            {/* LOGS TAB */}
+            {
+                activeTab === 'logs' && canViewLogs && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden animate-in fade-in duration-300">
+                        <div className="p-4 border-b dark:border-gray-700 flex flex-col md:flex-row justify-between bg-gray-50 dark:bg-white/5 gap-4">
+                            <div className="flex gap-2">
+                                <button onClick={() => setLogType('email')} className={`px-3 py-1.5 rounded-lg text-sm font-bold flex gap-2 items-center ${logType === 'email' ? 'bg-white dark:bg-gray-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                                    <Mail size={16} /> Email Logs
+                                </button>
+                                <button onClick={() => setLogType('server')} className={`px-3 py-1.5 rounded-lg text-sm font-bold flex gap-2 items-center ${logType === 'server' ? 'bg-white dark:bg-gray-700 shadow text-purple-600 dark:text-purple-400' : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                                    <Server size={16} /> Server Logs
+                                </button>
+                            </div>
+
+                            {logType === 'server' && (
+                                <div className="flex gap-2 items-center">
+                                    <select
+                                        value={serverLogConfig.level}
+                                        onChange={(e) => setServerLogConfig(prev => ({ ...prev, level: e.target.value }))}
+                                        className="text-sm p-1.5 rounded border dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    >
+                                        <option value="DEBUG">DEBUG</option>
+                                        <option value="INFO">INFO</option>
+                                        <option value="WARNING">WARNING</option>
+                                        <option value="ERROR">ERROR</option>
+                                    </select>
+                                    <select
+                                        value={serverLogConfig.lines}
+                                        onChange={(e) => setServerLogConfig(prev => ({ ...prev, lines: parseInt(e.target.value) }))}
+                                        className="text-sm p-1.5 rounded border dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    >
+                                        <option value="100">100 Lines</option>
+                                        <option value="200">200 Lines</option>
+                                        <option value="500">500 Lines</option>
+                                        <option value="1000">1000 Lines</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            <button onClick={fetchLogs} className="text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white flex gap-2 font-medium items-center ml-auto">
+                                <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
+                            </button>
+                        </div>
+
+                        {logType === 'email' ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 dark:bg-white/5 border-b dark:border-gray-700">
+                                        <tr>
+                                            <th className="p-4 text-xs font-bold text-gray-500 uppercase">Time</th>
+                                            <th className="p-4 text-xs font-bold text-gray-500 uppercase">Recipient</th>
+                                            <th className="p-4 text-xs font-bold text-gray-500 uppercase">Subject</th>
+                                            <th className="p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
+                                            <th className="p-4 text-xs font-bold text-gray-500 uppercase">Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                        {emailLogs.length === 0 ? (
+                                            <tr><td colSpan="5" className="p-8 text-center text-gray-400">No email logs found.</td></tr>
+                                        ) : (
+                                            emailLogs.map(l => (
+                                                <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                                                    <td className="p-4 text-xs text-gray-500 whitespace-nowrap">{formatDate(l.timestamp)}</td>
+                                                    <td className="p-4 text-sm font-medium">{l.recipient}</td>
+                                                    <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{l.subject}</td>
+                                                    <td className="p-4">
+                                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${l.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                            {l.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-xs text-red-500">{l.error_message || '-'}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="p-4 bg-gray-900 text-gray-300 font-mono text-xs overflow-x-auto whitespace-pre h-[600px] overflow-y-auto">
+                                {serverLogs.length === 0 ? "No logs found." : serverLogs.join("")}
                             </div>
                         )}
                     </div>
@@ -1651,84 +1773,91 @@ const AdminPanel = () => {
 
             {/* 4. DIAGNOSTICS TAB */}
             {
-                activeTab === 'diagnostics' && canViewDiagnostics && diagnostics && (
-                    <div className="space-y-6">
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
-                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">System Status</div>
-                                <div className="flex items-center gap-2 text-green-600 font-bold">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                                    Operational
-                                </div>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
-                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Version</div>
-                                <div className="font-mono text-xl dark:text-white">{diagnostics.current_version}</div>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
-                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Disk Usage</div>
-                                <div className="font-mono text-xl dark:text-white">{diagnostics.disk_percent}%</div>
-                                <div className="text-xs text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
-                                <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Database</div>
-                                <div className="flex items-center gap-2 text-green-600 font-bold">
-                                    <Database size={16} /> Connected
-                                </div>
-                            </div>
+                activeTab === 'diagnostics' && canViewDiagnostics && (
+                    loading && !diagnostics ? (
+                        <div className="flex flex-col items-center justify-center p-12 text-gray-500 animate-in fade-in">
+                            <RefreshCw className="animate-spin mb-4" size={32} />
+                            <p className="font-bold">Gathering system diagnostics...</p>
+                            <p className="text-sm opacity-75">This includes checking disk usage and GitHub releases.</p>
                         </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {/* Changelog */}
-                            <div className="bg-white rounded-xl shadow p-6 max-h-[500px] overflow-y-auto">
-                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><FileText className="text-blue-500" /> Changelog</h3>
-                                <div className="space-y-6">
-                                    {changelog.map((rel, i) => (
-                                        <div key={i} className="border-b pb-4 last:border-0">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-bold text-gray-800">{rel.name}</h4>
-                                                <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{rel.tag_name}</span>
-                                            </div>
-                                            <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
-                                                {rel.body}
-                                            </div>
-                                        </div>
-                                    ))}
+                    ) : diagnostics && (
+                        <div className="space-y-6">
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                    <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">System Status</div>
+                                    <div className="flex items-center gap-2 text-green-600 font-bold">
+                                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                        Operational
+                                    </div>
+                                </div>
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                    <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Version</div>
+                                    <div className="font-mono text-xl dark:text-white">{diagnostics.current_version}</div>
+                                </div>
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                    <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Disk Usage</div>
+                                    <div className="font-mono text-xl dark:text-white">{diagnostics.disk_percent}%</div>
+                                    <div className="text-xs text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
+                                </div>
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
+                                    <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Database</div>
+                                    <div className="flex items-center gap-2 text-green-600 font-bold">
+                                        <Database size={16} /> Connected
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Updates */}
-                            <div className="bg-white rounded-xl shadow p-6">
-                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Zap className="text-yellow-500" /> Updates</h3>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Changelog */}
+                                <div className="bg-white rounded-xl shadow p-6 max-h-[500px] overflow-y-auto">
+                                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><FileText className="text-blue-500" /> Changelog</h3>
+                                    <div className="space-y-6">
+                                        {changelog.map((rel, i) => (
+                                            <div key={i} className="border-b pb-4 last:border-0">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h4 className="font-bold text-gray-800">{rel.name}</h4>
+                                                    <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{rel.tag_name}</span>
+                                                </div>
+                                                <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+                                                    {rel.body}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                {diagnostics.update_available || diagnostics.beta_update_available ? (
-                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                        <div className="font-bold text-blue-800 mb-2">New Version Available!</div>
-                                        <div className="text-sm text-blue-600 mb-4">
-                                            A new version of Solumati is available.
-                                            {diagnostics.beta_update_available && <span className="block mt-1 font-bold">New Beta also available!</span>}
-                                        </div>
-                                        <div className="flex flex-col gap-2">
-                                            <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
-                                                Download {diagnostics.latest_version}
-                                            </a>
-                                            {diagnostics.beta_update_available && (
-                                                <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-white border border-blue-300 text-blue-600 text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition">
-                                                    Check Beta ({diagnostics.latest_beta_version})
+                                {/* Updates */}
+                                <div className="bg-white rounded-xl shadow p-6">
+                                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Zap className="text-yellow-500" /> Updates</h3>
+
+                                    {diagnostics.update_available || diagnostics.beta_update_available ? (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                            <div className="font-bold text-blue-800 mb-2">New Version Available!</div>
+                                            <div className="text-sm text-blue-600 mb-4">
+                                                A new version of Solumati is available.
+                                                {diagnostics.beta_update_available && <span className="block mt-1 font-bold">New Beta also available!</span>}
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+                                                    Download {diagnostics.latest_version}
                                                 </a>
-                                            )}
+                                                {diagnostics.beta_update_available && (
+                                                    <a href="https://github.com/FaserF/Solumati/releases" target="_blank" rel="noreferrer" className="bg-white border border-blue-300 text-blue-600 text-center px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition">
+                                                        Check Beta ({diagnostics.latest_beta_version})
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <CheckCircle className="mx-auto w-12 h-12 text-green-500 mb-2" />
-                                        <p>You are using the latest version.</p>
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500">
+                                            <CheckCircle className="mx-auto w-12 h-12 text-green-500 mb-2" />
+                                            <p>You are using the latest version.</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )
+                    )
             }
 
             {/* Modals */}
@@ -1790,231 +1919,247 @@ const AdminPanel = () => {
                                 >
                                     Execute
                                 </button>
+                                {(users.find(u => u.id === punishModal.userId)?.role === 'guest' || users.find(u => u.id === punishModal.userId)?.role === 'test' || users.find(u => u.id === punishModal.userId)?.username === 'solumati_support') && (
+                                    <button
+                                        onClick={() => {
+                                            handleAction(punishModal.userId, 'silent_deactivate', {
+                                                reason: 'Silent Deactivation',
+                                                duration_hours: 0
+                                            });
+                                            setPunishModal({ show: false, userId: null });
+                                        }}
+                                        className="px-4 py-2 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700"
+                                        title="Deactivates account without sending an email"
+                                    >
+                                        Deactivate (Silent)
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
-                )
-            }
-
-            {
-                createUserModal && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                            <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
-                            <div className="space-y-3 mb-4">
-                                <input
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    placeholder="Username"
-                                    value={createUserForm.username}
-                                    onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
-                                />
-                                <input
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    placeholder="Email"
-                                    value={createUserForm.email}
-                                    onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
-                                />
-                                <input
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    placeholder="Password"
-                                    type="password"
-                                    value={createUserForm.password}
-                                    onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
-                                />
-                                <select
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    value={createUserForm.role}
-                                    onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
-                                >
-                                    <option value="user">User</option>
-                                    <option value="moderator">Moderator</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="test">{t('role.test', 'Test')}</option>
-                                </select>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                                <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
-                            </div>
-                        </div>
                     </div>
-                )
-            }
+    )
+}
+
+{
+    createUserModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
+                <div className="space-y-3 mb-4">
+                    <input
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="Username"
+                        value={createUserForm.username}
+                        onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
+                    />
+                    <input
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="Email"
+                        value={createUserForm.email}
+                        onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                    />
+                    <input
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="Password"
+                        type="password"
+                        value={createUserForm.password}
+                        onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                    />
+                    <select
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        value={createUserForm.role}
+                        onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
+                    >
+                        <option value="user">User</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                        <option value="test">{t('role.test', 'Test')}</option>
+                    </select>
+                </div>
+                <div className="flex justify-end gap-2">
+                    <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                    <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 
-            {/* 5. BACKUP & MIGRATION TAB */}
-            {
-                activeTab === 'backup' && isAdmin && (
-                    <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
-                        {/* Settings Backup Card */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                                    <Settings size={28} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
-                                    <p className="text-sm text-gray-500">Export/Import configuration only.</p>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 space-y-4">
-                                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                    Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
-                                </p>
-
-                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
-                                    <Info className="shrink-0" size={16} />
-                                    <span>This file contains sensitive API keys. Handle with care!</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
-                                <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
-                                    <Download size={18} /> Export JSON
-                                </button>
-                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                                    <Upload size={18} /> Import JSON
-                                    <input type="file" accept=".json" onChange={importSettings} className="hidden" />
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Full Database Backup Card */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-                                    <Database size={28} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
-                                    <p className="text-sm text-gray-500">Transfer entire instance data.</p>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 space-y-4">
-                                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                    Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
-                                </p>
-
-                                <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
-                                    <AlertTriangle className="shrink-0" size={16} />
-                                    <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
-                                <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
-                                    <Download size={18} /> Export Full DB
-                                </button>
-                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                                    <Upload size={18} /> Import DB
-                                    <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
-                                </label>
-                            </div>
-                        </div>
+{/* 5. BACKUP & MIGRATION TAB */ }
+{
+    activeTab === 'backup' && isAdmin && (
+        <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
+            {/* Settings Backup Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                        <Settings size={28} />
                     </div>
-                )
-            }
-            {
-                editModal.show && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                            <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
-                            <div className="space-y-3 mb-4">
-                                <label className="block text-sm font-bold dark:text-gray-300">Username</label>
-                                <input
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    value={editForm.username}
-                                    onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                                />
-                                <label className="block text-sm font-bold dark:text-gray-300">Email</label>
-                                <input
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    value={editForm.email}
-                                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                                />
-                                <input
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    type="password"
-                                    value={editForm.password}
-                                    onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                                />
-
-                                <label className="block text-sm font-bold dark:text-gray-300">Role</label>
-                                <select
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    value={editForm.role}
-                                    onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                                    disabled={[0, 1, 3].includes(editModal.user.id)}
-                                >
-                                    <option value="user">User</option>
-                                    <option value="moderator">Moderator</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="guest">Guest</option>
-                                    <option value="test">{t('role.test', 'Test')}</option>
-                                </select>
-                                {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                                <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
-                                    <input
-                                        type="checkbox"
-                                        checked={editForm.is_visible_in_matches}
-                                        onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                                        disabled={[0, 1, 3].includes(editModal.user.id)}
-                                    />
-                                    Is Visible in Matches
-                                </label>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                                <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
-                            </div>
-                        </div>
+                    <div>
+                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
+                        <p className="text-sm text-gray-500">Export/Import configuration only.</p>
                     </div>
-                )
-            }
+                </div>
 
-            {/* Roles Info Modal */}
-            {
-                rolesModalOpen && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
-                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
-                                <Info size={20} className="text-blue-600" /> System Roles
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
+                <div className="flex-1 space-y-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
+                    </p>
 
-                            <div className="space-y-4">
-                                {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
-                                    <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
-                                                {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
-                                                {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
-                                                {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
-                                                {role.name}
-                                            </h4>
-                                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
-                                        </div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
-                                        <div className="flex flex-wrap gap-1">
-                                            {role.permissions && role.permissions.map(p => (
-                                                <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                                                    {p}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
+                        <Info className="shrink-0" size={16} />
+                        <span>This file contains sensitive API keys. Handle with care!</span>
+                    </div>
+                </div>
+
+                <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                    <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                        <Download size={18} /> Export JSON
+                    </button>
+                    <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                        <Upload size={18} /> Import JSON
+                        <input type="file" accept=".json" onChange={importSettings} className="hidden" />
+                    </label>
+                </div>
+            </div>
+
+            {/* Full Database Backup Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                        <Database size={28} />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
+                        <p className="text-sm text-gray-500">Transfer entire instance data.</p>
+                    </div>
+                </div>
+
+                <div className="flex-1 space-y-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
+                    </p>
+
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
+                        <AlertTriangle className="shrink-0" size={16} />
+                        <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
+                    </div>
+                </div>
+
+                <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                    <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                        <Download size={18} /> Export Full DB
+                    </button>
+                    <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                        <Upload size={18} /> Import DB
+                        <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
+                    </label>
+                </div>
+            </div>
+        </div>
+    )
+}
+{
+    editModal.show && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
+                <div className="space-y-3 mb-4">
+                    <label className="block text-sm font-bold dark:text-gray-300">Username</label>
+                    <input
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        value={editForm.username}
+                        onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                    />
+                    <label className="block text-sm font-bold dark:text-gray-300">Email</label>
+                    <input
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        value={editForm.email}
+                        onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                    />
+                    <input
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        type="password"
+                        value={editForm.password}
+                        onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                    />
+
+                    <label className="block text-sm font-bold dark:text-gray-300">Role</label>
+                    <select
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        value={editForm.role}
+                        onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                        disabled={[0, 1, 3].includes(editModal.user.id)}
+                    >
+                        <option value="user">User</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                        <option value="guest">Guest</option>
+                        <option value="test">{t('role.test', 'Test')}</option>
+                    </select>
+                    {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
+                    <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+                        <input
+                            type="checkbox"
+                            checked={editForm.is_visible_in_matches}
+                            onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                            disabled={[0, 1, 3].includes(editModal.user.id)}
+                        />
+                        Is Visible in Matches
+                    </label>
+                </div>
+                <div className="flex justify-end gap-2">
+                    <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                    <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+{/* Roles Info Modal */ }
+{
+    rolesModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
+                    <Info size={20} className="text-blue-600" /> System Roles
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
+
+                <div className="space-y-4">
+                    {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
+                        <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
+                                    {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
+                                    {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
+                                    {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
+                                    {role.name}
+                                </h4>
+                                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
+                            <div className="flex flex-wrap gap-1">
+                                {role.permissions && role.permissions.map(p => (
+                                    <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                        {p}
+                                    </span>
                                 ))}
                             </div>
-
-                            <div className="flex justify-end mt-6">
-                                <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
-                            </div>
                         </div>
-                    </div>
-                )
-            }
+                    ))}
+                </div>
+
+                <div className="flex justify-end mt-6">
+                    <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
+                </div>
+            </div>
+        </div>
+    )
+}
         </div >
     );
 };

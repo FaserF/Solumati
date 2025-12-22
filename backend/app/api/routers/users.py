@@ -263,7 +263,31 @@ def discover_users(
     db: Session = Depends(get_db),
 ):
     is_privileged = (user.id == 0 or user.role in ("admin", "moderator"))
-    candidates = user_service.get_discover_candidates(db, user, is_privileged)
+    candidates = user_service.get_discover_candidates(db, user, is_privileged, limit=100) # Increased limit for shuffle
+
+    # --- DEMO MODE: Inject Dummy Users for Guest OR Admin ---
+    if (user.id == 0 or user.role == "admin") and not demo_service.active_mode:
+        if len(candidates) < 5:
+             dummy_data = [
+                {"id": -1, "username": "Alice (Demo)", "image_url": "https://i.pravatar.cc/300?img=1", "intent": "friendship", "answers": json.dumps({"1": 4, "2": 2})},
+                {"id": -2, "username": "Bob (Demo)", "image_url": "https://i.pravatar.cc/300?img=11", "intent": "dating", "answers": json.dumps({"1": 2, "2": 5})},
+                {"id": -3, "username": "Charlie (Demo)", "image_url": "https://i.pravatar.cc/300?img=3", "intent": "chat", "answers": json.dumps({"1": 5, "2": 1})},
+                {"id": -4, "username": "Diana (Demo)", "image_url": "https://i.pravatar.cc/300?img=5", "intent": "networking", "answers": json.dumps({"1": 3, "2": 3})},
+                {"id": -5, "username": "Eve (Demo)", "image_url": "https://i.pravatar.cc/300?img=9", "intent": "chat", "answers": json.dumps({"1": 1, "2": 4})},
+            ]
+             for d in dummy_data:
+                dummy_user = models.User(
+                    id=d["id"],
+                    username=d["username"],
+                    real_name=d["username"],
+                    image_url=d["image_url"],
+                    intent=d["intent"],
+                    answers=d["answers"],
+                    role="test",
+                    is_active=True,
+                    is_visible_in_matches=True
+                )
+                candidates.append(dummy_user)
 
     if not candidates:
         return []

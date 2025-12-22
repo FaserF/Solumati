@@ -243,8 +243,35 @@ def send_mail_sync(to_email: str, subject: str, html_body: str, db: Session):
         server.send_message(msg)
         server.quit()
         logger.info(f"Email sent successfully to {to_email}")
+
+        # Log to DB
+        try:
+            log_entry = models.EmailLog(
+                recipient=to_email,
+                subject=subject,
+                status="sent",
+                timestamp=datetime.utcnow()
+            )
+            db.add(log_entry)
+            db.commit()
+        except:
+             pass
+
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
+        # Log failure
+        try:
+            log_entry = models.EmailLog(
+                recipient=to_email,
+                subject=subject,
+                status="failed",
+                error_message=str(e),
+                timestamp=datetime.utcnow()
+            )
+            db.add(log_entry)
+            db.commit()
+        except:
+             pass
 
 
 # --- Core Logic Helpers ---
