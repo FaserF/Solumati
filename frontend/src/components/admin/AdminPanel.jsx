@@ -635,7 +635,7 @@ const AdminPanel = () => {
                 <button onClick={() => setActiveTab('diagnostics')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'diagnostics' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                     <Activity size={18} /> {t('admin.tab.diagnostics')}
                 </button>
-                )}
+
                 {canViewLogs && (
                     <button onClick={() => setActiveTab('logs')} className={`px-4 py-2 rounded-lg font-bold flex gap-2 transition whitespace-nowrap ${activeTab === 'logs' ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                         <FileText size={18} /> Logs
@@ -1858,6 +1858,7 @@ const AdminPanel = () => {
                             </div>
                         </div>
                     )
+                )
             }
 
             {/* Modals */}
@@ -1937,229 +1938,228 @@ const AdminPanel = () => {
                             </div>
                         </div>
                     </div>
-                    </div>
-    )
-}
+                )
+            }
 
-{
-    createUserModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
-                <div className="space-y-3 mb-4">
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Username"
-                        value={createUserForm.username}
-                        onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
-                    />
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Email"
-                        value={createUserForm.email}
-                        onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
-                    />
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Password"
-                        type="password"
-                        value={createUserForm.password}
-                        onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
-                    />
-                    <select
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={createUserForm.role}
-                        onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
-                    >
-                        <option value="user">User</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="admin">Admin</option>
-                        <option value="test">{t('role.test', 'Test')}</option>
-                    </select>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                    <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-
-{/* 5. BACKUP & MIGRATION TAB */ }
-{
-    activeTab === 'backup' && isAdmin && (
-        <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
-            {/* Settings Backup Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                        <Settings size={28} />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
-                        <p className="text-sm text-gray-500">Export/Import configuration only.</p>
-                    </div>
-                </div>
-
-                <div className="flex-1 space-y-4">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
-                    </p>
-
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
-                        <Info className="shrink-0" size={16} />
-                        <span>This file contains sensitive API keys. Handle with care!</span>
-                    </div>
-                </div>
-
-                <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
-                    <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
-                        <Download size={18} /> Export JSON
-                    </button>
-                    <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                        <Upload size={18} /> Import JSON
-                        <input type="file" accept=".json" onChange={importSettings} className="hidden" />
-                    </label>
-                </div>
-            </div>
-
-            {/* Full Database Backup Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-                        <Database size={28} />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
-                        <p className="text-sm text-gray-500">Transfer entire instance data.</p>
-                    </div>
-                </div>
-
-                <div className="flex-1 space-y-4">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
-                    </p>
-
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
-                        <AlertTriangle className="shrink-0" size={16} />
-                        <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
-                    </div>
-                </div>
-
-                <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
-                    <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
-                        <Download size={18} /> Export Full DB
-                    </button>
-                    <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-                        <Upload size={18} /> Import DB
-                        <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
-                    </label>
-                </div>
-            </div>
-        </div>
-    )
-}
-{
-    editModal.show && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
-                <div className="space-y-3 mb-4">
-                    <label className="block text-sm font-bold dark:text-gray-300">Username</label>
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={editForm.username}
-                        onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                    />
-                    <label className="block text-sm font-bold dark:text-gray-300">Email</label>
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={editForm.email}
-                        onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                    />
-                    <input
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        type="password"
-                        value={editForm.password}
-                        onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                    />
-
-                    <label className="block text-sm font-bold dark:text-gray-300">Role</label>
-                    <select
-                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={editForm.role}
-                        onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                        disabled={[0, 1, 3].includes(editModal.user.id)}
-                    >
-                        <option value="user">User</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="admin">Admin</option>
-                        <option value="guest">Guest</option>
-                        <option value="test">{t('role.test', 'Test')}</option>
-                    </select>
-                    {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
-                    <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
-                        <input
-                            type="checkbox"
-                            checked={editForm.is_visible_in_matches}
-                            onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
-                            disabled={[0, 1, 3].includes(editModal.user.id)}
-                        />
-                        Is Visible in Matches
-                    </label>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
-                    <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{/* Roles Info Modal */ }
-{
-    rolesModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
-                    <Info size={20} className="text-blue-600" /> System Roles
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
-
-                <div className="space-y-4">
-                    {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
-                        <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
-                            <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
-                                    {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
-                                    {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
-                                    {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
-                                    {role.name}
-                                </h4>
-                                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+            {
+                createUserModal && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 dark:text-white">Create New User</h3>
+                            <div className="space-y-3 mb-4">
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Username"
+                                    value={createUserForm.username}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, username: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Email"
+                                    value={createUserForm.email}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Password"
+                                    type="password"
+                                    value={createUserForm.password}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                                />
+                                <select
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={createUserForm.role}
+                                    onChange={e => setCreateUserForm({ ...createUserForm, role: e.target.value })}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="test">{t('role.test', 'Test')}</option>
+                                </select>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
-                            <div className="flex flex-wrap gap-1">
-                                {role.permissions && role.permissions.map(p => (
-                                    <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                                        {p}
-                                    </span>
-                                ))}
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setCreateUserModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                                <button onClick={handleCreateUser} className="px-4 py-2 bg-black dark:bg-white dark:text-black text-white font-bold rounded-lg">Create</button>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                )
+            }
 
-                <div className="flex justify-end mt-6">
-                    <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
-                </div>
-            </div>
-        </div>
-    )
-}
+
+            {/* 5. BACKUP & MIGRATION TAB */}
+            {
+                activeTab === 'backup' && isAdmin && (
+                    <div className="grid md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500">
+                        {/* Settings Backup Card */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                                    <Settings size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Settings Migration</h3>
+                                    <p className="text-sm text-gray-500">Export/Import configuration only.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-4">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Easily transfer your SMTP, OAuth, and Site settings to another instance. Secrets are included in the export.
+                                </p>
+
+                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-lg flex gap-2">
+                                    <Info className="shrink-0" size={16} />
+                                    <span>This file contains sensitive API keys. Handle with care!</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                                <button onClick={exportSettings} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                                    <Download size={18} /> Export JSON
+                                </button>
+                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                                    <Upload size={18} /> Import JSON
+                                    <input type="file" accept=".json" onChange={importSettings} className="hidden" />
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Full Database Backup Card */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-transparent dark:border-white/10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                                    <Database size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xl text-gray-900 dark:text-white">Full Database Migration</h3>
+                                    <p className="text-sm text-gray-500">Transfer entire instance data.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-4">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Export all Users, Messages, Reports, and Settings. Use this to move your community to a new server.
+                                </p>
+
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-xs rounded-lg flex gap-2">
+                                    <AlertTriangle className="shrink-0" size={16} />
+                                    <span><strong>Warning:</strong> Importing a database backup will overwrite existing data. Ensure you have a backup of the target system first.</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4 pt-4 border-t dark:border-gray-700">
+                                <button onClick={exportDatabase} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                                    <Download size={18} /> Export Full DB
+                                </button>
+                                <label className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                                    <Upload size={18} /> Import DB
+                                    <input type="file" accept=".json" onChange={importDatabase} className="hidden" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {
+                editModal.show && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 dark:text-white">Edit User</h3>
+                            <div className="space-y-3 mb-4">
+                                <label className="block text-sm font-bold dark:text-gray-300">Username</label>
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.username}
+                                    onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                                />
+                                <label className="block text-sm font-bold dark:text-gray-300">Email</label>
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.email}
+                                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                                />
+                                <input
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    type="password"
+                                    value={editForm.password}
+                                    onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                                />
+
+                                <label className="block text-sm font-bold dark:text-gray-300">Role</label>
+                                <select
+                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={editForm.role}
+                                    onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                                    disabled={[0, 1, 3].includes(editModal.user.id)}
+                                >
+                                    <option value="user">User</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="guest">Guest</option>
+                                    <option value="test">{t('role.test', 'Test')}</option>
+                                </select>
+                                {[0, 1, 3].includes(editModal.user.id) && <p className="text-xs text-red-500">System roles cannot be changed.</p>}
+                                <label className="flex items-center gap-2 mt-2 dark:text-gray-300">
+                                    <input
+                                        type="checkbox"
+                                        checked={editForm.is_visible_in_matches}
+                                        onChange={e => setEditForm({ ...editForm, is_visible_in_matches: e.target.checked })}
+                                        disabled={[0, 1, 3].includes(editModal.user.id)}
+                                    />
+                                    Is Visible in Matches
+                                </label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setEditModal({ show: false, user: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10 rounded-lg">Cancel</button>
+                                <button onClick={saveUserEdit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Roles Info Modal */}
+            {
+                rolesModalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-transparent dark:border-white/10">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 dark:text-white">
+                                <Info size={20} className="text-blue-600" /> System Roles
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">These are the defined roles in the system and their capabilities.</p>
+
+                            <div className="space-y-4">
+                                {systemRoles.length === 0 ? <p className="dark:text-white">No roles loaded.</p> : systemRoles.map((role, idx) => (
+                                    <div key={idx} className="border dark:border-gray-700 p-4 rounded-xl bg-gray-50 dark:bg-white/5">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 capitalize flex items-center gap-2">
+                                                {role.name === 'admin' && <Shield size={18} className="text-red-500" />}
+                                                {role.name === 'moderator' && <Shield size={18} className="text-blue-500" />}
+                                                {role.name === 'guest' && <UserX size={18} className="text-gray-500" />}
+                                                {role.name}
+                                            </h4>
+                                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded font-mono">Rank: {role.rank || idx}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">{role.description}</div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {role.permissions && role.permissions.map(p => (
+                                                <span key={p} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                                    {p}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex justify-end mt-6">
+                                <button onClick={() => setRolesModalOpen(false)} className="px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-black font-bold rounded-lg hover:bg-black dark:hover:bg-gray-200">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
         </div >
     );
 };
