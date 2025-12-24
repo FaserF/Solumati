@@ -10,6 +10,7 @@ from app.services.utils import (create_html_email, get_setting,
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,12 @@ def start_scheduler():
     scheduler.add_job(
         send_daily_message_summaries, trigger, id="daily_summary", replace_existing=True
     )
+
+    # Run cleanup of Guest Data every 1 hour (to ensure strict privacy in demo mode)
+    scheduler.add_job(
+        cleanup_guest_data, 'interval', hours=1, id="guest_cleanup", replace_existing=True
+    )
+
     scheduler.start()
     logger.info("Scheduler started with daily summary job at 08:00.")
 
@@ -125,5 +132,45 @@ def send_daily_message_summaries():
 
     except Exception as e:
         logger.error(f"Error in send_daily_message_summaries: {e}")
+    finally:
+        db.close()
+
+
+def cleanup_guest_data():
+    """
+    Periodic cleanup for Guest User (ID 0) to ensure privacy.
+    Removes all messages and interactions associated with the Guest user.
+    """
+    logger.info("Starting Guest Data Cleanup...")
+    db: Session = SessionLocal()
+    try:
+        # 1. Clear Guest Messages
+        guest_id = 0
+
+        # Count first for logging
+        msg_count = db.query(models.Message).filter(
+            or_(models.Message.sender_id == guest_id, models.Message.receiver_id == guest_id)
+        ).count()
+
+        if msg_count > 0:
+            db.query(models.Message).filter(
+                or_(models.Message.sender_id == guest_id, models.Message.receiver_id == guest_id)
+            ).delete(synchronize_session=False)
+            logger.info(f"Deleted {msg_count} guest messages.")
+
+        # 2. Reset Guest Profile Data (Optional, ensuring clean slate)
+        # We re-run ensure_guest_user which handles reset of standard fields
+        from app.scripts.init_data import ensure_guest_user
+        ensure_guest_user(db)
+
+        # 3. Also clean up any Reports made by Guest?
+        db.query(models.Report).filter(models.Report.reporter_id == guest_id).delete(synchronize_session=False)
+
+        db.commit()
+        logger.info("Guest data cleanup completed successfully.")
+
+    except Exception as e:
+        logger.error(f"Guest cleanup failed: {e}")
+        db.rollback()
     finally:
         db.close()

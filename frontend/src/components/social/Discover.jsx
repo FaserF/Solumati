@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, Heart, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { useAuth } from '../../context/AuthContext'; // Unused
+import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { API_URL } from '../../config';
 
 const Discover = () => {
-    // const { user } = useAuth(); // Unused
+    const { user } = useAuth();
     const { t } = useI18n();
     const navigate = useNavigate();
     const onBack = () => navigate('/dashboard');
@@ -15,16 +15,23 @@ const Discover = () => {
     const [loading, setLoading] = useState(true);
 
     const fetchCandidates = useCallback(async () => {
+        if (!user) return; // Wait for user to be loaded
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/users/discover`);
+            const res = await fetch(`${API_URL}/users/discover`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token || user.user_id}`,
+                    'X-User-Id': `${user.user_id}`
+                }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setCandidates(data);
             }
         } catch { /* ignore */ }
         setLoading(false);
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         // Use setTimeout to avoid synchronous setState warning

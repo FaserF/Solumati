@@ -145,7 +145,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                     </div>
                     <div>
                         <h4 className="font-bold text-zinc-900 dark:text-white leading-none">{chatPartner.username}</h4>
-                        <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-wide flex items-center gap-1">
+                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-wide flex items-center gap-1">
                             {status === 'connected' ? 'Online' : 'Offline'}
                             {status !== 'connected' && <WifiOff size={10} />}
                         </span>
@@ -159,7 +159,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50/50 dark:bg-black/20">
                 {messages.length === 0 && canWrite && (
-                    <div className="flex flex-col items-center justify-center h-full text-zinc-400 space-y-4">
+                    <div className="flex flex-col items-center justify-center h-full text-zinc-500 dark:text-zinc-400 space-y-4">
                         <p className="text-sm italic">{t ? t('chat.start_convo', 'Start the conversation!') : 'Start the conversation!'}</p>
                         <div className="flex flex-wrap justify-center gap-2 max-w-[250px]">
                             {ICEBREAKERS.map((cur, i) => (
@@ -185,7 +185,7 @@ const ChatWindow = ({ currentUser, chatPartner, token, onClose, supportChatEnabl
                                     }`}
                             >
                                 {msg.content}
-                                <div className={`text-[9px] opacity-70 mt-1 flex justify-end gap-1 ${isMe ? 'text-indigo-100' : 'text-zinc-400'}`}>
+                                <div className={`text-[9px] opacity-70 mt-1 flex justify-end gap-1 ${isMe ? 'text-indigo-100' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             </div>

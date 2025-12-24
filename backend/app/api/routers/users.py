@@ -116,6 +116,63 @@ def verify_email(id: int, code: str, db: Session = Depends(get_db)):
     logger.info(f"User {user.username} (ID {id}) successfully verified.")
     return {"message": "Success", "status": "verified"}
 
+@router.get("/questions")
+def get_questions(lang: str = "en"):
+    t = get_translations(lang)
+    questions_data = t.get("questions", {})
+    final_questions = []
+
+    for q_skel in QUESTIONS_SKELETON:
+        qid_str = str(q_skel["id"])
+        q_trans = questions_data.get(qid_str, {})
+        final_questions.append({
+            **q_skel,
+            "text": q_trans.get("text", f"Question {qid_str}"),
+            "options": q_trans.get("options", q_skel.get("options", ["Yes", "No"]))
+        })
+    return final_questions
+
+@router.get("/users/discover", response_model=List[schemas.UserDisplay])
+def discover_users(
+    user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db),
+):
+    is_privileged = (user.id == 0 or user.role in ("admin", "moderator"))
+    candidates = user_service.get_discover_candidates(db, user, is_privileged, limit=100) # Increased limit for shuffle
+
+    # --- DEMO MODE: Inject Dummy Users for Guest OR Admin ---
+    if (user.id == 0 or user.role == "admin"):
+        if len(candidates) < 5:
+             dummy_data = [
+                {"id": -1, "username": "Alice (Demo)", "image_url": "https://i.pravatar.cc/300?img=1", "intent": "friendship", "answers": json.dumps({"1": 4, "2": 2})},
+                {"id": -2, "username": "Bob (Demo)", "image_url": "https://i.pravatar.cc/300?img=11", "intent": "dating", "answers": json.dumps({"1": 2, "2": 5})},
+                {"id": -3, "username": "Charlie (Demo)", "image_url": "https://i.pravatar.cc/300?img=3", "intent": "chat", "answers": json.dumps({"1": 5, "2": 1})},
+                {"id": -4, "username": "Diana (Demo)", "image_url": "https://i.pravatar.cc/300?img=5", "intent": "networking", "answers": json.dumps({"1": 3, "2": 3})},
+                {"id": -5, "username": "Eve (Demo)", "image_url": "https://i.pravatar.cc/300?img=9", "intent": "chat", "answers": json.dumps({"1": 1, "2": 4})},
+            ]
+             for d in dummy_data:
+                dummy_user = models.User(
+                    id=d["id"],
+                    username=d["username"],
+                    real_name=d["username"],
+                    email=f"{d['username'].lower().replace(' ', '')}@example.com",
+                    image_url=d["image_url"],
+                    intent=d["intent"],
+                    answers=d["answers"],
+                    role="test",
+                    is_active=True,
+                    is_visible_in_matches=True,
+                    is_guest=False,
+                    is_verified=True
+                )
+                candidates.append(dummy_user)
+
+    if not candidates:
+        return []
+
+    random.shuffle(candidates)
+    return candidates[:10]
+
 @router.get("/users/{user_id}", response_model=schemas.UserDisplay)
 def get_user_profile(
     user_id: int,
@@ -154,7 +211,7 @@ def get_matches(user_id: int, db: Session = Depends(get_db)):
 
     # --- DEMO MODE: Inject Dummy Users for Guest OR Admin ---
     # Only if Demo Mode is NOT active (Live Mode) - ensuring we don't duplicate logic if DB is full of fake users.
-    if (user_id == 0 or (current_user and current_user.role == "admin")) and not demo_service.active_mode:
+    if (user_id == 0 or (current_user and current_user.role == "admin")):
         # If we don't have enough real candidates (or any), inject dummies so the guest/admin sees something.
         if len(candidates) < 5:
             # Create transient dummy users (not saved to DB)
@@ -241,59 +298,6 @@ def report_user(
     logger.info(f"User {reporter.id} reported User {user_id}. Reason: {report.reason}")
     return {"status": "submitted"}
 
-@router.get("/questions")
-def get_questions(lang: str = "en"):
-    t = get_translations(lang)
-    questions_data = t.get("questions", {})
-    final_questions = []
-
-    for q_skel in QUESTIONS_SKELETON:
-        qid_str = str(q_skel["id"])
-        q_trans = questions_data.get(qid_str, {})
-        final_questions.append({
-            **q_skel,
-            "text": q_trans.get("text", f"Question {qid_str}"),
-            "options": q_trans.get("options", q_skel.get("options", ["Yes", "No"]))
-        })
-    return final_questions
-
-@router.get("/users/discover", response_model=List[schemas.UserDisplay])
-def discover_users(
-    user: models.User = Depends(get_current_user_from_header),
-    db: Session = Depends(get_db),
-):
-    is_privileged = (user.id == 0 or user.role in ("admin", "moderator"))
-    candidates = user_service.get_discover_candidates(db, user, is_privileged, limit=100) # Increased limit for shuffle
-
-    # --- DEMO MODE: Inject Dummy Users for Guest OR Admin ---
-    if (user.id == 0 or user.role == "admin") and not demo_service.active_mode:
-        if len(candidates) < 5:
-             dummy_data = [
-                {"id": -1, "username": "Alice (Demo)", "image_url": "https://i.pravatar.cc/300?img=1", "intent": "friendship", "answers": json.dumps({"1": 4, "2": 2})},
-                {"id": -2, "username": "Bob (Demo)", "image_url": "https://i.pravatar.cc/300?img=11", "intent": "dating", "answers": json.dumps({"1": 2, "2": 5})},
-                {"id": -3, "username": "Charlie (Demo)", "image_url": "https://i.pravatar.cc/300?img=3", "intent": "chat", "answers": json.dumps({"1": 5, "2": 1})},
-                {"id": -4, "username": "Diana (Demo)", "image_url": "https://i.pravatar.cc/300?img=5", "intent": "networking", "answers": json.dumps({"1": 3, "2": 3})},
-                {"id": -5, "username": "Eve (Demo)", "image_url": "https://i.pravatar.cc/300?img=9", "intent": "chat", "answers": json.dumps({"1": 1, "2": 4})},
-            ]
-             for d in dummy_data:
-                dummy_user = models.User(
-                    id=d["id"],
-                    username=d["username"],
-                    real_name=d["username"],
-                    image_url=d["image_url"],
-                    intent=d["intent"],
-                    answers=d["answers"],
-                    role="test",
-                    is_active=True,
-                    is_visible_in_matches=True
-                )
-                candidates.append(dummy_user)
-
-    if not candidates:
-        return []
-
-    random.shuffle(candidates)
-    return candidates[:10]
 
 @router.put("/users/{user_id}/profile", response_model=schemas.UserDisplay)
 def update_profile(

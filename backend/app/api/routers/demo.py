@@ -23,18 +23,18 @@ class DemoError(BaseModel):
 
 @router.post("/start")
 async def start_demo(
-    mode: str = Query(..., regex="^(local|persistent)$"),
+    mode: str = Query(..., pattern="^(local|persistent)$"),
     current_user: models.User = Depends(get_current_user_from_header)
 ):
     try:
         if not current_user.is_superuser and current_user.role != "admin":
              raise HTTPException(status_code=403, detail="Only Admins can start Demo Mode")
 
+        logger.info(f"Admin {current_user.username} (ID {current_user.id}) attempting to start demo mode: {mode}")
         await demo_service.start_demo(mode)
         return {"status": "started", "mode": mode}
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception(f"Demo Start Failed for mode {mode} by {current_user.username}")
         raise HTTPException(status_code=500, detail=f"Demo Start Failed: {str(e)}")
 
 @router.post("/stop")

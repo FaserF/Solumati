@@ -428,7 +428,7 @@ async def generate_dummy_data(db: Session):
         async with httpx.AsyncClient() as client:
             tasks = []
 
-            for i in range(20):
+            for i in range(40):
                 # Select Random Archetype for this user
                 arch = random.choice(archetypes)
 

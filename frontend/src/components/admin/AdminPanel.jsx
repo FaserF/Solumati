@@ -531,7 +531,7 @@ const AdminPanel = () => {
     };
 
     return (
-        <div className="w-full text-gray-900 dark:text-gray-100 font-sans">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-gray-900 dark:text-gray-100 font-sans">
             {/* Admin Header / Navbar - Glass Effect */}
             <div className="glass flex items-center justify-between p-4 md:p-6 mb-8 rounded-3xl animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-4">
@@ -668,7 +668,7 @@ const AdminPanel = () => {
                             </button>
                         </div>
                         {conversations.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-12 text-gray-400">
+                            <div className="flex flex-col items-center justify-center p-12 text-gray-500 dark:text-gray-400">
                                 <MessageSquare size={48} className="mb-4 opacity-50" />
                                 <p>No conversations found.</p>
                             </div>
@@ -743,14 +743,14 @@ const AdminPanel = () => {
                                 </thead>
                                 <tbody>
                                     {users.length === 0 ? (
-                                        <tr><td colSpan="7" className="p-8 text-center text-gray-400">{loading ? "Loading..." : t('admin.no_users')}</td></tr>
+                                        <tr><td colSpan="7" className="p-8 text-center text-gray-500 dark:text-gray-400">{loading ? "Loading..." : t('admin.no_users')}</td></tr>
                                     ) : (
                                         users.map(u => (
                                             <tr key={u.id} className="border-b hover:bg-gray-50">
                                                 <td className="p-4 text-gray-500">#{u.id}</td>
                                                 <td className="p-4 font-medium">
                                                     <div className="font-bold text-gray-800 dark:text-gray-200">{u.username}</div>
-                                                    <div className="text-xs text-gray-400">{u.email}</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">{u.email}</div>
                                                 </td>
                                                 <td className="p-4">
                                                     {u.role === 'admin' ? <span className="text-red-600 font-bold flex items-center gap-1"><Shield size={12} /> Admin</span> :
@@ -844,7 +844,7 @@ const AdminPanel = () => {
                                 </thead>
                                 <tbody>
                                     {reports.length === 0 ? (
-                                        <tr><td colSpan="5" className="p-8 text-center text-gray-400">No reports found.</td></tr>
+                                        <tr><td colSpan="5" className="p-8 text-center text-gray-500 dark:text-gray-400">No reports found.</td></tr>
                                     ) : (
                                         reports.map(r => (
                                             <tr key={r.id} className="border-b hover:bg-gray-50 dark:hover:bg-white/5 dark:border-gray-700">
@@ -1279,7 +1279,7 @@ const AdminPanel = () => {
                                         <p className="text-xs text-gray-400 mt-1">Used for generating verification links.</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.domains')} <span className="text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{t('admin.settings.domains')} <span className="text-gray-500 dark:text-gray-400 font-normal">({t('admin.settings.domains_hint')})</span></label>
                                         <textarea
                                             value={settings.registration.allowed_domains || ''}
                                             onChange={(e) => updateSetting('registration', 'allowed_domains', e.target.value)}
@@ -1797,7 +1797,7 @@ const AdminPanel = () => {
                                 <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
                                     <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Disk Usage</div>
                                     <div className="font-mono text-xl dark:text-white">{diagnostics.disk_percent}%</div>
-                                    <div className="text-xs text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{diagnostics.disk_free_gb} GB free</div>
                                 </div>
                                 <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
                                     <div className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase mb-2">Database</div>
