@@ -142,12 +142,12 @@
             "users.py": [
                 "POST /users/ (create_user)",
                 "POST /verify (verify_email)",
+                "GET /questions (get_questions)",
+                "GET /users/discover (discover_users)",
                 "GET /users/{user_id} (get_user_profile)",
                 "GET /matches/{user_id} (get_matches)",
                 "GET /users/{user_id}/public (get_user_public_profile)",
                 "POST /users/{user_id}/report (report_user)",
-                "GET /questions (get_questions)",
-                "GET /users/discover (discover_users)",
                 "PUT /users/{user_id}/profile (update_profile)",
                 "POST /users/{user_id}/image (upload_image)",
                 "PUT /users/{user_id}/account (update_account_settings)",
@@ -287,6 +287,7 @@
                 "test_auth_validation.py": null,
                 "test_chat_crypto.py": null,
                 "test_export.py": null,
+                "test_guest_and_demo.py": null,
                 "test_mail_chat.py": null,
                 "test_main.py": null,
                 "test_notifications.py": null,
@@ -304,6 +305,7 @@
             "OAUTH_SETUP.md": null
         },
         "frontend/": {
+            ".dockerignore": null,
             "Dockerfile": null,
             "e2e/": {
                 "functional.spec.js": null
