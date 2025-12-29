@@ -3,7 +3,7 @@ export const API_URL = (import.meta.env && import.meta.env.VITE_API_URL) ? impor
 /* eslint-disable no-undef */
 export const APP_VERSION = (typeof __APP_VERSION__ !== 'undefined') ? __APP_VERSION__ : '0.0.0';
 /* eslint-enable no-undef */
-export const APP_RELEASE_TYPE = "dev"; // stable, beta, nightly, development
+export const APP_RELEASE_TYPE = "nightly"; // stable, beta, nightly, development
 export const APP_NAME = "Solumati";
 
 export const FALLBACK = {
