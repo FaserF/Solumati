@@ -388,7 +388,8 @@
             "update_repo_meta.py": null
         },
         "secret.key": null,
-        "test.db": null
+        "test.db": null,
+        "windows-certificate.pwd": null
     },
     "generated_at": "Dynamic (Run `scripts/update_repo_meta.py` to update)"
 }
