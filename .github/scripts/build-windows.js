@@ -135,7 +135,7 @@ console.log('Building with MSBuild...');
 // We rely on MSBuild being in PATH (Developer Command Prompt) or setup-msbuild action
 try {
     // Restore
-    execSync(`msbuild -t:Restore -p:RestorePackagesConfig=true`, { cwd: PROJECT_DIR, stdio: 'inherit' });
+    execSync(`msbuild -t:Restore`, { cwd: PROJECT_DIR, stdio: 'inherit' });
 
     // Build and Package
     // /p:AppxBundle=Always /p:AppxPackageSigningEnabled=true /p:PackageCertificateKeyFile="Solumati_TemporaryKey.pfx" /p:PackageCertificatePassword="password"
