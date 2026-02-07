@@ -12,5 +12,5 @@ webauthn==2.7.0
 pytest==9.0.2
 httpx==0.28.1
 fastapi-sso==0.20.0
-Faker==40.1.2
+Faker==40.4.0
 APScheduler==3.11.2
