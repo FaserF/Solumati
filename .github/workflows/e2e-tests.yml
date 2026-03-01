@@ -69,14 +69,14 @@ jobs:
         CI: true
         VITE_API_URL: "http://localhost:7777"
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: playwright-report
         path: frontend/playwright-report/
         retention-days: 30
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: backend-logs
