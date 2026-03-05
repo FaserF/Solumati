@@ -51,7 +51,7 @@ jobs:
             fi
 
       - name: Build and push Backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           push: true
@@ -60,7 +60,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ steps.get_version.outputs.VERSION }}
 
       - name: Build and push Frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           push: true
