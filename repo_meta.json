@@ -5,18 +5,18 @@
     },
     "technology_stack": {
         "frontend": [
-            "lucide-react (^0.562.0)",
+            "lucide-react (^0.577.0)",
             "react (^19.0.0)",
             "react-router-dom (^7.0.0)",
-            "vite (^7.0.0)"
+            "vite (^8.0.0)"
         ],
         "backend": [
-            "fastapi==0.128.0",
-            "sqlalchemy==2.0.45",
+            "fastapi==0.135.1",
+            "sqlalchemy==2.0.48",
             "pydantic==2.12.5",
-            "pydantic-settings==2.12.0",
+            "pydantic-settings==2.13.1",
             "pytest==9.0.2",
-            "fastapi-sso==0.19.0"
+            "fastapi-sso==0.21.0"
         ],
         "dev_ops": [
             "Docker Compose",
@@ -139,22 +139,18 @@
             }
         },
         "api_routes": {
-            "users.py": [
-                "POST /users/ (create_user)",
-                "POST /verify (verify_email)",
-                "GET /questions (get_questions)",
-                "GET /users/discover (discover_users)",
-                "GET /users/{user_id} (get_user_profile)",
-                "GET /matches/{user_id} (get_matches)",
-                "GET /users/{user_id}/public (get_user_public_profile)",
-                "POST /users/{user_id}/report (report_user)",
-                "PUT /users/{user_id}/profile (update_profile)",
-                "POST /users/{user_id}/image (upload_image)",
-                "PUT /users/{user_id}/account (update_account_settings)",
-                "PUT /users/{user_id}/preferences (update_user_preferences)",
-                "DELETE /users/{user_id} (delete_own_account)",
-                "POST /auth/password-reset/request (request_password_reset)",
-                "POST /auth/password-reset/confirm (confirm_password_reset)"
+            "backup.py": [
+                "GET /settings/export (export_settings)",
+                "GET /database/export (export_database)"
+            ],
+            "oauth.py": [
+                "GET /connections (get_connections)",
+                "DELETE /connections/{provider} (delete_connection)"
+            ],
+            "system.py": [
+                "GET /public-config (get_public_config)",
+                "GET /public/legal (get_public_legal)",
+                "GET /.well-known/assetlinks.json (get_assetlinks)"
             ],
             "auth.py": [
                 "POST /login (login)",
@@ -170,13 +166,12 @@
                 "POST /auth/2fa/webauthn/verify (webauthn_auth_verify)",
                 "POST /auth/2fa/send-email-code (send_email_2fa_code_endpoint)"
             ],
-            "chat.py": [
-                "GET /chat/history/{other_user_id} (get_chat_history)",
-                "GET /chat/conversations (get_conversations)"
-            ],
-            "backup.py": [
-                "GET /settings/export (export_settings)",
-                "GET /database/export (export_database)"
+            "notifications.py": [
+                "GET /notifications (get_notifications)",
+                "PUT /notifications/{notif_id}/read (mark_notification_read)",
+                "DELETE /notifications/clear (clear_all_notifications)",
+                "GET /notifications/vapid-public-key (get_vapid_public_key)",
+                "POST /notifications/subscribe (subscribe_push)"
             ],
             "admin.py": [
                 "GET /roles (get_system_roles)",
@@ -195,21 +190,26 @@
                 "GET /logs/email (get_email_logs)",
                 "GET /logs/server (get_server_logs)"
             ],
-            "notifications.py": [
-                "GET /notifications (get_notifications)",
-                "PUT /notifications/{notif_id}/read (mark_notification_read)",
-                "DELETE /notifications/clear (clear_all_notifications)",
-                "GET /notifications/vapid-public-key (get_vapid_public_key)",
-                "POST /notifications/subscribe (subscribe_push)"
+            "chat.py": [
+                "GET /chat/history/{other_user_id} (get_chat_history)",
+                "GET /chat/conversations (get_conversations)"
             ],
-            "oauth.py": [
-                "GET /connections (get_connections)",
-                "DELETE /connections/{provider} (delete_connection)"
-            ],
-            "system.py": [
-                "GET /public-config (get_public_config)",
-                "GET /public/legal (get_public_legal)",
-                "GET /.well-known/assetlinks.json (get_assetlinks)"
+            "users.py": [
+                "POST /users/ (create_user)",
+                "POST /verify (verify_email)",
+                "GET /questions (get_questions)",
+                "GET /users/discover (discover_users)",
+                "GET /users/{user_id} (get_user_profile)",
+                "GET /matches/{user_id} (get_matches)",
+                "GET /users/{user_id}/public (get_user_public_profile)",
+                "POST /users/{user_id}/report (report_user)",
+                "PUT /users/{user_id}/profile (update_profile)",
+                "POST /users/{user_id}/image (upload_image)",
+                "PUT /users/{user_id}/account (update_account_settings)",
+                "PUT /users/{user_id}/preferences (update_user_preferences)",
+                "DELETE /users/{user_id} (delete_own_account)",
+                "POST /auth/password-reset/request (request_password_reset)",
+                "POST /auth/password-reset/confirm (confirm_password_reset)"
             ]
         },
         "key_modules": {}
