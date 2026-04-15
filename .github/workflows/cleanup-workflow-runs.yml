@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cleanup old workflow runs
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const dryRun = '${{ inputs.dry_run }}' === 'true';
