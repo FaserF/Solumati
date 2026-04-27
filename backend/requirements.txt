@@ -4,7 +4,7 @@ sqlalchemy==2.0.49
 psycopg2-binary==2.9.12
 pydantic==2.13.3
 pydantic-settings==2.14.0
-python-multipart==0.0.26
+python-multipart==0.0.27
 email-validator==2.3.0
 bcrypt==5.0.0
 pyotp==2.9.0
