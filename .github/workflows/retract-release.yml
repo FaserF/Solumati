@@ -21,7 +21,7 @@ jobs:
           echo "❌ You must type 'RETRACT' in the confirmation box."
           exit 1
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

@@ -24,7 +24,7 @@ jobs:
       dependencies: ${{ steps.filter.outputs.dependencies }}
       any_code: ${{ steps.filter.outputs.any_code }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -65,7 +65,7 @@ jobs:
     name: Link Checker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: lycheeverse/lychee-action@v2.8.0
         with:
           args: --config lychee.toml --exclude-all-private './**/*.md' './docs/**/*.md' './frontend/src/**/*.jsx'
