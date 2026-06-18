@@ -30,7 +30,7 @@ jobs:
       new_version: ${{ steps.version.outputs.version }}
       commit_sha: ${{ steps.commit.outputs.commit_sha }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
@@ -314,7 +314,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -362,7 +362,7 @@ jobs:
     runs-on: ubuntu-latest
     # if: inputs.release_type == 'stable' # Only bump main to dev after a stable release
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
