@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 from app.core.database import Base
-from sqlalchemy import (ARRAY, Boolean, Column, DateTime, Enum, ForeignKey,
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey,
                         Integer, String, Text)
 from sqlalchemy.orm import relationship
 

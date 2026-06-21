@@ -15,7 +15,7 @@ from app.db import models, schemas
 from app.services.utils import (get_setting, save_setting,
                                 send_account_deactivated_notification)
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)

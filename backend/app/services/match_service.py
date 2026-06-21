@@ -1,6 +1,6 @@
 import json
 import random
-from typing import List, Dict, Any, Optional
+from typing import List
 from sqlalchemy.orm import Session
 from app.db import models, schemas
 from app.services.questions_content import QUESTIONS_SKELETON

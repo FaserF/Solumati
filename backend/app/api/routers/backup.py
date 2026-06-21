@@ -1,15 +1,14 @@
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
 
 from app.api.dependencies import require_admin
 # Local modules
 from app.core.database import Base, get_db
 from app.db import models, schemas
-from app.services.utils import get_setting, save_setting
+from app.services.utils import save_setting
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 

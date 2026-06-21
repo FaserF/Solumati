@@ -7,7 +7,7 @@ from app.api.dependencies import get_current_user_from_header
 from app.core.database import get_db
 from app.db import models, schemas
 from app.services.utils import get_setting
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 # Try to import pywebpush, if not available, push will fail but app won't crash

@@ -6,7 +6,7 @@ Uses in-memory storage with automatic cleanup.
 import logging
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)

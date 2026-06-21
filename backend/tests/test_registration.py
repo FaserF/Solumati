@@ -2,8 +2,6 @@ import os
 import sys
 from datetime import datetime
 
-import pytest
-from fastapi.testclient import TestClient
 
 # Ensure backend path is in sys.path if running from root or backend/tests
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

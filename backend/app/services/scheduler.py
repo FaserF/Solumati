@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import datetime, timedelta
 
 from app.core.config import PROJECT_NAME
 from app.core.database import SessionLocal

@@ -2,7 +2,7 @@
 Standardized API Response Models
 Provides unified response format across all endpoints.
 """
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel
 

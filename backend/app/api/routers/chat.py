@@ -1,16 +1,15 @@
-import base64
 import json
 import os
 import secrets
 from datetime import datetime
-from typing import Dict, List
+from typing import List
 
 from app.api.dependencies import \
     get_current_user_from_header  # We might need a query param version for WS
 from app.core.database import get_db
-from app.db import models, schemas
+from app.db import models
 from cryptography.fernet import Fernet
-from fastapi import (APIRouter, Depends, HTTPException, WebSocket,
+from fastapi import (APIRouter, Depends, WebSocket,
                      WebSocketDisconnect)
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session

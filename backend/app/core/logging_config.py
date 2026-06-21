@@ -5,7 +5,6 @@
 import logging
 import os
 import re
-from functools import lru_cache
 from logging import FileHandler, StreamHandler
 
 LOG_FILE = os.getenv("LOG_FILE", "app.log")

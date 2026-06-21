@@ -4,7 +4,6 @@ Centralized, typed access to system settings with caching.
 """
 import json
 import logging
-from functools import lru_cache
 from typing import Any, Dict, Optional, Type, TypeVar
 
 from pydantic import BaseModel

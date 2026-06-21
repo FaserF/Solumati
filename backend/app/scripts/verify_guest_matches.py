@@ -9,7 +9,6 @@ sys.path.append(
 from app.api.routers.users import get_matches
 from app.core.database import SessionLocal
 from app.db import models
-from sqlalchemy import or_
 
 
 def verify_guest_matches():

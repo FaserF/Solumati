@@ -3,7 +3,7 @@ import json
 import zipfile
 from datetime import datetime
 
-from app.db import models, schemas
+from app.db import models
 from sqlalchemy.orm import Session
 
 

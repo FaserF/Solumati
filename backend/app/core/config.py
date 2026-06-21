@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 
 from app.core.logging_config import logger

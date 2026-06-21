@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import os
-import random
 import secrets
 from datetime import datetime
 
@@ -265,10 +264,9 @@ def ensure_admin_user(db: Session):
 def check_emergency_reset(db: Session):
     """Checks if an emergency admin reset was requested."""
     try:
-        import json
 
         from app.db import models
-        from app.services.utils import get_setting, save_setting
+        from app.services.utils import get_setting
 
         target_id_str = get_setting(db, "admin_emergency_reset_target", None)
         if not target_id_str:

@@ -7,14 +7,14 @@ from datetime import datetime, timedelta
 # 2FA Libraries
 import pyotp
 from app.api.dependencies import get_current_user_from_header
-from app.core.config import APP_BASE_URL, PROJECT_NAME
+from app.core.config import PROJECT_NAME
 # Local modules
 from app.core.database import get_db
 from app.core.security import verify_password
 from app.db import models, schemas
 from app.services.captcha import verify_captcha_sync
 from app.services.rate_limiter import rate_limiter
-from app.services.utils import get_setting, save_setting, send_mail_sync
+from app.services.utils import get_setting, send_mail_sync
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -22,8 +22,7 @@ from webauthn import (base64url_to_bytes, generate_authentication_options,
                       generate_registration_options, options_to_json,
                       verify_authentication_response,
                       verify_registration_response)
-from webauthn.helpers.structs import (AuthenticationCredential,
-                                      AuthenticatorAttachment,
+from webauthn.helpers.structs import (AuthenticatorAttachment,
                                       AuthenticatorSelectionCriteria,
                                       PublicKeyCredentialDescriptor,
                                       RegistrationCredential,

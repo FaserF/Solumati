@@ -1,6 +1,5 @@
 import json
 import logging
-import random
 import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
@@ -313,7 +312,7 @@ def generate_unique_username(db: Session, real_name: str) -> str:
         suffix += 1
 
 
-from app.services.questions_content import QUESTIONS, get_question_by_id
+from app.services.questions_content import get_question_by_id
 
 
 def calculate_compatibility(answers_a_raw, answers_b_raw, intent_a, intent_b) -> dict:

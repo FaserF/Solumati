@@ -1,10 +1,7 @@
 import os
 import sys
-from datetime import datetime
 from unittest.mock import MagicMock
 
-import pytest
-from fastapi.testclient import TestClient
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -68,7 +65,7 @@ def test_mark_notification_read(client):
     mock_notif = models.Notification(id=123, is_read=False, user_id=1)
     mock_db.query.return_value.filter.return_value.first.return_value = mock_notif
 
-    response = client.put(f"/notifications/123/read", headers={"X-User-ID": "1"})
+    response = client.put("/notifications/123/read", headers={"X-User-ID": "1"})
 
     assert response.status_code == 200
     assert mock_notif.is_read == True

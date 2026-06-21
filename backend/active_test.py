@@ -3,7 +3,6 @@ import asyncio
 from httpx import AsyncClient, ASGITransport
 from fastapi.testclient import TestClient
 from app.main import app
-from app.core.database import SessionLocal
 from app.db import models
 
 # Use TestClient for synchronous endpoints if needed, but here we need Async for WS

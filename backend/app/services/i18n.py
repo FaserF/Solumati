@@ -5,7 +5,6 @@ import json
 import locale
 import logging
 import os
-from functools import lru_cache
 
 # Configure local logger for this module
 logger = logging.getLogger(__name__)

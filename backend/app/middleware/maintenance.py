@@ -1,7 +1,6 @@
 import logging
 
 from app.core.database import SessionLocal
-from app.db import schemas
 from app.services.utils import get_setting
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse

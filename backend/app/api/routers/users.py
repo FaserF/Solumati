@@ -4,13 +4,12 @@ import secrets
 import shutil
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List
 
 from fastapi import (APIRouter, BackgroundTasks, Depends, File, HTTPException,
                      Request, UploadFile)
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from app.api.dependencies import get_current_user_from_header
 from app.core.config import PROJECT_NAME
@@ -22,7 +21,6 @@ from app.db import models, schemas
 from app.services.user_service import user_service
 from app.services.match_service import match_service
 from app.services.email_service import email_service
-from app.services.demo_service import demo_service
 # LegacyUtils (to be deprecated/moved)
 from app.services.utils import (get_setting, is_profile_complete,
                                 send_email_changed_notification,

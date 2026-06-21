@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from app.core.config import PROJECT_NAME
 from email_validator import EmailNotValidError, validate_email
 from pydantic import BaseModel, EmailStr, field_validator
 

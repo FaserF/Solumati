@@ -7,12 +7,10 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
-from typing import Optional
 
 from sqlalchemy.orm import Session
 
 from app.core.config import PROJECT_NAME
-from app.db import schemas
 from app.services.settings_service import SettingsService
 
 logger = logging.getLogger(__name__)
