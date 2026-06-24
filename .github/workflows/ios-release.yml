@@ -93,7 +93,7 @@ jobs:
 
       - name: Upload IPA to Release
         if: github.event_name == 'release' || inputs.tag_name != ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag_name }}
           files: ${{ steps.rename.outputs.ipa_path }}
