@@ -108,7 +108,7 @@ jobs:
 
       - name: Update Release with Download Buttons
         if: github.event_name == 'release' || inputs.tag_name != ''
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.14'
 
