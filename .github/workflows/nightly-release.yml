@@ -176,7 +176,7 @@ jobs:
 
       - name: Create Nightly Release
         if: steps.check_changes.outputs.has_changes == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ env.NEW_VERSION }}
           name: Nightly v${{ env.NEW_VERSION }}
