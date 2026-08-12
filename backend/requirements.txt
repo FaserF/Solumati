@@ -8,7 +8,7 @@ python-multipart==0.0.32
 email-validator==2.3.0
 bcrypt==5.0.0
 pyotp==2.10.0
-webauthn==2.8.0
+webauthn==3.0.0
 pytest==9.1.1
 httpx==0.28.1
 fastapi-sso==0.21.1
