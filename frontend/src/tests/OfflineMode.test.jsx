@@ -4,6 +4,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import AppRouter from '../router/AppRouter';
 
+
+vi.mock('../components/ThemeContext', () => ({
+    useTheme: () => ({ setTheme: vi.fn(), theme: 'light' }),
+    ThemeProvider: ({ children }) => <div>{children}</div>
+}));
+
 // Need to mock child components to avoid deep rendering issues,
 // seeing as we are testing AppRouter integration primarily.
 vi.mock('../pages/Landing', () => ({ default: () => <div>Landing Page</div> }));

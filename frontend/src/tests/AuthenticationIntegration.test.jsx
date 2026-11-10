@@ -6,6 +6,12 @@ import AuthLayout from '../components/layout/AuthLayout';
 import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
 
+
+vi.mock('../components/ThemeContext', () => ({
+    useTheme: () => ({ setTheme: vi.fn(), theme: 'light' }),
+    ThemeProvider: ({ children }) => <div>{children}</div>
+}));
+
 // Mocks
 vi.mock('../context/AuthContext', () => ({
     useAuth: () => ({

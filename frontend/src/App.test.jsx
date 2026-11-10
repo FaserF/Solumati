@@ -2,6 +2,12 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import App from './App';
 
+
+vi.mock('../components/ThemeContext', () => ({
+    useTheme: () => ({ setTheme: vi.fn(), theme: 'light' }),
+    ThemeProvider: ({ children }) => <div>{children}</div>
+}));
+
 // Mock config
 vi.mock('./config', () => ({
     API_URL: 'http://localhost:8000',

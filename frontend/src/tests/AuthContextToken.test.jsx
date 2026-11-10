@@ -2,6 +2,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthProvider } from '../context/AuthContext';
 
+
+vi.mock('../components/ThemeContext', () => ({
+    useTheme: () => ({ setTheme: vi.fn(), theme: 'light' }),
+    ThemeProvider: ({ children }) => <div>{children}</div>
+}));
+
 // Mock I18nContext
 vi.mock('../context/I18nContext', () => ({
     useI18n: () => ({
