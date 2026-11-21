@@ -6,7 +6,7 @@ on:
       pwa_url:
         description: 'PWA URL'
         required: false
-        default: 'https://solumati.fabiseitz.de'
+        default: 'https://github.com/apps/faserf-hermes-agent'
         type: string
       tag_name:
         description: 'Release Tag Name (e.g. v1.0.0)'
@@ -21,7 +21,7 @@ on:
       pwa_url:
         description: 'PWA URL'
         required: false
-        default: 'https://solumati.fabiseitz.de'
+        default: 'https://github.com/apps/faserf-hermes-agent'
         type: string
       tag_name:
         description: 'Release Tag Name (e.g. v1.0.0)'
@@ -75,7 +75,7 @@ jobs:
       - name: Generate APK
         env:
           # Use input if dispatch, otherwise try secret, fallback to hardcoded default
-          PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://solumati.fabiseitz.de' }}
+          PWA_URL: ${{ inputs.pwa_url || secrets.PWA_URL || 'https://github.com/apps/faserf-hermes-agent' }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
