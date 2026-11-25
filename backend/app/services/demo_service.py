@@ -2,7 +2,6 @@ import asyncio
 import logging
 import random
 from datetime import datetime
-from typing import List, Optional
 
 try:
     from faker import Faker
@@ -19,14 +18,14 @@ logger = logging.getLogger(__name__)
 
 class DemoService:
     def __init__(self):
-        self.active_mode: Optional[str] = None  # 'local' or 'persistent'
-        self.task: Optional[asyncio.Task] = None
+        self.active_mode: str | None = None  # 'local' or 'persistent'
+        self.task: asyncio.Task | None = None
         if Faker:
             self.faker = Faker()
         else:
             self.faker = None
             logger.warning("Faker library not installed. Demo features will generate errors or use fallbacks.")
-        self.errors: List[dict] = []
+        self.errors: list[dict] = []
         self._stop_event = asyncio.Event()
 
     async def start_demo(self, mode: str):
@@ -46,7 +45,7 @@ class DemoService:
         self.active_mode = None
         logger.info("Demo Mode stopped")
 
-    def get_errors(self) -> List[dict]:
+    def get_errors(self) -> list[dict]:
         return self.errors
 
     def clear_errors(self):

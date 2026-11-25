@@ -2,15 +2,14 @@ import json
 import os
 import secrets
 from datetime import datetime
-from typing import List
 
-from app.api.dependencies import \
-    get_current_user_from_header  # We might need a query param version for WS
+from app.api.dependencies import (
+    get_current_user_from_header,  # We might need a query param version for WS
+)
 from app.core.database import get_db
 from app.db import models
 from cryptography.fernet import Fernet
-from fastapi import (APIRouter, Depends, WebSocket,
-                     WebSocketDisconnect)
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
@@ -122,7 +121,9 @@ async def websocket_endpoint(
                             support_email = support_conf.get("email_target", "")
                             if support_email:
                                 from app.services.utils import (
-                                    create_html_email, send_mail_sync)
+                                    create_html_email,
+                                    send_mail_sync,
+                                )
 
                                 try:
                                     subject = f"Support Request: {user.username}"
@@ -227,7 +228,7 @@ async def websocket_endpoint(
         manager.disconnect(websocket, user.id)
 
 
-@router.get("/chat/history/{other_user_id}", response_model=List[dict])
+@router.get("/chat/history/{other_user_id}", response_model=list[dict])
 def get_chat_history(
     other_user_id: int,
     current_user: models.User = Depends(get_current_user_from_header),
@@ -280,7 +281,7 @@ def get_chat_history(
     return results
 
 
-@router.get("/chat/conversations", response_model=List[dict])
+@router.get("/chat/conversations", response_model=list[dict])
 def get_conversations(
     current_user: models.User = Depends(get_current_user_from_header),
     db: Session = Depends(get_db),

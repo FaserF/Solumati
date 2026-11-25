@@ -1,17 +1,17 @@
 import logging
-from typing import Optional
+
+from fastapi import Depends, Header, HTTPException
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.db import models
-from fastapi import Depends, Header, HTTPException
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 
 # --- Dependency: Auth & Role Check ---
 def get_current_user_from_header(
-    x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)
+    x_user_id: int | None = Header(None), db: Session = Depends(get_db)
 ):
     if x_user_id is None:
         raise HTTPException(status_code=401, detail="Missing authentication header")

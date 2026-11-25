@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime
-from typing import List
 
 from app.api.dependencies import get_current_user_from_header
 from app.core.database import get_db
@@ -28,7 +27,7 @@ router = APIRouter()
 # We will use the 'SystemSetting' to store them if generated.
 
 
-@router.get("/notifications", response_model=List[schemas.NotificationDisplay])
+@router.get("/notifications", response_model=list[schemas.NotificationDisplay])
 def get_notifications(
     user: models.User = Depends(get_current_user_from_header),
     db: Session = Depends(get_db),

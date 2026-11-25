@@ -1,33 +1,52 @@
-name: "🐛 Bug Report"
-description: "Found something wrong? Report it here."
-title: "[BUG]: "
-labels: ["bug", "triage"]
+name: 🐛 Bug Report
+description: Create a report to help improve this project.
+title: "[Bug]: "
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug! Your feedback helps us improve Solumati.
+        Thanks for opening an issue! Automated triage and diagnostics are provided by [faserf-hermes-agent[bot]](https://github.com/apps/faserf-hermes-agent).
+
   - type: input
     id: version
     attributes:
-      label: "Solumati Version"
-      description: "What version of Solumati are you using? (e.g. v2025.12.3)"
-      placeholder: "v..."
+      label: Version / Release
+      description: Which version of this repository/component are you using? (e.g. v1.2.0, latest commit)
+      placeholder: "e.g. 1.2.0"
     validations:
       required: true
+
+  - type: input
+    id: env_version
+    attributes:
+      label: Environment Version (Home Assistant / Python / OS)
+      description: Applicable runtime environment details (e.g. Home Assistant 2026.11.2, Python 3.14, Ubuntu 24.04).
+      placeholder: "e.g. Home Assistant 2026.11.2"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pre_release
+    attributes:
+      label: Release Channel
+      options:
+        - label: I am using a Beta or Pre-release version
+          required: false
+
   - type: textarea
     id: description
     attributes:
-      label: "Description"
-      description: "A clear and concise description of what the bug is."
-      placeholder: "I encountered a problem when..."
+      label: Describe the bug
+      description: A clear and concise description of what went wrong.
     validations:
       required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: "Steps to Reproduce"
-      description: "Tell us how to reproduce the issue."
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
       placeholder: |
         1. Go to '...'
         2. Click on '....'
@@ -35,22 +54,30 @@ body:
         4. See error
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
-      label: "Expected Behavior"
-      description: "What did you expect to happen?"
-      placeholder: "The application should show..."
+      label: Expected Behavior
+      description: What did you expect to happen instead?
     validations:
       required: true
+
   - type: textarea
     id: logs
     attributes:
-      label: "Relevant Logs / Console Output"
-      description: "Please share any logs or console errors if available."
+      label: Diagnostic Logs & Tracebacks
+      description: Paste relevant debug logs or stack traces here (enclosed in code blocks).
       render: shell
-  - type: textarea
-    id: additional
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
     attributes:
-      label: "Additional Context"
-      description: "Add any other context about the problem here (e.g., screenshots, OS, Browser)."
+      label: Checklist
+      options:
+        - label: I have checked existing issues and documentation for duplicates.
+          required: true
+        - label: I understand this project is maintained in free time by @FaserF with assistance from Hermes Fleet AI.
+          required: true

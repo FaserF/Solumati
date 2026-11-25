@@ -5,9 +5,10 @@ This script adds graphical buttons for APK, MSIX, IPA, and Docker downloads.
 """
 
 import os
-import sys
 import re
+import sys
 from datetime import datetime
+
 from github import Github
 
 # GitHub token

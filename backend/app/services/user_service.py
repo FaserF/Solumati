@@ -1,20 +1,22 @@
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from app.db import models, schemas
-from app.services.base import BaseService
-from app.core.security import hash_password
-from app.services.utils import generate_unique_username
-from datetime import datetime
 import json
 import secrets
+from datetime import datetime
+
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 from app.core.config import TEST_MODE
+from app.core.security import hash_password
+from app.db import models, schemas
+from app.services.base import BaseService
+from app.services.utils import generate_unique_username
+
 
 class UserService(BaseService[models.User]):
-    def get_by_email(self, db: Session, email: str) -> Optional[models.User]:
+    def get_by_email(self, db: Session, email: str) -> models.User | None:
         return db.query(self.model).filter(self.model.email == email).first()
 
-    def get_by_username(self, db: Session, username: str) -> Optional[models.User]:
+    def get_by_username(self, db: Session, username: str) -> models.User | None:
         return db.query(self.model).filter(self.model.username == username).first()
 
     def create_user(self, db: Session, user_in: schemas.UserCreate, is_verified: bool = False) -> models.User:
@@ -49,14 +51,14 @@ class UserService(BaseService[models.User]):
         db.refresh(db_obj)
         return db_obj
 
-    def get_candidates(self, db: Session, user: models.User, is_privileged: bool) -> List[models.User]:
+    def get_candidates(self, db: Session, user: models.User, is_privileged: bool) -> list[models.User]:
         """
         Efficiently fetch candidates for matching.
         """
         # Base filters
         query = db.query(self.model).filter(
             self.model.id != user.id,
-            self.model.is_active == True,
+            self.model.is_active,
             self.model.role != "admin",
             self.model.id != 0
         )
@@ -64,32 +66,32 @@ class UserService(BaseService[models.User]):
         # Allow test users if Privileged OR TEST_MODE is active
         if is_privileged or TEST_MODE:
              query = query.filter(
-                or_(self.model.is_visible_in_matches == True, self.model.role == "test")
+                or_(self.model.is_visible_in_matches, self.model.role == "test")
             )
         else:
              query = query.filter(
-                self.model.is_visible_in_matches == True,
+                self.model.is_visible_in_matches,
                 self.model.role != "test"
             )
 
         # Optimization: Limit candidate pool to 100 before processing python side
         return query.limit(100).all()
 
-    def get_discover_candidates(self, db: Session, user: models.User, is_privileged: bool, limit: int = 50) -> List[models.User]:
+    def get_discover_candidates(self, db: Session, user: models.User, is_privileged: bool, limit: int = 50) -> list[models.User]:
         query = db.query(self.model).filter(
             self.model.id != user.id,
-            self.model.is_active == True,
+            self.model.is_active,
             self.model.role != "admin",
             self.model.id != 0
         )
 
         if is_privileged or TEST_MODE:
             query = query.filter(
-                or_(self.model.is_visible_in_matches == True, self.model.role == "test")
+                or_(self.model.is_visible_in_matches, self.model.role == "test")
             )
         else:
             query = query.filter(
-                self.model.is_visible_in_matches == True,
+                self.model.is_visible_in_matches,
                 self.model.role != "test"
             )
 

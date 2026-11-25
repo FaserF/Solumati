@@ -1,8 +1,10 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.services.password_validation import (check_pwned_password,
-                                              validate_password_complexity)
+from app.services.password_validation import (
+    check_pwned_password,
+    validate_password_complexity,
+)
 
 
 # --- COMPLEXITY TESTS ---

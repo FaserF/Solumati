@@ -25,7 +25,7 @@ def load_translations(lang_code):
 
     if os.path.exists(filename):
         try:
-            with open(filename, "r", encoding="utf-8") as f:
+            with open(filename, encoding="utf-8") as f:
                 data = json.load(f)
                 logger.info(f"Successfully loaded translations for {lang_code}")
                 return data
@@ -40,7 +40,7 @@ def load_translations(lang_code):
     if filename_short != filename and os.path.exists(filename_short):
         logger.debug(f"Attempting fallback load from: {filename_short}")
         try:
-            with open(filename_short, "r", encoding="utf-8") as f:
+            with open(filename_short, encoding="utf-8") as f:
                 data = json.load(f)
                 logger.info(f"Successfully loaded fallback translations for {short}")
                 return data
