@@ -28,7 +28,7 @@ def get_app_version():
     try:
         pkg_path = "/app/frontend_package.json"
         if os.path.exists(pkg_path):
-            with open(pkg_path, "r") as f:
+            with open(pkg_path) as f:
                 data = json.load(f)
                 version = data.get("version")
                 if version:

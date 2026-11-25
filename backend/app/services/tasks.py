@@ -16,7 +16,7 @@ async def cleanup_unverified_users():
         users_to_delete = (
             db.query(models.User)
             .filter(
-                models.User.is_verified == False,
+                not models.User.is_verified,
                 models.User.created_at < expiration_threshold,
             )
             .all()

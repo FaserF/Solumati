@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect } from 'react';
-import { Github, Scale, AlertTriangle, Info, Smartphone, Monitor, ChevronRight } from 'lucide-react';
+import { Scale, AlertTriangle, Info, Smartphone, Monitor, ChevronRight } from 'lucide-react';
+import { Github } from '../components/ui/BrandIcons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';

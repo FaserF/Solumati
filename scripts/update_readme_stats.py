@@ -8,7 +8,7 @@ IGNORE_DIRS = {'node_modules', 'venv', 'env', 'build', 'dist', '.git', '__pycach
 
 def count_lines_in_file(file_path):
     try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(file_path, encoding='utf-8', errors='ignore') as f:
             return sum(1 for line in f if line.strip())
     except:
         return 0
@@ -65,7 +65,7 @@ def main():
 """
 
     if os.path.exists(README_PATH):
-        with open(README_PATH, 'r', encoding='utf-8') as f:
+        with open(README_PATH, encoding='utf-8') as f:
             content = f.read()
 
         pattern = re.compile(r'<!-- STATS_START -->.*<!-- STATS_END -->', re.DOTALL)

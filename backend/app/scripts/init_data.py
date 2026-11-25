@@ -6,11 +6,12 @@ import secrets
 from datetime import datetime
 
 import httpx
+from sqlalchemy import or_, text
+from sqlalchemy.orm import Session
+
 from app.core.config import TEST_MODE
 from app.core.security import hash_password
 from app.db import models
-from sqlalchemy import or_, text
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -323,7 +324,7 @@ def fix_dummy_user_roles(db: Session):
             db.query(models.User)
             .filter(
                 models.User.real_name.like("% Dummy"),
-                or_(models.User.role != "test", models.User.role == None),
+                or_(models.User.role != "test", models.User.role is None),
             )
             .all()
         )

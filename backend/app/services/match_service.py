@@ -1,7 +1,8 @@
 import json
 import random
-from typing import List
+
 from sqlalchemy.orm import Session
+
 from app.db import models, schemas
 from app.services.questions_content import QUESTIONS_SKELETON
 
@@ -82,7 +83,7 @@ class MatchService:
                 return {}
         return {}
 
-    def get_matches_for_user(self, db: Session, user: models.User, candidates: List[models.User], is_guest: bool, is_admin: bool) -> List[schemas.MatchResult]:
+    def get_matches_for_user(self, db: Session, user: models.User, candidates: list[models.User], is_guest: bool, is_admin: bool) -> list[schemas.MatchResult]:
         """
         Process candidates and return sorted results.
         """

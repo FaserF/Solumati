@@ -1,37 +1,48 @@
 import json
 import logging
+import random
 import secrets
 import shutil
-import random
 from datetime import datetime, timedelta
-from typing import List
-
-from fastapi import (APIRouter, BackgroundTasks, Depends, File, HTTPException,
-                     Request, UploadFile)
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user_from_header
 from app.core.config import PROJECT_NAME
 from app.core.database import get_db
 from app.core.security import hash_password
 from app.db import models, schemas
+from app.services.captcha import verify_captcha_sync
+from app.services.email_service import email_service
+from app.services.export_service import collect_user_data, create_export_archive
+from app.services.i18n import get_translations
+from app.services.match_service import match_service
+from app.services.password_validation import (
+    check_pwned_password,
+    validate_password_complexity,
+)
+from app.services.questions_content import QUESTIONS_SKELETON
 
 # Services
 from app.services.user_service import user_service
-from app.services.match_service import match_service
-from app.services.email_service import email_service
-# LegacyUtils (to be deprecated/moved)
-from app.services.utils import (get_setting, is_profile_complete,
-                                send_email_changed_notification,
-                                send_password_changed_notification,
-                                send_registration_notification)
-from app.services.captcha import verify_captcha_sync
-from app.services.password_validation import check_pwned_password, validate_password_complexity
-from app.services.export_service import collect_user_data, create_export_archive
-from app.services.i18n import get_translations
-from app.services.questions_content import QUESTIONS_SKELETON
 
+# LegacyUtils (to be deprecated/moved)
+from app.services.utils import (
+    get_setting,
+    is_profile_complete,
+    send_email_changed_notification,
+    send_password_changed_notification,
+    send_registration_notification,
+)
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+)
+from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +141,7 @@ def get_questions(lang: str = "en"):
         })
     return final_questions
 
-@router.get("/users/discover", response_model=List[schemas.UserDisplay])
+@router.get("/users/discover", response_model=list[schemas.UserDisplay])
 def discover_users(
     user: models.User = Depends(get_current_user_from_header),
     db: Session = Depends(get_db),
@@ -181,7 +192,7 @@ def get_user_profile(
         raise HTTPException(403, "Forbidden")
     return user
 
-@router.get("/matches/{user_id}", response_model=List[schemas.MatchResult])
+@router.get("/matches/{user_id}", response_model=list[schemas.MatchResult])
 def get_matches(user_id: int, db: Session = Depends(get_db)):
     # 1. Resolve Current Use Context
     if user_id == 0:

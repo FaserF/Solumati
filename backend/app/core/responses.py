@@ -2,7 +2,7 @@
 Standardized API Response Models
 Provides unified response format across all endpoints.
 """
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -12,14 +12,14 @@ T = TypeVar("T")
 class APIResponse(BaseModel, Generic[T]):
     """Standard API response wrapper."""
     success: bool = True
-    data: Optional[T] = None
-    message: Optional[str] = None
-    errors: Optional[List[str]] = None
+    data: T | None = None
+    message: str | None = None
+    errors: list[str] | None = None
 
 
 class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated response for list endpoints."""
-    items: List[T]
+    items: list[T]
     total: int
     page: int
     page_size: int
@@ -30,11 +30,11 @@ class ErrorDetail(BaseModel):
     """Structured error detail."""
     code: str
     message: str
-    field: Optional[str] = None
+    field: str | None = None
 
 
 class APIError(BaseModel):
     """Standard error response."""
     success: bool = False
     error: ErrorDetail
-    request_id: Optional[str] = None
+    request_id: str | None = None

@@ -4,16 +4,19 @@ import shutil
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
-from typing import List
 
 from app.api.dependencies import require_admin, require_moderator_or_admin
 from app.core.config import CURRENT_VERSION
+
 # Local modules
 from app.core.database import get_db
 from app.core.security import hash_password
 from app.db import models, schemas
-from app.services.utils import (get_setting, save_setting,
-                                send_account_deactivated_notification)
+from app.services.utils import (
+    get_setting,
+    save_setting,
+    send_account_deactivated_notification,
+)
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -38,7 +41,7 @@ def get_system_roles(
     ]
 
 
-@router.get("/users", response_model=List[schemas.UserDisplay])
+@router.get("/users", response_model=list[schemas.UserDisplay])
 def admin_get_users(
     db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)
 ):
@@ -463,7 +466,7 @@ def trigger_update(
     }
 
 
-@router.get("/changelog", response_model=List[schemas.ChangelogRelease])
+@router.get("/changelog", response_model=list[schemas.ChangelogRelease])
 def get_changelog(
     db: Session = Depends(get_db), current_admin: models.User = Depends(require_admin)
 ):
@@ -490,7 +493,7 @@ def get_changelog(
     return []
 
 
-@router.get("/reports", response_model=List[schemas.ReportDisplay])
+@router.get("/reports", response_model=list[schemas.ReportDisplay])
 def get_reports(
     db: Session = Depends(get_db),
     current_mod: models.User = Depends(require_moderator_or_admin),
@@ -559,7 +562,7 @@ def get_server_logs(
         if not os.path.exists(log_file):
             return {"lines": ["Log file not found."]}
 
-        with open(log_file, "r", encoding="utf-8") as f:
+        with open(log_file, encoding="utf-8") as f:
             # Read all line by line efficiently for large files?
             # For 200 lines, reading all then slicing is okay for moderate size.
             # If huge, use seek.

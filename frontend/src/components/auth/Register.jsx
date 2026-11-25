@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { API_URL } from '../../config';
-import { Github } from 'lucide-react';
+import { Github } from '../ui/BrandIcons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
