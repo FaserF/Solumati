@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { API_URL } from '../../config';
 import { ChevronRight, ChevronLeft, CheckCircle, X, Sparkles, Trophy, Zap, ArrowRight, CornerDownLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useI18n } from '../../context/I18nContext';
 import { Button } from '../ui/Button';
 
 // Encouraging messages for streaks
@@ -17,7 +16,6 @@ const STREAK_MESSAGES = [
 
 const Questionnaire = ({ onComplete, onClose }) => {
     const { user } = useAuth();
-    const { t } = useI18n();
     const navigate = useNavigate();
 
     // Handlers
@@ -58,7 +56,9 @@ const Questionnaire = ({ onComplete, onClose }) => {
                         // Let's start from 0 for the flow experience, or find first missing.
                         // const firstMissing = data.findIndex(q => parsed[q.id] === undefined);
                         // if (firstMissing > 0) setCurrentIdx(firstMissing);
-                    } catch (e) { }
+                    } catch (err) {
+                        console.warn("Failed to parse existing answers", err);
+                    }
                 }
                 setLoading(false);
             } catch (e) {
@@ -68,6 +68,34 @@ const Questionnaire = ({ onComplete, onClose }) => {
         };
         load();
     }, [user.answers]);
+
+    const handleNext = useCallback(() => {
+        if (currentIdx < questions.length) {
+            setDirection('next');
+            setIsExiting(true);
+            setTimeout(() => {
+                setCurrentIdx(prev => prev + 1);
+                setIsExiting(false);
+            }, 300); // Wait for animation
+        }
+    }, [currentIdx, questions.length]);
+
+    const handleSelect = useCallback((qid, optionIdx) => {
+        // Optimistic update
+        setAnswers(prev => ({ ...prev, [qid]: optionIdx }));
+        setStreak(prev => prev + 1);
+
+        // Trigger Milestone?
+        if ((currentIdx + 1) % 10 === 0 && currentIdx > 0) {
+            setShowMilestone(STREAK_MESSAGES[Math.floor(Math.random() * STREAK_MESSAGES.length)]);
+            setTimeout(() => setShowMilestone(null), 2000);
+        }
+
+        // Auto Advance with delay for visual feedback
+        setTimeout(() => {
+            handleNext();
+        }, 250);
+    }, [currentIdx, handleNext]);
 
     // Keyboard Navigation
     useEffect(() => {
@@ -88,36 +116,7 @@ const Questionnaire = ({ onComplete, onClose }) => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentQ, loading, isFinished, answers]);
-
-    // Core Logic
-    const handleSelect = (qid, optionIdx) => {
-        // Optimistic update
-        setAnswers(prev => ({ ...prev, [qid]: optionIdx }));
-        setStreak(prev => prev + 1);
-
-        // Trigger Milestone?
-        if ((currentIdx + 1) % 10 === 0 && currentIdx > 0) {
-            setShowMilestone(STREAK_MESSAGES[Math.floor(Math.random() * STREAK_MESSAGES.length)]);
-            setTimeout(() => setShowMilestone(null), 2000);
-        }
-
-        // Auto Advance with delay for visual feedback
-        setTimeout(() => {
-            handleNext();
-        }, 250);
-    };
-
-    const handleNext = () => {
-        if (currentIdx < questions.length) {
-            setDirection('next');
-            setIsExiting(true);
-            setTimeout(() => {
-                setCurrentIdx(prev => prev + 1);
-                setIsExiting(false);
-            }, 300); // Wait for animation
-        }
-    };
+    }, [currentQ, loading, isFinished, answers, handleSelect, handleNext]);
 
     const handlePrev = () => {
         if (currentIdx > 0) {
@@ -139,7 +138,8 @@ const Questionnaire = ({ onComplete, onClose }) => {
                 body: JSON.stringify({ answers: answers })
             });
             handleCompleteFinal();
-        } catch (e) {
+        } catch (err) {
+            console.error("Failed to save questionnaire:", err);
             alert("Failed to save. check connection.");
             setLoading(false);
         }
@@ -169,7 +169,7 @@ const Questionnaire = ({ onComplete, onClose }) => {
 
                     <div className="space-y-2">
                         <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">Profile Complete!</h1>
-                        <p className="text-xl text-zinc-400">You're all set to find your perfect match.</p>
+                        <p className="text-xl text-zinc-400">You&apos;re all set to find your perfect match.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -7,7 +7,6 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ class RateLimiter:
     """Thread-safe rate limiter for login attempts."""
 
     def __init__(self):
-        self._attempts: Dict[str, AttemptRecord] = {}
+        self._attempts: dict[str, AttemptRecord] = {}
         self._lock = threading.Lock()
         self._cleanup_interval = 300  # Cleanup every 5 minutes
         self._last_cleanup = time.time()
@@ -74,7 +73,7 @@ class RateLimiter:
 
     def check_rate_limit(
         self, ip: str, threshold: int = 5, lockout_minutes: int = 10
-    ) -> Tuple[bool, int, int]:
+    ) -> tuple[bool, int, int]:
         """
         Check if an IP is rate limited.
 

@@ -1,4 +1,5 @@
-import { ChevronLeft, Github, Heart, MessageCircle, Mail } from 'lucide-react';
+import { ChevronLeft, Heart, MessageCircle, Mail } from 'lucide-react';
+import { Github } from '../components/ui/BrandIcons';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from '../context/ConfigContext';
 import { useI18n } from '../context/I18nContext';

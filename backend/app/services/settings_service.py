@@ -4,7 +4,7 @@ Centralized, typed access to system settings with caching.
 """
 import json
 import logging
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 # In-memory cache for settings (simple implementation)
-_settings_cache: Dict[str, Dict[str, Any]] = {}
+_settings_cache: dict[str, dict[str, Any]] = {}
 
 
 class SettingsService:
@@ -26,7 +26,7 @@ class SettingsService:
     """
 
     @staticmethod
-    def get(db: Session, key: str, default: Optional[T] = None) -> Dict[str, Any]:
+    def get(db: Session, key: str, default: T | None = None) -> dict[str, Any]:
         """
         Get a setting by key. Returns default if not found.
 
@@ -61,7 +61,7 @@ class SettingsService:
         return {}
 
     @staticmethod
-    def get_typed(db: Session, key: str, schema: Type[T]) -> T:
+    def get_typed(db: Session, key: str, schema: type[T]) -> T:
         """
         Get a setting and validate it against a Pydantic schema.
 
@@ -77,7 +77,7 @@ class SettingsService:
         return schema(**data)
 
     @staticmethod
-    def save(db: Session, key: str, value: Dict[str, Any]) -> bool:
+    def save(db: Session, key: str, value: dict[str, Any]) -> bool:
         """
         Save a setting. Creates or updates as needed.
 
@@ -111,7 +111,7 @@ class SettingsService:
             return False
 
     @staticmethod
-    def invalidate_cache(key: Optional[str] = None) -> None:
+    def invalidate_cache(key: str | None = None) -> None:
         """
         Invalidate settings cache.
 

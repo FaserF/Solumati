@@ -1,7 +1,6 @@
 import logging
 import secrets
 from datetime import datetime
-from typing import List, Optional
 
 from app.api.dependencies import get_current_user_from_header
 from app.core.config import APP_BASE_URL
@@ -11,6 +10,7 @@ from app.db import models, schemas
 from app.services.utils import get_setting
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
+
 # FastAPI SSO
 from fastapi_sso.sso.github import GithubSSO
 from fastapi_sso.sso.google import GoogleSSO
@@ -57,7 +57,7 @@ def get_provider_sso(provider: str, db: Session):
 
 
 async def process_oauth_login(
-    user_info, provider: str, db: Session, link_user_id: Optional[int] = None
+    user_info, provider: str, db: Session, link_user_id: int | None = None
 ):
     """
     Common logic for processing OAuth user info.
@@ -187,7 +187,7 @@ async def process_oauth_login(
 # --- Management Endpoints ---
 
 
-@router.get("/connections", response_model=List[schemas.LinkedAccountDisplay])
+@router.get("/connections", response_model=list[schemas.LinkedAccountDisplay])
 def get_connections(
     user: models.User = Depends(get_current_user_from_header),
     db: Session = Depends(get_db),
@@ -222,7 +222,7 @@ def delete_connection(
 
 # --- GitHub ---
 @router.get("/github/login")
-async def github_login(state: Optional[str] = None, db: Session = Depends(get_db)):
+async def github_login(state: str | None = None, db: Session = Depends(get_db)):
     sso = get_provider_sso("github", db)
     if not sso:
         raise HTTPException(501, "GitHub auth not configured")
@@ -260,7 +260,7 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
 # --- Google ---
 @router.get("/google/login")
-async def google_login(state: Optional[str] = None, db: Session = Depends(get_db)):
+async def google_login(state: str | None = None, db: Session = Depends(get_db)):
     sso = get_provider_sso("google", db)
     if not sso:
         raise HTTPException(501, "Google auth not configured")
@@ -295,7 +295,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
 # --- Microsoft ---
 @router.get("/microsoft/login")
-async def microsoft_login(state: Optional[str] = None, db: Session = Depends(get_db)):
+async def microsoft_login(state: str | None = None, db: Session = Depends(get_db)):
     sso = get_provider_sso("microsoft", db)
     if not sso:
         raise HTTPException(501, "Microsoft auth not configured")

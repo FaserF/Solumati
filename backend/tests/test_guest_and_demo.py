@@ -1,8 +1,9 @@
-from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
-from app.main import app
+
 from app.api.dependencies import get_current_user_from_header, get_db
 from app.db import models
+from app.main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -58,10 +59,10 @@ def test_demo_mode_start_pydantic_fix(mock_start_demo):
 
     # Param 'mode' must match ^(local|persistent)$
     # We mock the async call
-    import asyncio
-    f = asyncio.Future()
-    f.set_result(None)
-    mock_start_demo.return_value = f
+    async def _noop(*_args, **_kwargs):
+        return None
+
+    mock_start_demo.side_effect = _noop
 
     response = client.post("/demo/start?mode=local")
 
