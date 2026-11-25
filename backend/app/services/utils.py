@@ -6,9 +6,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
 
+from sqlalchemy.orm import Session
+
 from app.core.config import PROJECT_NAME
 from app.db import models, schemas
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,6 @@ def create_html_email(
 
     github_url = "https://github.com/FaserF/Solumati"
 
-    logo_svg = ""  # Removed inline SVG
 
     # Default to GitHub Raw URL (Always works, fallback)
     github_logo = "https://raw.githubusercontent.com/FaserF/Solumati/refs/heads/main/frontend/public/logo/android-chrome-192x192.png"

@@ -1,16 +1,16 @@
-from typing import List, Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+import logging
 
 from app.api.dependencies import get_current_user_from_header
 from app.db import models
 from app.services.demo_service import demo_service
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/demo", tags=["demo"])
 
 class DemoStatus(BaseModel):
-    active_mode: Optional[str]
+    active_mode: str | None
     is_running: bool
 
 class DemoError(BaseModel):
@@ -54,7 +54,7 @@ async def get_demo_status():
         "is_running": demo_service.task is not None
     }
 
-@router.get("/errors", response_model=List[DemoError])
+@router.get("/errors", response_model=list[DemoError])
 async def get_demo_errors(
     current_user: models.User = Depends(get_current_user_from_header)
 ):

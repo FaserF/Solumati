@@ -1,7 +1,7 @@
-import os
-import json
 import ast
 import glob
+import json
+import os
 
 # Configuration
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +26,7 @@ def get_project_metadata():
     }
 
     if os.path.exists(readme_path):
-        with open(readme_path, 'r', encoding='utf-8') as f:
+        with open(readme_path, encoding='utf-8') as f:
             lines = f.readlines()
             for line in lines:
                 if line.startswith('# '):
@@ -57,7 +57,7 @@ def get_tech_stack():
     pkg_json_path = os.path.join(PROJECT_ROOT, 'frontend', 'package.json')
     if os.path.exists(pkg_json_path):
         try:
-            with open(pkg_json_path, 'r') as f:
+            with open(pkg_json_path) as f:
                 data = json.load(f)
                 deps = {**data.get('dependencies', {}), **data.get('devDependencies', {})}
                 for dep, ver in deps.items():
@@ -68,7 +68,7 @@ def get_tech_stack():
     # Backend
     req_path = os.path.join(PROJECT_ROOT, 'backend', 'requirements.txt')
     if os.path.exists(req_path):
-        with open(req_path, 'r') as f:
+        with open(req_path) as f:
             for line in f:
                 if any(x in line for x in ['fastapi', 'sqlalchemy', 'pydantic', 'pytest']):
                     stack['backend'].append(line.strip())
@@ -82,7 +82,7 @@ def get_tech_stack():
 def extract_docstrings(file_path):
     """Extracts module-level docstrings from a file."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             tree = ast.parse(f.read())
             return ast.get_docstring(tree)
     except:
@@ -97,7 +97,7 @@ def get_database_schema():
         return schema
 
     try:
-        with open(models_path, 'r', encoding='utf-8') as f:
+        with open(models_path, encoding='utf-8') as f:
             tree = ast.parse(f.read())
 
         for node in ast.walk(tree):
@@ -141,7 +141,7 @@ def get_api_structure():
         if basename == "__init__.py": continue
 
         try:
-            with open(file, 'r', encoding='utf-8') as f:
+            with open(file, encoding='utf-8') as f:
                 tree = ast.parse(f.read())
 
             endpoints = []

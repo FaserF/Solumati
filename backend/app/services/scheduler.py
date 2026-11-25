@@ -1,15 +1,20 @@
 import json
 import logging
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 from app.core.config import PROJECT_NAME
 from app.core.database import SessionLocal
 from app.db import models
-from app.services.utils import (create_html_email, get_setting,
-                                get_user_email_preferences, send_mail_sync)
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from app.services.utils import (
+    create_html_email,
+    get_setting,
+    get_user_email_preferences,
+    send_mail_sync,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +49,7 @@ def send_daily_message_summaries():
     db: Session = SessionLocal()
     try:
         # 1. Get all active users
-        users = db.query(models.User).filter(models.User.is_active == True).all()
+        users = db.query(models.User).filter(models.User.is_active).all()
 
         for user in users:
             # Check Preferences (Default False for new messages, but user might have enabled it)
@@ -62,7 +67,7 @@ def send_daily_message_summaries():
                 db.query(models.Message)
                 .filter(
                     models.Message.receiver_id == user.id,
-                    models.Message.is_read == False,
+                    not models.Message.is_read,
                 )
                 .count()
             )
@@ -75,7 +80,7 @@ def send_daily_message_summaries():
                 db.query(models.Message.sender_id)
                 .filter(
                     models.Message.receiver_id == user.id,
-                    models.Message.is_read == False,
+                    not models.Message.is_read,
                 )
                 .distinct()
                 .count()

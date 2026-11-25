@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import pyotp
 from app.api.dependencies import get_current_user_from_header
 from app.core.config import PROJECT_NAME
+
 # Local modules
 from app.core.database import get_db
 from app.core.security import verify_password
@@ -18,15 +19,21 @@ from app.services.utils import get_setting, send_mail_sync
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from webauthn import (base64url_to_bytes, generate_authentication_options,
-                      generate_registration_options, options_to_json,
-                      verify_authentication_response,
-                      verify_registration_response)
-from webauthn.helpers.structs import (AuthenticatorAttachment,
-                                      AuthenticatorSelectionCriteria,
-                                      PublicKeyCredentialDescriptor,
-                                      RegistrationCredential,
-                                      UserVerificationRequirement)
+from webauthn import (
+    base64url_to_bytes,
+    generate_authentication_options,
+    generate_registration_options,
+    options_to_json,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers.structs import (
+    AuthenticatorAttachment,
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialDescriptor,
+    RegistrationCredential,
+    UserVerificationRequirement,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -530,7 +537,7 @@ def webauthn_register_verify(
         # Note: request.base_url usually ends with /. We need the origin.
         # str(request.base_url) -> http://localhost:8000/
         # We want http://localhost:8000
-        expected_origin = str(request.base_url).rstrip("/")
+        str(request.base_url).rstrip("/")
 
         # NOTE: If behind a proxy (Nginx), request.base_url might be http://internal_ip.
         # In that case, we should trust the 'Origin' header from the client or X-Forwarded-Proto/Host?

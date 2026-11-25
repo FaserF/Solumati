@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Github, Chrome, Globe, Download } from 'lucide-react';
+import { Lock, Mail, Trash2, ChevronLeft, Eye, EyeOff, Shield, Smartphone, Fingerprint, Bell, Moon, Sun, Smartphone as PhoneIcon, RefreshCcw, AlertTriangle, Link as LinkIcon, Globe, Download } from 'lucide-react';
+import { Github, Chrome } from '../ui/BrandIcons';
 import { API_URL, APP_VERSION } from '../../config';
 import { startRegistration } from '@simplewebauthn/browser';
 import { useNavigate } from 'react-router-dom';

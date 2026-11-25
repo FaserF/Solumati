@@ -146,8 +146,9 @@ class EmailService:
 
             # Log to DB
             try:
-                from app.db import models
                 from datetime import datetime
+
+                from app.db import models
                 log_entry = models.EmailLog(
                     recipient=to_email,
                     subject=subject,
@@ -162,8 +163,9 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {e}")
             try:
-                from app.db import models
                 from datetime import datetime
+
+                from app.db import models
                 log_entry = models.EmailLog(
                     recipient=to_email,
                     subject=subject,
