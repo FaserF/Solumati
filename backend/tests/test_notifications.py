@@ -2,7 +2,6 @@ import os
 import sys
 from unittest.mock import MagicMock
 
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.dependencies import get_current_user_from_header
@@ -68,7 +67,7 @@ def test_mark_notification_read(client):
     response = client.put("/notifications/123/read", headers={"X-User-ID": "1"})
 
     assert response.status_code == 200
-    assert mock_notif.is_read == True
+    assert mock_notif.is_read
     mock_db.commit.assert_called_once()
 
     del app.dependency_overrides[get_current_user_from_header]

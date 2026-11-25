@@ -6,7 +6,6 @@ CAPTCHA verification service supporting multiple providers:
 """
 
 import logging
-from typing import Optional
 
 import httpx
 
@@ -21,7 +20,7 @@ VERIFY_URLS = {
 
 
 async def verify_captcha_async(
-    token: str, provider: str, secret_key: str, remote_ip: Optional[str] = None
+    token: str, provider: str, secret_key: str, remote_ip: str | None = None
 ) -> bool:
     """
     Verify a CAPTCHA token with the specified provider (async version).
@@ -84,7 +83,7 @@ async def verify_captcha_async(
 
 
 def verify_captcha_sync(
-    token: str, provider: str, secret_key: str, remote_ip: Optional[str] = None
+    token: str, provider: str, secret_key: str, remote_ip: str | None = None
 ) -> bool:
     """
     Verify a CAPTCHA token with the specified provider (sync version).

@@ -1,10 +1,11 @@
-from typing import Dict, List
+
 from fastapi import WebSocket
+
 
 class ConnectionManager:
     def __init__(self):
         # Store active connections: user_id -> List[WebSocket]
-        self.active_connections: Dict[int, List[WebSocket]] = {}
+        self.active_connections: dict[int, list[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: int):
         await websocket.accept()

@@ -1,24 +1,40 @@
 import asyncio
 import os
 
-# Routers
-from app.api.routers import (admin, auth, backup, chat, demo, notifications, oauth,
-                             system, users)
-from app.core.config import CURRENT_VERSION, PROJECT_NAME, TEST_MODE
-from app.core.exceptions import register_exception_handlers
-# Local modules
-from app.core.database import Base, SessionLocal, engine
-from app.core.logging_config import logger
-from app.scripts.init_data import (check_emergency_reset, check_schema,
-                                   ensure_admin_user, ensure_guest_user,
-                                   ensure_showcase_dummies,
-                                   ensure_support_user, fix_dummy_user_roles,
-                                   generate_dummy_data)
-from app.services.scheduler import start_scheduler
-from app.services.tasks import periodic_cleanup_task
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
+# Routers
+from app.api.routers import (
+    admin,
+    auth,
+    backup,
+    chat,
+    demo,
+    notifications,
+    oauth,
+    system,
+    users,
+)
+from app.core.config import CURRENT_VERSION, PROJECT_NAME, TEST_MODE
+
+# Local modules
+from app.core.database import Base, SessionLocal, engine
+from app.core.exceptions import register_exception_handlers
+from app.core.logging_config import logger
+from app.scripts.init_data import (
+    check_emergency_reset,
+    check_schema,
+    ensure_admin_user,
+    ensure_guest_user,
+    ensure_showcase_dummies,
+    ensure_support_user,
+    fix_dummy_user_roles,
+    generate_dummy_data,
+)
+from app.services.scheduler import start_scheduler
+from app.services.tasks import periodic_cleanup_task
 
 # --- App Initialization ---
 app = FastAPI(title=PROJECT_NAME, version=CURRENT_VERSION)

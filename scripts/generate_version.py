@@ -1,6 +1,7 @@
-import datetime
 import argparse
+import datetime
 import re
+
 
 def get_calver_parts():
     now = datetime.datetime.now()

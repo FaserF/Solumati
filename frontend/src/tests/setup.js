@@ -12,6 +12,23 @@ afterEach(() => {
     cleanup();
 });
 
+// Ensure Web Storage API works reliably under Node 25+ / jsdom
+if (!globalThis.localStorage || typeof globalThis.localStorage.getItem !== 'function') {
+    const store = new Map();
+    const storageMock = {
+        getItem: (k) => (store.has(String(k)) ? store.get(String(k)) : null),
+        setItem: (k, v) => { store.set(String(k), String(v)); },
+        removeItem: (k) => { store.delete(String(k)); },
+        clear: () => { store.clear(); },
+        key: (i) => Array.from(store.keys())[i] ?? null,
+        get length() { return store.size; },
+    };
+    Object.defineProperty(globalThis, 'localStorage', { value: storageMock, writable: true, configurable: true });
+    if (typeof window !== 'undefined') {
+        Object.defineProperty(window, 'localStorage', { value: storageMock, writable: true, configurable: true });
+    }
+}
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
     writable: true,

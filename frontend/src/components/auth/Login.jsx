@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Github, Fingerprint, AlertCircle } from 'lucide-react';
+import { Fingerprint, AlertCircle } from 'lucide-react';
+import { Github } from '../ui/BrandIcons';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useNavigate } from 'react-router-dom';
 import { API_URL, APP_NAME } from '../../config';

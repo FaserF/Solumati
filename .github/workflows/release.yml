@@ -1,446 +1,100 @@
 name: Release
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release Type'
+        description: "Version bump level"
         required: true
-        default: 'stable'
+        default: "patch"
         type: choice
         options:
-        - stable
-        - beta
-        - nightly
-        - dev
-      version_override:
-        description: 'Manual version (leave empty for auto-increment, e.g. 2025.12.3b1). Do not add v in front.'
+          - patch
+          - minor
+          - major
+      draft:
+        description: "Create as draft release"
         required: false
-        default: ''
-        type: string
+        default: false
+        type: boolean
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
-  release:
+  prepare:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.version.outputs.version }}
-      commit_sha: ${{ steps.commit.outputs.commit_sha }}
+      tag_name: ${{ steps.bump.outputs.tag_name }}
     steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
+      - name: Generate Bot Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.15'
-
-    - name: Calculate Version
-      id: version
-      run: |
-        # Get current version from frontend/package.json (Source of Truth)
-        current=$(jq -r .version frontend/package.json)
-
-        # Use input release type (stable/beta/nightly/dev)
-        RELEASE_TYPE="${{ inputs.release_type }}"
-
-        # Check for manual version override
-        if [ -n "${{ inputs.version_override }}" ]; then
-          new_version="${{ inputs.version_override }}"
-        else
-          # Auto-generate version using the refined script
-          new_version=$(python3 scripts/generate_version.py --current "$current" --type $RELEASE_TYPE)
-        fi
-
-        echo "Release Type: $RELEASE_TYPE"
-        echo "Current Version: $current"
-        echo "New Version: $new_version"
-
-        echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
-        echo "RELEASE_TYPE=$RELEASE_TYPE" >> $GITHUB_ENV
-        echo "version=$new_version" >> $GITHUB_OUTPUT
-
-    - name: Update Version Files & Commit
-      id: commit
-      run: |
-        # Configure Git
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Update frontend/package.json
-        cd frontend
-        # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
-        NPM_VERSION=$(echo "${{ env.NEW_VERSION }}" | sed -E 's/([0-9])([ab])/\1-\2/' | sed 's/\.dev/-dev/')
-        npm version $NPM_VERSION --no-git-tag-version --allow-same-version
-        cd ..
-
-        # Update backend/app/core/config.py
-        sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/app/core/config.py
-        sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "${{ env.RELEASE_TYPE }}")/' backend/app/core/config.py
-
-        # Update frontend/src/config.js
-        sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "${{ env.RELEASE_TYPE }}";/' frontend/src/config.js
-
-        # Update README Statistics
-        python3 scripts/update_readme_stats.py
-
-        # Commit and Push
-        git add frontend/package.json backend/app/core/config.py frontend/src/config.js README.md
-        git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]"
-        git push
-
-        # Get the new commit SHA
-        echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-
-    - name: Find Last Stable Tag
-      id: last_stable
-      if: inputs.release_type == 'stable'
-      run: |
-        # Find the last stable tag (no 'a', 'b', 'dev', 'nightly' suffix)
-        LAST_STABLE=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -vE '[ab][0-9]|dev|nightly' | sort -V | tail -1)
-        echo "Last stable tag: $LAST_STABLE"
-        echo "last_stable=$LAST_STABLE" >> $GITHUB_OUTPUT
-
-    - name: Generate Changelog (Stable)
-      id: changelog_stable
-      if: inputs.release_type == 'stable'
-      uses: orhun/git-cliff-action@v4
-      with:
-        config: cliff.toml
-        args: --verbose --unreleased --tag v${{ env.NEW_VERSION }} ${{ steps.last_stable.outputs.last_stable && format('--since-tag {0}', steps.last_stable.outputs.last_stable) || '' }}
-      env:
-        OUTPUT: CHANGELOG.md
-
-    - name: Generate Changelog (Pre-release)
-      id: changelog_prerelease
-      if: inputs.release_type != 'stable'
-      uses: orhun/git-cliff-action@v4
-      with:
-        config: cliff.toml
-        args: --verbose --latest
-      env:
-        OUTPUT: CHANGELOG.md
-
-    - name: Create Release with Initial Buttons
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.15'
-
-    - name: Install Dependencies
-      run: |
-        pip install PyGithub
-
-    - name: Generate Initial Release Body
-      id: release_body
-      run: |
-        # Read changelog
-        if [ -f CHANGELOG.md ]; then
-          CHANGELOG=$(cat CHANGELOG.md)
-        else
-          CHANGELOG="## Release v${{ env.NEW_VERSION }}\n\nInitial release."
-        fi
-
-        # Generate download buttons HTML using Python to avoid YAML parsing issues
-        python3 << 'PYTHON_SCRIPT'
-        from datetime import datetime
-
-        # Build HTML using string concatenation to avoid YAML parser seeing < characters
-        downloads_html = "## 📥 Downloads\n\n"
-        downloads_html += "<div style=\"background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 24px; border-radius: 12px; margin: 24px 0;\">\n"
-        downloads_html += "  <div style=\"margin-bottom: 16px;\">\n"
-        downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
-        downloads_html += "      <div style=\"background: #2196f3; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9em;\">\n"
-        downloads_html += "        ⏳ Build Status: Building...\n"
-        downloads_html += "      </div>\n"
-        downloads_html += "    </div>\n"
-        downloads_html += "  </div>\n"
-        downloads_html += "  <div style=\"display: flex; flex-wrap: wrap; gap: 8px; align-items: center;\">\n"
-        downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
-        downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
-        downloads_html += "        <span style=\"font-size: 1.2em;\">🤖</span>\n"
-        downloads_html += "        <span>Android APK</span>\n"
-        downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
-        downloads_html += "      </div>\n"
-        downloads_html += "    </div>\n"
-        downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
-        downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
-        downloads_html += "        <span style=\"font-size: 1.2em;\">🪟</span>\n"
-        downloads_html += "        <span>Windows MSIX</span>\n"
-        downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
-        downloads_html += "      </div>\n"
-        downloads_html += "    </div>\n"
-        downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
-        downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
-        downloads_html += "        <span style=\"font-size: 1.2em;\">🍎</span>\n"
-        downloads_html += "        <span>iOS IPA</span>\n"
-        downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
-        downloads_html += "      </div>\n"
-        downloads_html += "    </div>\n"
-        downloads_html += "    <div style=\"display: inline-block; margin: 8px;\">\n"
-        downloads_html += "      <div style=\"background: #e0e0e0; color: #757575; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: not-allowed; opacity: 0.6;\">\n"
-        downloads_html += "        <span style=\"font-size: 1.2em;\">🐳</span>\n"
-        downloads_html += "        <span>Docker Image</span>\n"
-        downloads_html += "        <span style=\"font-size: 0.85em; opacity: 0.7;\">(⏳ Building)</span>\n"
-        downloads_html += "      </div>\n"
-        downloads_html += "    </div>\n"
-        downloads_html += "  </div>\n"
-        downloads_html += "  <div style=\"margin-top: 16px; font-size: 0.9em; color: #666;\">\n"
-        downloads_html += "    <p><strong>Last updated:</strong> " + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') + " UTC</p>\n"
-        downloads_html += "    <p><em>Build artifacts are automatically uploaded as they become available.</em></p>\n"
-        downloads_html += "  </div>\n"
-        downloads_html += "</div>"
-
-        with open('/tmp/release_body.txt', 'w', encoding='utf-8') as f:
-            f.write(downloads_html)
-        PYTHON_SCRIPT
-
-        RELEASE_CONTENT=$(cat /tmp/release_body.txt)
-        printf "%s\n\n%s" "$CHANGELOG" "$RELEASE_CONTENT" > RELEASE_BODY.md
-        echo "body_path=RELEASE_BODY.md" >> $GITHUB_OUTPUT
-
-    - name: Create Release
-      uses: softprops/action-gh-release@v3
-      with:
-        tag_name: v${{ env.NEW_VERSION }}
-        name: Release v${{ env.NEW_VERSION }}
-        target_commitish: ${{ steps.commit.outputs.commit_sha }}
-        body_path: ${{ steps.release_body.outputs.body_path }}
-        draft: false
-        prerelease: ${{ inputs.release_type != 'stable' }}
-
-  build-push-docker:
-    needs: release
-    uses: ./.github/workflows/docker-publish.yml
-    with:
-      version: ${{ needs.release.outputs.new_version }}
-    permissions:
-      contents: write
-      packages: write
-
-  build-android:
-    needs: release
-    uses: ./.github/workflows/android-release.yml
-    with:
-      tag_name: v${{ needs.release.outputs.new_version }}
-      ref: ${{ needs.release.outputs.commit_sha }}
-    secrets: inherit
-
-  build-ios:
-    needs: release
-    uses: ./.github/workflows/ios-release.yml
-    with:
-      tag_name: v${{ needs.release.outputs.new_version }}
-      ref: ${{ needs.release.outputs.commit_sha }}
-    secrets: inherit
-
-  check-windows-build-status:
-    needs: release
-    runs-on: ubuntu-latest
-    # Skip this check if this release workflow was manually triggered
-    if: github.event_name != 'workflow_dispatch'
-    outputs:
-      should_build: ${{ steps.check.outputs.should_build }}
-    steps:
-      - name: Check last automatic Windows build status
-        id: check
-        run: |
-          # Get the last workflow run triggered by workflow_call (automatic, from release.yml)
-          # We exclude workflow_dispatch (manual) runs
-          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/windows-release.yml/runs?per_page=20")
-
-          # Check if we found any runs
-          TOTAL_COUNT=$(echo "$RESPONSE" | jq -r '.total_count // 0')
-          if [ "$TOTAL_COUNT" -eq "0" ]; then
-            echo "No previous runs found. Building Windows."
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Find the last automatic run (workflow_call event, not workflow_dispatch)
-          LAST_RUN=$(echo "$RESPONSE" | jq -r '.workflow_runs[] | select(.event == "workflow_call") | .id' | head -n 1)
-
-          if [ -z "$LAST_RUN" ] || [ "$LAST_RUN" == "null" ]; then
-            echo "No previous automatic runs found. Building Windows."
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Get the status of the last automatic run
-          RUN_DETAILS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/runs/$LAST_RUN")
-          RUN_STATUS=$(echo "$RUN_DETAILS" | jq -r '.conclusion')
-          RUN_STATE=$(echo "$RUN_DETAILS" | jq -r '.status')
-
-          echo "Last automatic Windows build run ID: $LAST_RUN"
-          echo "Last automatic Windows build status: $RUN_STATUS (state: $RUN_STATE)"
-
-          # If the run is still in progress, allow building
-          if [ "$RUN_STATE" != "completed" ]; then
-            echo "Last automatic run is still in progress. Building Windows."
-            echo "should_build=true" >> $GITHUB_OUTPUT
-          elif [ "$RUN_STATUS" == "success" ]; then
-            echo "Last automatic run was successful. Building Windows."
-            echo "should_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "Last automatic run failed (status: $RUN_STATUS). Skipping Windows build."
-            echo "Build will be skipped until manually triggered and successful."
-            echo "should_build=false" >> $GITHUB_OUTPUT
-          fi
-
-  build-windows:
-    needs: [release, check-windows-build-status]
-    # Always build if manually triggered, otherwise check the status from check-windows-build-status
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (needs.check-windows-build-status.result == 'success' && needs.check-windows-build-status.outputs.should_build == 'true') ||
-      (needs.check-windows-build-status.result == 'skipped')
-    uses: ./.github/workflows/windows-release.yml
-    with:
-      tag_name: v${{ needs.release.outputs.new_version }}
-      ref: ${{ needs.release.outputs.commit_sha }}
-    secrets: inherit
-
-  # Monitor and update release buttons
-  update-release-buttons:
-    needs: [release, build-push-docker, build-android, build-ios, build-windows]
-    if: always()
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
         with:
-          python-version: '3.15'
-
-      - name: Install Dependencies
-        run: |
-          pip install PyGithub
-
-      - name: Determine Overall Build Status
-        id: build_status
-        run: |
-          STATUS="success"
-          if [ "${{ needs.build-android.result }}" == "failure" ] || \
-             [ "${{ needs.build-ios.result }}" == "failure" ] || \
-             [ "${{ needs.build-windows.result }}" == "failure" ] || \
-             [ "${{ needs.build-push-docker.result }}" == "failure" ]; then
-            STATUS="failure"
-          elif [ "${{ needs.build-android.result }}" == "cancelled" ] || \
-               [ "${{ needs.build-ios.result }}" == "cancelled" ] || \
-               [ "${{ needs.build-windows.result }}" == "cancelled" ] || \
-               [ "${{ needs.build-push-docker.result }}" == "cancelled" ]; then
-            STATUS="cancelled"
-          elif [ "${{ needs.build-android.result }}" != "success" ] || \
-               [ "${{ needs.build-ios.result }}" != "success" ] || \
-               [ "${{ needs.build-windows.result }}" != "success" ] || \
-               [ "${{ needs.build-push-docker.result }}" != "success" ]; then
-            STATUS="running"
-          fi
-          echo "status=$STATUS" >> $GITHUB_OUTPUT
-          echo "Build Status: $STATUS"
-
-      - name: Update Release Notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          TAG_NAME: v${{ needs.release.outputs.new_version }}
-          BUILD_STATUS: ${{ steps.build_status.outputs.status }}
-        run: |
-          python .github/scripts/update-release-buttons.py
-
-  bump-dev-version:
-    needs: release
-    runs-on: ubuntu-latest
-    # if: inputs.release_type == 'stable' # Only bump main to dev after a stable release
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: main
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.15'
-
-      - name: Calculate Next Dev Version
-        id: dev_version
-        env:
-          CURRENT_RELEASE: ${{ needs.release.outputs.new_version }}
+      - name: Bump Version & Push Tag
+        id: bump
         run: |
-          # The current released version is in CURRENT_RELEASE (e.g. 2025.12.1)
-          echo "Released Version: $CURRENT_RELEASE"
-
-          # Use the script to generate the next dev version properly
-          NEXT_DEV=$(python3 scripts/generate_version.py --current "$CURRENT_RELEASE" --type dev)
-
-          echo "Next Dev Version: $NEXT_DEV"
-          echo "next_dev=$NEXT_DEV" >> $GITHUB_OUTPUT
-
-      - name: Update to Dev Version
-        env:
-          NEW_VERSION: ${{ steps.dev_version.outputs.next_dev }}
-        run: |
-          # Configure Git
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Pull latest changes first to avoid conflicts
-          git pull --rebase origin main || true
-
-          # Update frontend/package.json
-          cd frontend
-          # Sanitize for NPM (Strict SemVer: .dev -> -dev, b1 -> -b1)
-          NPM_VERSION=$(echo "${{ env.NEW_VERSION }}" | sed -E 's/([0-9])([ab])/\1-\2/' | sed 's/\.dev/-dev/')
-          npm version $NPM_VERSION --no-git-tag-version --allow-same-version
-          cd ..
-
-          # Update backend/app/core/config.py
-          sed -i 's/os.getenv("BACKEND_VERSION", "[^"]*")/os.getenv("BACKEND_VERSION", "${{ env.NEW_VERSION }}")/' backend/app/core/config.py
-          sed -i 's/os.getenv("RELEASE_TYPE", "[^"]*")/os.getenv("RELEASE_TYPE", "dev")/' backend/app/core/config.py
-
-          # Update frontend/src/config.js
-          sed -i 's/export const APP_RELEASE_TYPE = "[^"]*";/export const APP_RELEASE_TYPE = "dev";/' frontend/src/config.js
-
-          # Stage all changes (including any files modified by npm version, like package-lock.json)
-          git add -A
-
-          # Show status for debugging
-          git status
-
-          # Check if there are any changes to commit
-          if git diff --staged --quiet && git diff --quiet; then
-            echo "No changes to commit"
+          if [ -f .github/scripts/version_manager.py ]; then
+            NEW_VER=$(python3 .github/scripts/version_manager.py bump --type stable --level "${{ inputs.release_type }}")
           else
-            # Commit all changes - ensure we capture everything
-            git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} [skip ci]"
-
-            # Double-check: stage and commit any remaining changes that might have been missed
-            git add -A
-            if ! git diff --staged --quiet || ! git diff --quiet; then
-              echo "Found additional changes after commit, committing them..."
-              git commit -m "chore: prepare for next development iteration ${{ env.NEW_VERSION }} (additional changes) [skip ci]" || echo "No additional changes to commit"
-            fi
-
-            # Verify working directory is clean before pull
-            if ! git diff --quiet || ! git diff --cached --quiet; then
-              echo "Error: Working directory still has uncommitted changes"
-              git status
-              exit 1
-            fi
-
-            # Pull again with rebase to handle any concurrent changes
-            git pull --rebase origin main
-
-            # Push the changes
-            git push origin main
+            NEW_VER=$(python3 - <<'PY'
+          import glob, json, os, re, subprocess
+          level = os.environ.get("RELEASE_TYPE", "patch")
+          tags = subprocess.check_output(["git", "tag", "--sort=-version:refname"], text=True).splitlines()
+          latest = next((t.lstrip("v") for t in tags if re.match(r"^v?\d+\.\d+\.\d+$", t.strip())), "1.0.0")
+          maj, min_, pat = (int(x) for x in latest.split("."))
+          if level == "major":
+              maj, min_, pat = maj + 1, 0, 0
+          elif level == "minor":
+              min_, pat = min_ + 1, 0
+          else:
+              pat += 1
+          ver = f"{maj}.{min_}.{pat}"
+          for mf in glob.glob("custom_components/*/manifest.json"):
+              data = json.load(open(mf, encoding="utf-8"))
+              data["version"] = ver
+              with open(mf, "w", encoding="utf-8") as fh:
+                  json.dump(data, fh, indent=2)
+                  fh.write("\n")
+          if os.path.exists("pyproject.toml"):
+              txt = open("pyproject.toml", encoding="utf-8").read()
+              txt = re.sub(r'^version\s*=\s*".*?"', f'version = "{ver}"', txt, count=1, flags=re.MULTILINE)
+              open("pyproject.toml", "w", encoding="utf-8").write(txt)
+          print(ver)
+          PY
+          )
           fi
+          TAG="v${NEW_VER}"
+          git config user.name "faserf-hermes-agent[bot]"
+          git config user.email "342667397+faserf-hermes-agent[bot]@users.noreply.github.com"
+          git add custom_components/*/manifest.json pyproject.toml 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "chore(release): ${TAG} [skip ci]"
+          git tag -f "${TAG}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin "${TAG}" --force
+          echo "tag_name=${TAG}" >> "$GITHUB_OUTPUT"
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+
+  release:
+    needs: prepare
+    if: always() && (github.event_name == 'push' || needs.prepare.result == 'success')
+    uses: FaserF/repo-template/.github/workflows/reusable-release.yml@v1
+    with:
+      tag_name: ${{ github.event_name == 'workflow_dispatch' && needs.prepare.outputs.tag_name || github.ref_name }}
+      draft: ${{ github.event_name == 'workflow_dispatch' && inputs.draft || false }}
+    secrets: inherit

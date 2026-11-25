@@ -9,7 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const { changeLanguage } = useI18n();
-    const { setTheme } = useTheme();
+    const { setTheme = () => {} } = useTheme() || {};
 
     // Initialize user from LocalStorage (Cache)
     const [user, setUser] = useState(() => {

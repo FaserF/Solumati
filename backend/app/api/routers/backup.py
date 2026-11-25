@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 from app.api.dependencies import require_admin
+
 # Local modules
 from app.core.database import Base, get_db
 from app.db import models, schemas
@@ -199,14 +200,6 @@ async def import_database(
             # We iterate in reverse dependency order ideally, but with FKs off it doesn't matter for deletion.
 
             # Deletion List (Manual implementation of dependency order to be safe)
-            tables_to_clear = [
-                "reports",
-                "messages",
-                "notifications",
-                "linked_accounts",
-                "users",
-                "system_settings",
-            ]
 
             # Or use metadata sorted tables
             for table in reversed(Base.metadata.sorted_tables):
